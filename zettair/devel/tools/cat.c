@@ -144,11 +144,11 @@ int cat_docmap(FILE *output, struct index *idx, int verbose) {
             fprintf(output, "), "
               "size %u (%u words, %u distinct words, %f weight) type %s%s%s\n", 
               bytes, words, dwords, weight, 
-              mime_string(type), aux ? ": " : "", aux ? aux : "");
+              mime_string(type), *aux ? ": " : "", *aux ? aux : "");
         } else {
             fprintf(output, "%lu, size %u (%u words, %u distinct words, "
               "%f weight)%s%s\n", i, bytes, words, dwords, weight, 
-              aux ? ": " : "", aux ? aux : "");
+              *aux ? ": " : "", *aux ? aux : "");
         }
     }
 
@@ -339,8 +339,7 @@ static unsigned int vbyte_read(FILE* fp, unsigned long int* n) {
             ret++;
             count += 7;
         } else if (ret > (sizeof(*n))) {
-            if (ret == (sizeof(*n) + 1) 
-              && (byte < (1 << (sizeof(*n) + 1)))) {
+            if (ret == (sizeof(*n) + 1)) {
                 /* its a large, but valid number */
                 *n |= byte << count;
                 return ret;

@@ -430,12 +430,12 @@ int diff(struct index *one, struct index *two, FILE *output) {
               "(%u and %u) in indexes\n", i, words1, words2);
             ret = 1;
         }
-        if (((aux1 || aux2) && !(aux1 && aux2))  /* logical xor */
-          || (aux1 && (str_cmp(aux1, aux2)))) {
+        if (((*aux1 || *aux2) && !(*aux1 && *aux2))  /* logical xor */
+          || (*aux1 && (str_cmp(aux1, aux2)))) {
             fprintf(output, "docno %u contains different auxilliary strings "
               "('%s' and '%s') in indexes\n", i, 
-              aux1 ? (const char *) aux1 : "(null)", 
-              aux2 ? (const char *) aux2 : "(null)");
+              *aux1 ? (const char *) aux1 : "(null)",
+              *aux2 ? (const char *) aux2 : "(null)");
             ret = 1;
         }
         if ((weight1 != weight2) 
