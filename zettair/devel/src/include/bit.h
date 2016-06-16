@@ -69,7 +69,7 @@ unsigned int bit_log2(unsigned long int num);
 
 /* return the a mask for bits lower bits */
 #define BIT_LMASK(bits) \
-  (assert(((bits) >= 0) && ((bits) <= (8 * sizeof(int)))), \
+  (assert(((bits) >= 0) && ((bits) <= (8 * sizeof(long)))), \
     (unsigned int)(bit_lbits[(bits)]))
 
 /* pointer setting (FIXME: this version is non-portable) */
