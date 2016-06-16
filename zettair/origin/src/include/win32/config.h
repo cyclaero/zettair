@@ -17,16 +17,16 @@
 #define PACKAGE_NAME "zettair"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zettair 0.6.0"
+#define PACKAGE_STRING "zettair 0.9.4"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zettair"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.6.0"
+#define PACKAGE_VERSION "0.9.4"
 
 /* Version number of package */
-#define VERSION "0.6.0"
+#define VERSION "0.9.4"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -42,19 +42,28 @@
 #define uintmax_t __int64  /* win32 doesn't seem to have uint64_t :o( */
 #define uint_fast32_t unsigned long int
 
-/* define floating point functions */
-#ifndef sqrtf 
+/* define floating point functions (visual studio 6 didn't have floating point
+ * versions at all, and visual studio 2005 declares them incorrectly 
+ * (see http://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=98751
+ * - thanks, fuckwits!), so we manually #define them to the double equivalents.
+ */
+#include <math.h>
+#ifdef sqrtf 
+#undef sqrtf
+#endif 
 #define sqrtf sqrt
+#ifdef logf 
+#undef logf
 #endif 
-#ifndef logf 
 #define logf log
+#ifdef ldexpf 
+#undef ldexpf
 #endif 
-#ifndef ldexpf 
 #define ldexpf ldexp
+#ifdef frexpf 
+#undef frexpf
 #endif 
-#ifndef frexpf 
 #define frexpf frexp
-#endif 
 
 /* XXX: win32 doesn't have eoverflow :o( */
 #define EOVERFLOW EINVAL

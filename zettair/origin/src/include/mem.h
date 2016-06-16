@@ -46,16 +46,16 @@ void *mem_set(void *b, int c, unsigned int len);
 /* alignment stuff */
 
 /* get alignments of basic types */
-unsigned int mem_align_char();
-unsigned int mem_align_short();
-unsigned int mem_align_int();
-unsigned int mem_align_long();
-unsigned int mem_align_float();
-unsigned int mem_align_double();
-unsigned int mem_align_ptr();
+unsigned int mem_align_char(void);
+unsigned int mem_align_short(void);
+unsigned int mem_align_int(void);
+unsigned int mem_align_long(void);
+unsigned int mem_align_float(void);
+unsigned int mem_align_double(void);
+unsigned int mem_align_ptr(void);
 
 /* return the maximum alignment (probably) for this platform */
-unsigned int mem_align_max();
+unsigned int mem_align_max(void);
 
 /* return the next point in the buffer that conforms to the given alignment.
  * align is assumed to be a power of two. */

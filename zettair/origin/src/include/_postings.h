@@ -38,8 +38,10 @@ struct postings {
     struct objalloc *node_mem;        /* allocator for nodes */
     struct postings_node *update;     /* first node in list to update */
     unsigned long int docno;          /* the current document number */
+    unsigned int termno;              /* the current term number */
     int update_required;              /* whether there are unupdated postings */
     int err;                          /* last error that occurred or 0 */
+    int offsets;                      /* whether to store offsets */
     struct stop *stop;                /* build-time stoplist */
 
     /* stemming function and opaque data for it */

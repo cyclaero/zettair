@@ -20,21 +20,6 @@ extern "C" {
 /* note that _decode and _encode assume that the following enums can fit in a
  * certain number of bits, so you'll have to change them if you add entries */
 
-/* different locations that a vector can be stored */
-enum vocab_locations {
-    VOCAB_LOCATION_VOCAB = 0,          /* inline, after the entry */
-    VOCAB_LOCATION_FILE = 1            /* standalone, in the heap files */
-};
-
-/* cardinality of attributes (arbitrary info) bits (note that they can both be
- * on at one time) */
-enum vocab_attributes {
-    VOCAB_ATTRIBUTES_NONE = 0,         /* no attributes */
-    VOCAB_ATTRIBUTES_PERLIST = 1,      /* attributes 1:1 with list */
-    VOCAB_ATTRIBUTES_PEROCC = (1 << 1) /* attributes 1:1 with occurrances 
-                                        * (1:N with list) */
-};
-
 /* different types of vectors that we deal with */
 enum vocab_vtype {
     VOCAB_VTYPE_DOC = 0,               /* standard document order,
@@ -56,9 +41,6 @@ enum vocab_vtype {
 
 /* structure representing an individual vector */
 struct vocab_vector {
-    enum vocab_attributes attr;
-    unsigned int attribute;
-
     enum vocab_vtype type;
 
     /* these entries are common to all vector types */
@@ -84,19 +66,10 @@ struct vocab_vector {
         } impact;
     } header;
 
-    enum vocab_locations location;     /* location */
-    union {
-        /* VOCAB entries are the last section of bytes in each entry */
-        struct {
-            void *vec;                 /* pointer to vector in given memory */
-        } vocab;
-
-        /* struct for entries in location FILE */
-        struct {
-            unsigned int capacity;     /* how much space is there */
-            unsigned int fileno;       /* number of file its in */
-            unsigned long int offset;  /* offset it's at */
-        } file;
+    /* location information */
+    struct {
+        unsigned int fileno;       /* number of file its in */
+        unsigned long int offset;  /* offset it's at */
     } loc;
 };
 

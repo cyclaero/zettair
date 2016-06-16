@@ -31,6 +31,7 @@ struct freemap;
  * final_type for final index files. */
 struct pyramid *pyramid_new(struct fdset *fds, unsigned int tmp_type,
   unsigned int final_type, unsigned int vocab_type, unsigned int maxfiles, 
+  int offsets,
   struct storagep *storagep, struct freemap *map, struct freemap *vocab_map);
 
 /* delete the pyramid object, deleting any temporary files created */

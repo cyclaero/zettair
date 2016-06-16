@@ -28,19 +28,20 @@
 #include "vec.h"
 #include "fdset.h"
 #include "metric.h"
+#include "mrwlock.h"
 #include "postings.h"
 #include "summarise.h"
 #include "error.h"
+#include "zvalgrind.h"
 
 #include <assert.h>
 #include <errno.h>
 #include <float.h>
-#include <math.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 
-/* number of significant digits in estimated results */
+/* number of significant digits in total estimated number of results */
 #define RESULTS_SIGDIGITS 3
 
 /* functions to return sources from terms and conjuncts */
@@ -164,7 +165,7 @@ static void sort_hash(struct search_acc *heap, unsigned int heapsize,
         link = acc->table[i];
         while (link && (j < heapsize)) {
             heap[j].docno = link->key.k_luint;
-            heap[j].weight = (float) link->data.d_luint;
+            heap[j].weight = link->data.d_luint;
 
             j++;
             link = link->next;
@@ -183,7 +184,7 @@ static void sort_hash(struct search_acc *heap, unsigned int heapsize,
             if (link->data.d_luint > lowest_weight) {
                 /* replace smallest element in heap with a larger one */
                 tmp.docno = link->key.k_luint;
-                tmp.weight = (float) link->data.d_luint;
+                tmp.weight = link->data.d_luint;
                 heap_replace(heap, heapsize, sizeof(*heap), 
                   accumulator_cmp, &tmp);
                 lowest = heap_peek(heap, heapsize, sizeof(*heap));
@@ -242,30 +243,38 @@ static unsigned int index_heap_select(struct index *idx,
     /* copy relevant accumulators into results (this loop form works properly 
      * if less than startdoc + len documents match the query - think before 
      * changing it) */ 
-    for (i = startdoc; i < numdocs; i++) {
-        unsigned aux_len = 0;
-        enum docmap_ret ret;
+    if (zpthread_mutex_lock(&idx->docmap_mutex) == ZPTHREAD_OK) {
+        for (i = startdoc; i < numdocs; i++) {
+            unsigned aux_len = 0;
+            enum docmap_ret ret;
 
-        results[i - startdoc].docno = heap[i].docno;
-        results[i - startdoc].score = heap[i].weight;
+            results[i - startdoc].docno = heap[i].docno;
+            results[i - startdoc].score = heap[i].weight;
 
-        /* lookup document auxilliary */
-        ret = docmap_get_trecno(idx->map, heap[i].docno, 
-          results[i - startdoc].auxilliary, INDEX_AUXILIARYLEN, &aux_len);
-        if (ret != DOCMAP_OK) {
-            return 0;
+            /* lookup document auxilliary */
+            ret = docmap_get_trecno(idx->map, heap[i].docno, 
+              results[i - startdoc].auxilliary, INDEX_AUXILIARYLEN, &aux_len);
+            if (ret != DOCMAP_OK) {
+                free(heap);
+                zpthread_mutex_unlock(&idx->docmap_mutex);
+                return 0;
+            }
+            if (aux_len > INDEX_AUXILIARYLEN) {
+                aux_len = INDEX_AUXILIARYLEN;
+            }
+            results[i - startdoc].auxilliary[aux_len] = '\0';
+
+            /* summary and title provided later */
+            results[i - startdoc].summary[0] = '\0';
+            results[i - startdoc].title[0] = '\0';
         }
-        if (aux_len > INDEX_AUXILIARYLEN) {
-            aux_len = INDEX_AUXILIARYLEN;
-        }
-        results[i - startdoc].auxilliary[aux_len] = '\0';
-
-        /* summary and title provided later */
-        results[i - startdoc].summary[0] = '\0';
-        results[i - startdoc].title[0] = '\0';
+        zpthread_mutex_unlock(&idx->docmap_mutex);
+    } else {
+        free(heap);
+        return 0;
     }
 
-    free(heap);                        /* free heap */
+    free(heap);
     return i - startdoc;
 }
 
@@ -438,7 +447,7 @@ static enum search_ret phrase_read(struct phrase_pos *pp) {
         unsigned int remaining = VEC_LEN(&pp->vec),
                      bytes;
 
-        if ((sret = pp->src->readlist(pp->src, remaining, &buf, &bytes)) 
+        if ((sret = pp->src->read(pp->src, remaining, &buf, &bytes)) 
           == SEARCH_OK) {
             /* buf read succeeded, reset vector to read from new stuff */
             pp->vec.pos = buf;
@@ -805,24 +814,21 @@ static int loc_cmp(const void *one, const void *two) {
         }
     }
 
-    assert(done->term->term.vocab.location == VOCAB_LOCATION_FILE);
-    assert(dtwo->term->term.vocab.location == VOCAB_LOCATION_FILE);
-
-    if (done->term->term.vocab.loc.file.fileno 
-      == dtwo->term->term.vocab.loc.file.fileno) {
-        if (done->term->term.vocab.loc.file.offset 
-          < dtwo->term->term.vocab.loc.file.offset) {
+    if (done->term->term.vocab.loc.fileno 
+      == dtwo->term->term.vocab.loc.fileno) {
+        if (done->term->term.vocab.loc.offset 
+          < dtwo->term->term.vocab.loc.offset) {
             return -1;
-        } else if (done->term->term.vocab.loc.file.offset 
-          > dtwo->term->term.vocab.loc.file.offset) {
+        } else if (done->term->term.vocab.loc.offset 
+          > dtwo->term->term.vocab.loc.offset) {
             return 1;
         } else {
             assert("can't get here" && 0);
             return 0;
         }
     } else {
-        return dtwo->term->term.vocab.loc.file.fileno
-          - done->term->term.vocab.loc.file.fileno;
+        return dtwo->term->term.vocab.loc.fileno
+          - done->term->term.vocab.loc.fileno;
     }
 }
 
@@ -846,7 +852,7 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
                  small,
                  memsum;
     enum search_ret ret;
-    const struct search_metric *sm;
+    struct search_metric sm;
     struct search_list_src *src;
     struct alloc alloc = {NULL, (alloc_mallocfn) poolalloc_malloc, 
                           (alloc_freefn) poolalloc_free};
@@ -863,28 +869,63 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
     /* choose metric */
     if (opts & INDEX_SEARCH_DIRICHLET_RANK) {
         selectivity_cmp = F_t_cmp;
-        sm = dirichlet();
+        dirichlet(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
     } else if (opts & INDEX_SEARCH_OKAPI_RANK) {
-        sm = okapi_k3();
+        okapi(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
     } else if (opts & INDEX_SEARCH_PCOSINE_RANK) {
-        sm = pcosine();
+        pcosine(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
     } else if (opts & INDEX_SEARCH_COSINE_RANK) {
-        sm = cosine();
+        cosine(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
     } else if (opts & INDEX_SEARCH_HAWKAPI_RANK) {
-        sm = hawkapi();
+        hawkapi(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
+    } else if (opts & INDEX_SEARCH_DYNAMIC_RANK) {
+        /* find metric according to given text.  Add new metrics to this
+         * array to allow them to be specified dynamically. */
+        enum search_ret sret;
+        const struct search_metric *(*metrics[])
+          (struct search_metric *sm, int offsets) 
+            = {dirichlet, okapi, pcosine, cosine, hawkapi};
+
+        for (i = 0; i < sizeof(metrics) / sizeof(*metrics); i++) {
+            metrics[i](&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
+            if (!str_cmp(sm.name, opt->u.dynamic.metric)) {
+                break;
+            }
+        }
+
+        /* couldn't find desired metric */
+        if (i == sizeof(metrics) / sizeof(*metrics)) {
+            return SEARCH_EINVAL;
+        }
+
+        /* initialise parameters with text parameters string.  Fiddle with
+         * option structure so we don't overwrite metric and parameters 
+         * string. */
+        if (opt) {
+            spareopt = *opt;
+        }
+        if ((sret = sm.parse_params(&spareopt.u, opt->u.dynamic.params)) 
+          == SEARCH_OK) {
+            opt = &spareopt;
+        } else {
+            return sret;
+        }
+
+        /* having found the correct metric and parsed parameters, we can now
+         * proceed as usual */
     } else {
         /* default is dirichlet with mu = 1500.  Fiddle with opt structure to
          * ensure everything works ok even if people pass a NULL */
         selectivity_cmp = F_t_cmp;
-        sm = dirichlet();
+        dirichlet(&sm, idx->vector_types & VOCAB_VTYPE_DOCWP);
+        opts |= INDEX_SEARCH_DIRICHLET_RANK;
         if (!opt) {
             opt = &spareopt;
-            opts |= INDEX_SEARCH_DIRICHLET_RANK;
         }
         opt->u.dirichlet.mu = 1500;
     }
 
-    if ((ret = sm->pre(idx, query, opts, opt)) != SEARCH_OK) {
+    if ((ret = sm.pre(idx, query, opts, opt)) != SEARCH_OK) {
         free(srcarr);
         return ret;
     }
@@ -896,8 +937,7 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
     for (small = 0, memsum = 0; small < query->terms; small++) {
         srcarr[small].term = &query->term[small];
         srcarr[small].src = NULL;
-        if (query->term[small].type == CONJUNCT_TYPE_WORD 
-          && query->term[small].term.vocab.location == VOCAB_LOCATION_FILE) {
+        if (query->term[small].type == CONJUNCT_TYPE_WORD) {
             if (memsum + query->term[small].term.vocab.size > list_mem_limit) {
                 break;
             }
@@ -920,16 +960,14 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
         void *mem;
 
         if ((srcarr[i].term->type == CONJUNCT_TYPE_WORD)
-          && (srcarr[i].term->term.vocab.location == VOCAB_LOCATION_FILE)
           && (mem 
             = poolalloc_malloc(list_alloc, srcarr[i].term->term.vocab.size))
           && (srcarr[i].src = memsrc_new_from_disk(idx, idx->index_type, 
-              srcarr[i].term->term.vocab.loc.file.fileno, 
-              srcarr[i].term->term.vocab.loc.file.offset, 
+              srcarr[i].term->term.vocab.loc.fileno, 
+              srcarr[i].term->term.vocab.loc.offset, 
               srcarr[i].term->term.vocab.size, mem))) {
             /* succeeded, do nothing */
-        } else if ((srcarr[i].term->type == CONJUNCT_TYPE_WORD)
-          && (srcarr[i].term->term.vocab.location == VOCAB_LOCATION_FILE)) {
+        } else if (srcarr[i].term->type == CONJUNCT_TYPE_WORD) {
             /* failed to allocate or read new source */
             free(srcarr);
             return SEARCH_ENOMEM;
@@ -955,7 +993,7 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
         if (((src = srcarr[i].src) 
             || (src = search_conjunct_src(idx, &query->term[i], &alloc, 
                 list_mem_limit)))
-          && (ret = sm->or_decode(idx, query, i, SEARCH_DOCNO_START, results,
+          && (ret = sm.or_decode(idx, query, i, SEARCH_DOCNO_START, results,
             src, opts, opt)) == SEARCH_OK) {
             src->delet(src);
             if (list_alloc && (i + 1 >= small)) {
@@ -994,7 +1032,7 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
             || (src 
               = search_conjunct_src(idx, &query->term[i], &alloc, 
                   list_mem_limit)))
-          && (((ret = sm->thresh_decode(idx, query, i, SEARCH_DOCNO_START, 
+          && (((ret = sm.thresh_decode(idx, query, i, SEARCH_DOCNO_START, 
               results, src, query->term[i].f_t, opts, opt)) 
             == SEARCH_OK)
           || (ret == SEARCH_FINISH))) {
@@ -1021,7 +1059,7 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
             || (src 
               = search_conjunct_src(idx, &query->term[i], &alloc, 
                   list_mem_limit)))
-          && (ret = sm->and_decode(idx, query, i, SEARCH_DOCNO_START, results,
+          && (ret = sm.and_decode(idx, query, i, SEARCH_DOCNO_START, results,
             src, opts, opt)) 
           == SEARCH_OK) {
             src->delet(src);
@@ -1042,14 +1080,13 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
     free(srcarr);
 
     /* post-process accumulators */
-    if (sm->post 
-      && (ret = sm->post(idx, query, results->acc, opts, opt)) != SEARCH_OK) {
+    if (sm.post 
+      && (ret = sm.post(idx, query, results->acc, opts, opt)) != SEARCH_OK) {
         return ret;
     }
 
     if (results->estimated) {
-        unsigned int lg 
-          = (unsigned int) ceil(log10(results->total_results));
+        unsigned int lg = ceil(log10(results->total_results));
 
         /* remove superfluous significant digits from the estimate */
         if (lg > RESULTS_SIGDIGITS) {
@@ -1108,9 +1145,6 @@ int index_search(struct index *idx, const char *querystr,
                  query_words;            /* number of words allowed in query */
     int summary_type;
 
-    /* variables needed for bucket processing */
-    void *bucketmem = NULL;              /* memory for holding a bucket */
-
     /* find out what our query word limit is */
     query_words = QUERY_WORDS;
     if (opts & INDEX_SEARCH_WORD_LIMIT) {
@@ -1123,7 +1157,12 @@ int index_search(struct index *idx, const char *querystr,
         summary_type = INDEX_SUMMARISE_NONE;
     }
 
+    if (mrwlock_rlock(idx->biglock) != MRWLOCK_OK) {
+        return 0;
+    }
+
     if (!(query.term = malloc(sizeof(*query.term) * query_words))) {
+        mrwlock_runlock(idx->biglock);
         return 0;
     }
 
@@ -1154,8 +1193,9 @@ int index_search(struct index *idx, const char *querystr,
         opts & INDEX_SEARCH_ANH_IMPACT_RANK))) {
 
         /* query construction failed */
-        free(query.term);
         ERROR1("building query '%s'", querystr);
+        free(query.term);
+        mrwlock_runlock(idx->biglock);
         return 0;
     }
 
@@ -1180,6 +1220,7 @@ int index_search(struct index *idx, const char *querystr,
         default:
             assert("not implemented yet" && 0);
             free(query.term);
+            mrwlock_runlock(idx->biglock);
             return 0;
         }
         if (mem > UINT_MAX - memsum) {
@@ -1201,6 +1242,7 @@ int index_search(struct index *idx, const char *querystr,
     if (!(list_alloc.opaque 
       = poolalloc_new(0, mem + poolalloc_overhead_first(), NULL))) {
         free(query.term);
+        mrwlock_runlock(idx->biglock);
         return 0;
     }
     list_alloc.malloc = (alloc_mallocfn) poolalloc_malloc;
@@ -1222,11 +1264,9 @@ int index_search(struct index *idx, const char *querystr,
                 }
             } else {
                 /* phrase processing failed */
-                if (bucketmem) {
-                    free(bucketmem);
-                }
                 free(query.term);
                 ERROR("processing phrase");
+                mrwlock_runlock(idx->biglock);
                 return 0;
             }
         }
@@ -1235,10 +1275,8 @@ int index_search(struct index *idx, const char *querystr,
     /* initialise accumulator memory allocator */
     if (!(acc_alloc 
       = objalloc_new(sizeof(struct search_acc_cons), 0, 0, 4096, NULL))) {
-        if (bucketmem) {
-            free(bucketmem);
-        }
         free(query.term);
+        mrwlock_runlock(idx->biglock);
         return 0;
     }
 
@@ -1255,6 +1293,7 @@ int index_search(struct index *idx, const char *querystr,
             if (hashacc) {
                 chash_delete(hashacc);
                 free(query.term);
+                mrwlock_runlock(idx->biglock);
                 return 0;
             }
         }
@@ -1298,28 +1337,42 @@ int index_search(struct index *idx, const char *querystr,
 
         /* summarise the selected results if necessary */
         if (summary_type != INDEX_SUMMARISE_NONE) {
-            /* sort the results by docno, which sorts them by repository
-             * location, improving the efficiency of summarisation */
-            qsort(result, *results, sizeof(*result), res_docno_cmp);
+            struct index_perquery *pq = index_perquery_fetch(idx);
 
-            for (i = 0; i < *results; i++) {
-                struct summary res;
+            if (pq) {
+                int pqres;
 
-                res.summary = result[i].summary;
-                res.summary_len = INDEX_SUMMARYLEN;
-                res.title = result[i].title;
-                res.title_len = INDEX_TITLELEN;
+                /* sort the results by docno, which sorts them by repository
+                 * location, improving the efficiency of summarisation */
+                qsort(result, *results, sizeof(*result), res_docno_cmp);
 
-                if (summarise(idx->sum, result[i].docno, &query, 
-                    summary_type, &res) != SUMMARISE_OK) {
+                for (i = 0; i < *results; i++) {
+                    struct summary res;
 
-                    ERROR1("creating summary for document %ul", 
-                      result[i].docno);
+                    res.summary = result[i].summary;
+                    res.summary_len = INDEX_SUMMARYLEN;
+                    res.title = result[i].title;
+                    res.title_len = INDEX_TITLELEN;
+
+                    if (summarise(pq->sum, result[i].docno, &query, 
+                        summary_type, &res) != SUMMARISE_OK) {
+
+                        ERROR1("creating summary for document %ul", 
+                          result[i].docno);
+                    }
                 }
-            }
 
-            /* resort the results by score */
-            qsort(result, *results, sizeof(*result), res_score_cmp);
+                /* resort the results by score */
+                qsort(result, *results, sizeof(*result), res_score_cmp);
+
+                pqres = index_perquery_store(idx, pq);
+                assert(pqres);
+            } else {
+                assert(!CRASH);
+                free(query.term);
+                mrwlock_runlock(idx->biglock);
+                return 0;
+            }
         }
     }
 
@@ -1336,13 +1389,14 @@ int index_search(struct index *idx, const char *querystr,
     }
 
     /* get rid of the accumulators */
+    if (RUNNING_ON_VALGRIND) {
+        objalloc_clear(acc_alloc);
+    }
     objalloc_delete(acc_alloc);
 
     /* free dynamic memory */
     free(query.term);
-    if (bucketmem) {
-        free(bucketmem);
-    }
+    mrwlock_runlock(idx->biglock);
 
     return ret == SEARCH_OK;
 }
@@ -1395,7 +1449,7 @@ static struct search_list_src *memsrc_new(void *mem, unsigned int len) {
         msrc->src.opaque = msrc;
         msrc->src.delet = memsrc_delete;
         msrc->src.reset = memsrc_reset;
-        msrc->src.readlist = memsrc_read;
+        msrc->src.read = memsrc_read;
     }
     return &msrc->src;
 }
@@ -1490,7 +1544,7 @@ static enum search_ret disksrc_read(struct search_list_src *src,
 
             dsrc->bufsize = 0;
             if ((newoff = lseek(dsrc->fd, dsrc->offset + dsrc->pos, SEEK_SET)) 
-              != (off_t) dsrc->offset) {
+              != dsrc->offset) {
                 return SEARCH_EINVAL;
             }
         }
@@ -1514,7 +1568,7 @@ static enum search_ret disksrc_read(struct search_list_src *src,
         }
 
         /* limit amount we try to read to available buffer size */
-        if ((unsigned int) cap > dsrc->bufcap - dsrc->bufsize) {
+        if (cap > dsrc->bufcap - dsrc->bufsize) {
             cap = dsrc->bufcap - dsrc->bufsize;
         }
 
@@ -1564,7 +1618,7 @@ static struct search_list_src *disksrc_new(struct index *idx,
             dsrc->src.opaque = dsrc;
             dsrc->src.delet = disksrc_delete;
             dsrc->src.reset = disksrc_reset;
-            dsrc->src.readlist = disksrc_read;
+            dsrc->src.read = disksrc_read;
 
             /* ensure that nothing gets served out of the buffer first time */
             dsrc->bufpos = -1;  
@@ -1625,7 +1679,7 @@ static enum search_ret debufsrc_read(struct search_list_src *src,
     assert(dsrc->len < dsrc->debuflen);
     /* read more from underlying source.  XXX: note that we're potentially
      * destroying current buffer on failure here */
-    if ((sret = dsrc->srcsrc->readlist(dsrc->srcsrc, dsrc->len, 
+    if ((sret = dsrc->srcsrc->read(dsrc->srcsrc, dsrc->len, 
         (void **) &dsrc->pos, &dsrc->len)) == SEARCH_OK) {
 
         *retbuf = dsrc->pos;
@@ -1655,7 +1709,7 @@ struct search_list_src *debufsrc_new(struct search_list_src *src,
     struct debufsrc *dsrc = malloc(sizeof(*dsrc));
 
     if (dsrc) {
-        dsrc->src.readlist = debufsrc_read;
+        dsrc->src.read = debufsrc_read;
         dsrc->src.reset = debufsrc_reset;
         dsrc->src.delet = debufsrc_delete;
         dsrc->src.opaque = dsrc;
@@ -1672,17 +1726,10 @@ struct search_list_src *debufsrc_new(struct search_list_src *src,
 
 struct search_list_src *search_term_src(struct index *idx, struct term *term,
   struct alloc *alloc, unsigned int mem) {
-    if (term->vecmem) {
-        /* memory source */
-        assert(term->vocab.location == VOCAB_LOCATION_VOCAB);
-        return memsrc_new(term->vecmem, term->vocab.size);
-    } else {
-        /* disk source */
-        assert(term->vocab.location == VOCAB_LOCATION_FILE);
-        return disksrc_new(idx, idx->index_type, 
-            term->vocab.loc.file.fileno, term->vocab.loc.file.offset, 
-            term->vocab.size, alloc, mem);
-    }
+    /* disk source */
+    return disksrc_new(idx, idx->index_type, 
+        term->vocab.loc.fileno, term->vocab.loc.offset, 
+        term->vocab.size, alloc, mem);
 }
 
 /* internal function to return the correct source for a given term */
@@ -1718,6 +1765,6 @@ float search_qweight(struct query *q) {
         weight += fqt_log * fqt_log;
     }
 
-    return (float) sqrtf(weight);
+    return sqrt(weight);
 }
 

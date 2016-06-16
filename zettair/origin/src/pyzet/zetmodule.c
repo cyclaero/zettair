@@ -16,14 +16,14 @@
 #include "vocab.h"
 #include "mlparse.h"
 #include "str.h"
-#include "ndocmap.h"
+#include "docmap.h"
 
 /* 
  *  Utility function forward declarations.
  */
 static PyObject * index_result_to_PyObject(struct index_result * result);
 static PyObject * index_results_to_PyObject(struct index_result * results,
-  unsigned int num_results, unsigned long int total_results);
+  unsigned int num_results, double total_results);
 
 /* *****************************************************************
  *
@@ -37,18 +37,19 @@ static PyObject * index_results_to_PyObject(struct index_result * results,
 typedef struct {
     PyObject_HEAD
     struct mlparse parser;
+    int parser_inited;
     /* next two are read-only once the parser is created */
     unsigned int wordlen;
     unsigned int lookahead;
-    /* buffer that parser works off */
-    char * buf;
+    /* buffer that parser works off; passed in as a string in the
+     * constructor. */
+    const char * buf;
     unsigned int buflen;
     /* entity buffer, of length wordlen, contents length entity_len */
     char * token;
     unsigned int toklen;
-    /* flag to signify that current input is all there is.  This can be
-       set at any time. */
-    int eof;
+    /* reference to the Python string object the buffer is from */
+    PyObject * buf_string;
 } zet_MLParserObject;
 
 /*
@@ -58,20 +59,22 @@ static void MLParser_dealloc(zet_MLParserObject * self);
 static int MLParser_init(zet_MLParserObject * self, PyObject * args,
   PyObject * kwds);
 
-static PyObject * MLParser_add_input(PyObject * self, PyObject * args);
 static PyObject * MLParser_parse(PyObject * self, PyObject * args);
-static PyObject * MLParser_eof(PyObject * self, PyObject * args);
+
+/* FIXME following is too low-level an interface.  The user should
+ * not have to handle CONT or MLPARSE_INPUT.  The constructor
+ * should take a single string as input, and then there should
+ * just be next_token() calls.
+ */
 
 /*
  *  Methods visible from Python.
  */
 static PyMethodDef MLParser_methods[] = {
-    {"add_input", MLParser_add_input, METH_VARARGS,
-        "Add input to the current input buffer"},
     {"parse", MLParser_parse, METH_VARARGS,
-        "Parse another token from the input"},
-    {"eof", MLParser_eof, METH_NOARGS, 
-        "Notify parser that current input is all there is"},
+        "Parse another token from the input.\n\n"
+        "Returns a tuple of (tok_type, token, endp, contp), or None if there\n"
+        "are no more tokens\n" },
     {NULL}
 };
 
@@ -97,20 +100,30 @@ static int MLParser_init(zet_MLParserObject * self, PyObject * args,
   PyObject * kwds) {
     /* Python paramlist is:
        wordlen = 32, lookahead = 999 */
-    static char * kwlist[] = {"wordlen", "lookahead", NULL };
+    static char * kwlist[] = {"buf", "wordlen", "lookahead", NULL };
     self->wordlen = 32;
     self->lookahead = 999;
     self->buflen = 0;
     self->buf = NULL;
-    self->eof = 0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|II", kwlist,
-          &self->wordlen, &self->lookahead))
+    self->parser_inited = 0;
+    self->buf_string = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "S|II", kwlist, 
+          &self->buf_string, &self->wordlen, &self->lookahead))
         return -1;
     if (!mlparse_new(&self->parser, self->wordlen, self->lookahead)) {
         PyErr_SetString(PyExc_StandardError,
           "error initialising parser");
         return -1;
     }
+    /* keep a reference to the original string object to stop Python
+     * from GC'ing it. */
+    Py_INCREF(self->buf_string);
+    self->buf = PyString_AsString(self->buf_string);
+    /* if __init__ fails, due for instance to the wrong arguments being
+     * passed to the constructor, then MLParse_dealloc gets called;
+     * the following flag makes sure that we don't attempt to free()
+     * an uninited parser in this case (which would lead to a core dump). */
+    self->parser_inited = 1;
     if ( (self->token = malloc(self->wordlen)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, 
           "out of memory allocating word buffer");
@@ -119,39 +132,17 @@ static int MLParser_init(zet_MLParserObject * self, PyObject * args,
     }
     self->toklen = 0;
     self->parser.next_in = self->buf;
-    self->parser.avail_in = 0;
+    self->parser.avail_in = strlen(self->buf);
     return 0;
 }
 
 static void MLParser_dealloc(zet_MLParserObject * self) {
-    if (self->buf != NULL)
-        free(self->buf);
-    mlparse_delete(&self->parser);
-    self->ob_type->tp_free((PyObject *) self);
-}
-
-static PyObject * MLParser_add_input(PyObject * self, PyObject * args) {
-    char * input;
-    int input_len;
-    unsigned int new_len;
-    char * new_buf;
-    zet_MLParserObject * parser = (zet_MLParserObject *) self;
-
-    if (!PyArg_ParseTuple(args, "s#", &input, &input_len))
-        return NULL;
-    /* FIXME if old buffer is finished, free it */
-    new_len = (unsigned) input_len + parser->buflen;
-    if ( (new_buf = realloc(parser->buf, new_len)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, 
-          "Out of memory extending parser buffer");
+    if (self->buf_string) {
+        Py_DECREF(self->buf_string);
     }
-    memcpy(new_buf + parser->buflen, input, input_len);
-    parser->parser.avail_in += input_len;
-    parser->parser.next_in = new_buf 
-        + (parser->parser.next_in - parser->buf);
-    parser->buflen = new_len;
-    parser->buf = new_buf;
-    return Py_BuildValue("i", new_len);
+    if (self->parser_inited)
+        mlparse_delete(&self->parser);
+    self->ob_type->tp_free((PyObject *) self);
 }
 
 static PyObject * MLParser_parse(PyObject * self, PyObject * args) {
@@ -164,14 +155,19 @@ static PyObject * MLParser_parse(PyObject * self, PyObject * args) {
     parse_ret = mlparse_parse(&parser->parser, parser->token,
       &parser->toklen, strip);
     if (parse_ret == MLPARSE_INPUT) {
-        if (parser->eof) {
+        mlparse_eof(&parser->parser);
+        parse_ret = mlparse_parse(&parser->parser, parser->token,
+          &parser->toklen, strip);
+        if (parse_ret == MLPARSE_INPUT) {
+            /* XXX In some circumstances, mlparse has to be told
+             * twice that there is not more input. */
             mlparse_eof(&parser->parser);
             parse_ret = mlparse_parse(&parser->parser, parser->token,
               &parser->toklen, strip);
-        } else {
-            /* FIXME need special-purpose exception */
-            PyErr_SetString(PyExc_IOError, "out of input");
-            return NULL;
+            if (parse_ret == MLPARSE_INPUT) {
+                Py_INCREF(Py_None);
+                return Py_None;
+            }
         }
     }
     if (parse_ret == MLPARSE_EOF) {
@@ -190,14 +186,8 @@ static PyObject * MLParser_parse(PyObject * self, PyObject * args) {
          (type, token, end?, cont?)
        type has the end and cont flags filtered out.
      */
-    return Py_BuildValue("(is#ii)", parse_ret, parser->token,
-      parser->toklen, end, cont);
-}
-
-static PyObject * MLParser_eof(PyObject * self, PyObject * args) {
-    ((zet_MLParserObject *) self)->eof = 1;
-    Py_INCREF(Py_None);
-    return Py_None;
+    return Py_BuildValue("(is#OO)", parse_ret, parser->token,
+      parser->toklen, end ? Py_True : Py_False, cont ? Py_True : Py_False);
 }
 
 /* *****************************************************************
@@ -242,6 +232,7 @@ static void SearchResult_dealloc(zet_SearchResultObject * self);
 static PyObject * SearchResult_reduce(PyObject * self,
   PyObject * ignored_args);
 static PyObject * SearchResult_str(zet_SearchResultObject * self);
+static PyObject * SearchResult_richcmp(PyObject * a, PyObject * b, int opid);
 
 /*
  *  Methods as visible from Python.
@@ -267,6 +258,7 @@ static PyTypeObject zet_SearchResultType = {
     .tp_dealloc     = (destructor) SearchResult_dealloc,
     .tp_str         = (reprfunc) SearchResult_str,
     .tp_repr        = (reprfunc) SearchResult_str,
+    .tp_richcompare = (richcmpfunc) SearchResult_richcmp,
 };
 
 /*
@@ -294,6 +286,7 @@ static PyObject * SearchResult_reduce(PyObject * self,
         Py_DECREF(fn_name);
         PyErr_SetString(PyExc_NameError, 
           "Can't find zet.unpickle_search_result");
+        return NULL;
     }
     return Py_BuildValue("O(kdOOO)", unpickler, result->docno, result->score,
       result->summary, result->title, result->auxiliary);
@@ -310,6 +303,42 @@ static PyObject * SearchResult_str(zet_SearchResultObject * self) {
     return str;
 }
 
+static PyObject * SearchResult_richcmp(PyObject * ao, PyObject * bo, int opid) {
+    zet_SearchResultObject * a;
+    zet_SearchResultObject * b;
+    int holds = 0;
+
+    if (!PyObject_IsInstance(ao, (PyObject *) &zet_SearchResultType) ||
+      !PyObject_IsInstance(bo, (PyObject *) &zet_SearchResultType)) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+    a = (zet_SearchResultObject *) ao;
+    b = (zet_SearchResultObject *) bo;
+    switch (opid) {
+    case Py_LT: case Py_LE: case Py_GT: case Py_GE:
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    case Py_EQ:
+        /* if docnos are same, then summary, title, and auxiliary should
+         * be the same, so we don't test here. */
+        if (a == b || (a->docno == b->docno && a->score == b->score))
+            holds = 1;
+        break;
+    case Py_NE:
+        if (a->docno != b->docno || a->score != b->score)
+            holds = 1;
+        break;
+    }
+    if (holds) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
+}
+
 /* *****************************************************************
  *
  *  S E A R C H   R E S U L T S   O B J E C T
@@ -321,7 +350,7 @@ static PyObject * SearchResult_str(zet_SearchResultObject * self) {
  */
 typedef struct {
     PyObject_HEAD
-    unsigned long int total_results;
+    double total_results;
     PyObject * results;
 } zet_SearchResultsObject;
 
@@ -329,7 +358,7 @@ typedef struct {
  *  Members as visible from Python.
  */
 static PyMemberDef SearchResults_members[] = {
-    {"total_results", T_ULONG, offsetof(zet_SearchResultsObject, 
+    {"total_results", T_DOUBLE, offsetof(zet_SearchResultsObject, 
       total_results), 0, "total results"},
     {"results", T_OBJECT_EX, offsetof(zet_SearchResultsObject, 
       results), 0, "results" },
@@ -340,11 +369,16 @@ static PyMemberDef SearchResults_members[] = {
  *  Method forward declarations.
  */
 static void SearchResults_dealloc(zet_SearchResultsObject * self);
+static PyObject * SearchResults_richcmp(PyObject * a, PyObject * b, int opid);
+static PyObject * SearchResults_reduce(PyObject * self,
+  PyObject * ignored_args);
 
 /*
  *  Methods as visible from Python.
  */
 static PyMethodDef SearchResults_methods[] = {
+    {"__reduce__", SearchResults_reduce, METH_NOARGS,
+        "Used for pickling a search result"},
     {NULL}
 };
 
@@ -359,7 +393,8 @@ static PyTypeObject zet_SearchResultsType = {
     .tp_doc         = "Simple wrapper for search results",
     .tp_methods     = SearchResults_methods,
     .tp_members     = SearchResults_members,
-    .tp_dealloc     = (destructor) SearchResults_dealloc
+    .tp_dealloc     = (destructor) SearchResults_dealloc,
+    .tp_richcompare = (richcmpfunc) SearchResults_richcmp
 };
 
 /*
@@ -368,6 +403,73 @@ static PyTypeObject zet_SearchResultsType = {
 static void SearchResults_dealloc(zet_SearchResultsObject * self) {
     Py_DECREF(self->results);
     self->ob_type->tp_free((PyObject *) self);
+}
+
+static PyObject * SearchResults_richcmp(PyObject * ao, PyObject * bo, 
+  int opid) {
+    zet_SearchResultsObject * a;
+    zet_SearchResultsObject * b;
+    int equal = 0;
+    int holds = 0;
+
+    if (!PyObject_IsInstance(ao, (PyObject *) &zet_SearchResultsType) ||
+      !PyObject_IsInstance(bo, (PyObject *) &zet_SearchResultsType)) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+    a = (zet_SearchResultsObject *) ao;
+    b = (zet_SearchResultsObject *) bo;
+    switch (opid) {
+    case Py_LT: case Py_LE: case Py_GT: case Py_GE:
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    case Py_EQ: case Py_NE:
+        if (a->total_results == b->total_results) {
+            int results_cmp = PyObject_Compare(a->results, b->results);
+            if (PyErr_Occurred()) {
+                return NULL;
+            }
+            if (results_cmp == 0) {
+                equal = 1;
+            } else {
+                equal = 0;
+            }
+        } else {
+            equal = 0;
+        }
+        if ((equal && opid == Py_EQ) || (!equal && opid == Py_NE)) {
+            holds = 1;
+        }
+        break;
+    }
+    if (holds) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
+}
+
+static PyObject * SearchResults_reduce(PyObject * self,
+  PyObject * ignored_args) {
+    zet_SearchResultsObject * results = (zet_SearchResultsObject *) self;
+    PyObject * zetModule = PyImport_ImportModule("zet");
+    if (zetModule == NULL)
+        return NULL;
+    PyObject * fn_name = Py_BuildValue("s", "unpickle_search_results");
+    if (fn_name == NULL)
+        return NULL;
+    PyObject * unpickler = PyDict_GetItem(PyModule_GetDict(zetModule),
+      fn_name);
+    if (unpickler == NULL) {
+        Py_DECREF(fn_name);
+        PyErr_SetString(PyExc_NameError, 
+          "Can't find zet.unpickle_search_results");
+        return NULL;
+    }
+    return Py_BuildValue("O(dO)", unpickler, results->total_results, 
+      results->results);
 }
 
 /* *****************************************************************
@@ -403,6 +505,7 @@ static PyMemberDef Posting_members[] = {
  *  Method forward declarations.
  */
 static void Posting_dealloc(zet_PostingObject * self);
+static PyObject * Posting_str(zet_PostingObject * self);
 
 /*
  *  Object methods as visible from Python.
@@ -422,7 +525,8 @@ static PyTypeObject zet_PostingType = {
     .tp_doc         = "Wrapper for individual term/doc posting",
     .tp_methods     = Posting_methods,
     .tp_members     = Posting_members,
-    .tp_dealloc     = (destructor) Posting_dealloc
+    .tp_dealloc     = (destructor) Posting_dealloc,
+    .tp_str         = (reprfunc) Posting_str
 };
 
 /*
@@ -431,6 +535,23 @@ static PyTypeObject zet_PostingType = {
 static void Posting_dealloc(zet_PostingObject * self) {
     Py_DECREF(self->offsets);
     self->ob_type->tp_free((PyObject *) self);
+}
+
+static PyObject * Posting_str(zet_PostingObject * self) {
+    PyObject * args_tuple = Py_BuildValue("(kkO)", self->docno, 
+      self->f_dt, self->offsets);
+    if (args_tuple == NULL) {
+        return NULL;
+    }
+    PyObject * format = PyString_InternFromString("<Posting:: docno: %u, "
+      "f_dt: %u, offsets: %s>");
+    if (format == NULL) {
+        return NULL;
+    }
+    PyObject * str = PyString_Format(format, args_tuple);
+    Py_DECREF(format);
+    Py_DECREF(args_tuple);
+    return str;
 }
 
 /* *****************************************************************
@@ -539,13 +660,13 @@ static PyObject * PostingsIterator_next(zet_PostingsIteratorObject * self) {
 
     vec.pos = self->postings->vec + self->vec_offset;
     vec.end = vec.pos + self->postings->size;
-    vec_vbyte_read_unchecked(&vec, &docno_d);
+    vec_vbyte_read(&vec, &docno_d);
 
     if (self->last_docno == (unsigned long) -1)
         posting->docno = docno_d;
     else 
         posting->docno = self->last_docno + docno_d + 1;
-    vec_vbyte_read_unchecked(&vec, &f_dt);
+    vec_vbyte_read(&vec, &f_dt);
     posting->f_dt = f_dt;
     posting->offsets = PyTuple_New(f_dt);
     if (posting->offsets == NULL) {
@@ -556,7 +677,7 @@ static PyObject * PostingsIterator_next(zet_PostingsIteratorObject * self) {
     for (i = 0; i < f_dt; i++) {
         unsigned long int offset_d;
         PyObject * pyOffset;
-        vec_vbyte_read_unchecked(&vec, &offset_d);
+        vec_vbyte_read(&vec, &offset_d);
         if (i == 0)
             offset = offset_d;
         else
@@ -607,7 +728,7 @@ static PyObject * PostingsIterator_skip_to(PyObject * self,
         unsigned long vec_save_pos;
 
         vec_save_pos = vec.pos - iterator->postings->vec;
-        vec_vbyte_read_unchecked(&vec, &docno_d);
+        vec_vbyte_read(&vec, &docno_d);
         prev_docno = curr_docno;
         if (curr_docno == (unsigned long) -1)
             curr_docno = docno_d;
@@ -617,8 +738,8 @@ static PyObject * PostingsIterator_skip_to(PyObject * self,
             /* skip the offsets */
             unsigned long f_dt;
             unsigned int scanned;
-            vec_vbyte_read_unchecked(&vec, &f_dt);
-            vec_vbyte_scan_unchecked(&vec, f_dt, &scanned);
+            vec_vbyte_read(&vec, &f_dt);
+            vec_vbyte_scan(&vec, f_dt, &scanned);
         } else {
             vec.pos = iterator->postings->vec + vec_save_pos;
         }
@@ -733,6 +854,9 @@ static void VocabEntry_dealloc(zet_VocabEntryObject * self);
 static PyObject * VocabEntry_get_term(PyObject * self, PyObject * args);
 static PyObject * VocabEntry_get_size(PyObject * self, PyObject * args);
 static PyObject * VocabEntry_get_occurs(PyObject * self, PyObject * args);
+static PyObject * VocabEntry_reduce(PyObject * self, PyObject * ignored_args);
+static PyObject * VocabEntry_richcmp(PyObject * a, PyObject * b, int opid);
+static PyObject * VocabEntry_getitem(PyObject * self, int index);
 
 /*
  *  Object methods as visible from Python.
@@ -741,7 +865,13 @@ static PyMethodDef VocabEntry_methods[] = {
     {"get_term", VocabEntry_get_term, METH_NOARGS, "Get the term"},
     {"get_size", VocabEntry_get_size, METH_NOARGS, "Get the size"},
     {"get_occurs", VocabEntry_get_occurs, METH_NOARGS, "Get the occurs"},
+    {"__reduce__", VocabEntry_reduce, METH_NOARGS,
+        "Used for pickling a vocab entry"},
     {NULL}
+};
+
+static PySequenceMethods zet_VocabEntrySequenceMethods = {
+    .sq_item    = (intargfunc) VocabEntry_getitem,
 };
 
 /*
@@ -755,8 +885,34 @@ static PyTypeObject zet_VocabEntryType = {
     .tp_doc         = "Wrapper for vocab entry",
     .tp_methods     = VocabEntry_methods,
     .tp_members     = VocabEntry_members,
-    .tp_dealloc     = (destructor) VocabEntry_dealloc
+    .tp_dealloc     = (destructor) VocabEntry_dealloc,
+    .tp_richcompare = (richcmpfunc) VocabEntry_richcmp,
+    .tp_as_sequence = &zet_VocabEntrySequenceMethods
 };
+
+static zet_VocabEntryObject * new_VocabEntry(const char * term, int termlen,
+  unsigned long int size, unsigned long int docs, unsigned long int occurs,
+  unsigned long int last) {
+    zet_VocabEntryObject * py_vocab_entry;
+    if ((py_vocab_entry = PyObject_New(zet_VocabEntryObject, 
+              &zet_VocabEntryType)) == NULL)
+        return NULL;
+    if (PyObject_Init((PyObject *) py_vocab_entry, 
+          &zet_VocabEntryType) == NULL) {
+        PyObject_Del(py_vocab_entry);
+        return NULL;
+    }
+    py_vocab_entry->term = Py_BuildValue("s#", term, (int) termlen);
+    if (py_vocab_entry->term == NULL) {
+        PyObject_Del(py_vocab_entry);
+        return NULL;
+    }
+    py_vocab_entry->size = size;
+    py_vocab_entry->docs = docs;
+    py_vocab_entry->occurs = occurs;
+    py_vocab_entry->last = last;
+    return py_vocab_entry;
+}
 
 /*
  *  Method definitions.
@@ -764,6 +920,27 @@ static PyTypeObject zet_VocabEntryType = {
 static void VocabEntry_dealloc(zet_VocabEntryObject * self) {
     Py_DECREF(self->term);
     self->ob_type->tp_free((PyObject *) self);
+}
+
+static PyObject * VocabEntry_reduce(PyObject * self,
+  PyObject * ignored_args) {
+    zet_VocabEntryObject * entry = (zet_VocabEntryObject *) self;
+    PyObject * zetModule = PyImport_ImportModule("zet");
+    if (zetModule == NULL)
+        return NULL;
+    PyObject * fn_name = Py_BuildValue("s", "unpickle_vocab_entry");
+    if (fn_name == NULL)
+        return NULL;
+    PyObject * unpickler = PyDict_GetItem(PyModule_GetDict(zetModule),
+      fn_name);
+    if (unpickler == NULL) {
+        Py_DECREF(fn_name);
+        PyErr_SetString(PyExc_NameError, 
+          "Can't find zet.unpickle_vocab_entry");
+        return NULL;
+    }
+    return Py_BuildValue("O(Okkkk)", unpickler, entry->term, entry->size,
+      entry->docs, entry->occurs, entry->last);
 }
 
 static PyObject * VocabEntry_get_term(PyObject * self,
@@ -781,6 +958,80 @@ static PyObject * VocabEntry_get_size(PyObject * self, PyObject * args) {
 static PyObject * VocabEntry_get_occurs(PyObject * self, PyObject * args) {
     zet_VocabEntryObject * ref = (zet_VocabEntryObject *) self;
     return Py_BuildValue("k", ref->occurs);
+}
+
+static PyObject * VocabEntry_richcmp(PyObject * ao, PyObject * bo, int opid) {
+    zet_VocabEntryObject * a;
+    zet_VocabEntryObject * b;
+    int holds = 0;
+    int equal = 0;
+
+    if (!PyObject_IsInstance(ao, (PyObject *) &zet_VocabEntryType) ||
+      !PyObject_IsInstance(bo, (PyObject *) &zet_VocabEntryType)) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+    a = (zet_VocabEntryObject *) ao;
+    b = (zet_VocabEntryObject *) bo;
+    switch (opid) {
+    case Py_LT: case Py_LE: case Py_GT: case Py_GE:
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    case Py_EQ: case Py_NE:
+        if (a->size == b->size && a->docs == b->docs && a->occurs == b->occurs
+          && a->last == b->last) {
+            int term_cmp = PyObject_Compare(a->term, b->term);
+            if (PyErr_Occurred()) {
+                return NULL;
+            }
+            if (term_cmp == 0) {
+                equal = 1;
+            } else {
+                equal = 0;
+            }
+        } else {
+            equal = 0;
+        }
+        if ((equal && opid == Py_EQ) || (!equal && opid == Py_NE)) {
+            holds = 1;
+        }
+        break;
+    }
+    if (holds) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
+}
+
+/* In an early version , the term_info() method of the Index
+ * object returned a tuple of term info.  This was later changed
+ * to return a VocabEntry object.  Here, we add subscript support
+ * for code that still thinks that the term info is a tuple. */
+static PyObject * VocabEntry_getitem(PyObject * s, int index) {
+    unsigned long val = 0;
+    zet_VocabEntryObject * self = (zet_VocabEntryObject *) s;
+    if (index < 0 || index > 3) {
+        PyErr_SetString(PyExc_IndexError, "Out of bounds");
+        return NULL;
+    }
+    switch (index) {
+    case 0:
+        val = self->docs;
+        break;
+    case 1:
+        val = self->occurs;
+        break;
+    case 2:
+        val = self->last;
+        break;
+    case 3:
+        val = self->size;
+        break;
+    }
+    return PyLong_FromLong(val);
 }
 
 /* *****************************************************************
@@ -871,23 +1122,9 @@ static PyObject * VocabIterator_next(zet_VocabIteratorObject * self) {
         return NULL;
     }
 
-    if ((py_vocab_entry = PyObject_New(zet_VocabEntryObject, 
-              &zet_VocabEntryType)) == NULL)
-        return NULL;
-    if (PyObject_Init((PyObject *) py_vocab_entry, 
-          &zet_VocabEntryType) == NULL) {
-        PyObject_Del(py_vocab_entry);
-        return NULL;
-    }
-    py_vocab_entry->term = Py_BuildValue("s#", term, (int) termlen);
-    if (py_vocab_entry->term == NULL) {
-        PyObject_Del(py_vocab_entry);
-        return NULL;
-    }
-    py_vocab_entry->size = vocab_entry.size;
-    py_vocab_entry->docs = vocab_docs(&vocab_entry);
-    py_vocab_entry->occurs = vocab_occurs(&vocab_entry);
-    py_vocab_entry->last = vocab_last(&vocab_entry);
+    py_vocab_entry = new_VocabEntry(term, (int) termlen, vocab_entry.size,
+      vocab_docs(&vocab_entry), vocab_occurs(&vocab_entry),
+      vocab_last(&vocab_entry));
     return (PyObject *) py_vocab_entry;
 }
 
@@ -1005,7 +1242,8 @@ static PyObject * Index_search(PyObject * self, PyObject * args,
     zet_IndexObject * Index = (zet_IndexObject *) self;
     struct index_result * result;
     unsigned int results;
-    unsigned long int total_results;
+    double total_results;
+    int total_results_is_est;
     unsigned int accumulator_limit = 0;
     int opts = INDEX_SEARCH_NOOPT;
     struct index_search_opt opt;
@@ -1016,8 +1254,10 @@ static PyObject * Index_search(PyObject * self, PyObject * args,
     opt.u.okapi_k3.k1 = 1.2;
     opt.u.okapi_k3.k3 = 1e10;
     opt.u.okapi_k3.b = 0.75;
+    startdoc = 0;
+    len = 20;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "skk|sOk", kwlist, &query,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|kksOk", kwlist, &query,
           &startdoc, &len, &optType, &optArgsTuple, &accumulator_limit))
         return NULL;
     if ( (result = malloc(sizeof(*result) * len)) == NULL) {
@@ -1069,7 +1309,8 @@ static PyObject * Index_search(PyObject * self, PyObject * args,
         opt.accumulator_limit = accumulator_limit;
     }
     if (!index_search(Index->idx, query, startdoc, len,
-          result, &results, &total_results, opts, &opt)) {
+          result, &results, &total_results, &total_results_is_est, 
+          opts, &opt)) {
         char err_buf[1024];
         snprintf(err_buf, 1024, "Unable to perform search for query '%s'; "
            "system error is '%s'\n", query, strerror(errno));
@@ -1156,8 +1397,10 @@ static PyObject * Index_term_info(PyObject * self, PyObject * args) {
           "the case");
         return NULL;
     }
-    return Py_BuildValue("(kkkk)", ve.header.docwp.docs, 
-      ve.header.docwp.occurs, ve.header.docwp.last, ve.size);
+    return (PyObject *) new_VocabEntry(term, termlen,
+      ve.size, vocab_docs(&ve), vocab_occurs(&ve), vocab_last(&ve));
+    /*return Py_BuildValue("(kkkk)", ve.header.docwp.docs, 
+      ve.header.docwp.occurs, ve.header.docwp.last, ve.size);*/
 }
 
 static PyObject * Index_term_postings(PyObject * self, PyObject * args) {
@@ -1195,11 +1438,6 @@ static PyObject * Index_term_postings(PyObject * self, PyObject * args) {
           "the case");
         return NULL;
     }
-    if (ve.location != VOCAB_LOCATION_FILE) {
-        PyErr_SetString(PyExc_StandardError, 
-          "I only handle on-file vectors");
-        return NULL;
-    }
     if ( (postings = PyObject_New(zet_PostingsObject, 
               &zet_PostingsType)) == NULL) {
         return NULL;
@@ -1217,15 +1455,15 @@ static PyObject * Index_term_postings(PyObject * self, PyObject * args) {
         PyObject_Del(postings);
         return NULL;
     }
-    fd = fdset_pin(idx->fd, idx->index_type, ve.loc.file.fileno, 
-      ve.loc.file.offset, SEEK_SET);
+    fd = fdset_pin(idx->fd, idx->index_type, ve.loc.fileno, ve.loc.offset, 
+      SEEK_SET);
     if (fd == -1 || read(fd, postings->vec, ve.size) < ve.size) {
         PyErr_SetString(PyExc_IOError, "Unable to read from vector file");
         free(postings->vec);
         PyObject_Del(postings);
         return NULL;
     }
-    fdset_unpin(idx->fd, idx->index_type, ve.loc.file.fileno, fd);
+    fdset_unpin(idx->fd, idx->index_type, ve.loc.fileno, fd);
     return (PyObject *) postings;
 }
 
@@ -1252,7 +1490,7 @@ static PyObject * Index_num_docs(PyObject * self, PyObject * args) {
     struct index * idx = Index->idx;
     unsigned long num_docs;
 
-    num_docs = ndocmap_entries(idx->map);
+    num_docs = docmap_entries(idx->map);
     return Py_BuildValue("k", num_docs);
 }
 
@@ -1265,26 +1503,27 @@ static PyObject * Index_vocab_size(PyObject * self, PyObject * args) {
     return Py_BuildValue("k", vocab_size);
 }
 
-#define AUX_BUF_LEN 1024
+#define TRECNO_BUF_LEN 1024
 
 static PyObject * Index_doc_aux(PyObject * self, PyObject * args) {
     zet_IndexObject * Index = (zet_IndexObject *) self;
     struct index * idx = Index->idx;
-    struct ndocmap * docmap = idx->map;
-    char aux_buf[AUX_BUF_LEN];
-    unsigned aux_len;
+    struct docmap * docmap = idx->map;
+    char trecno_buf[TRECNO_BUF_LEN];
+    unsigned trecno_len;
     unsigned long int docno;
-    enum ndocmap_ret ret;
+    enum docmap_ret ret;
 
     if (!PyArg_ParseTuple(args, "k", &docno))
         return NULL;
-    ret = ndocmap_get_aux(docmap, docno, aux_buf, AUX_BUF_LEN, &aux_len);
-    if (ret != NDOCMAP_OK) {
-        /* error might be NDOCMAP_BUFSIZE_ERROR, but life is too short... */
+    ret = docmap_get_trecno(docmap, docno, trecno_buf, TRECNO_BUF_LEN, 
+      &trecno_len);
+    if (ret != DOCMAP_OK) {
+        /* error might be DOCMAP_BUFSIZE_ERROR, but life is too short... */
         PyErr_SetString(PyExc_IOError, "Unable to read aux info");
         return NULL;
     }
-    return Py_BuildValue("s#", aux_buf, (int) aux_len);
+    return Py_BuildValue("s#", trecno_buf, (int) trecno_len);
 }
 
 /* *****************************************************************
@@ -1328,7 +1567,7 @@ static PyObject * index_result_to_PyObject(struct index_result * result) {
 }
 
 static PyObject * index_results_to_PyObject(struct index_result * results,
-  unsigned int num_results, unsigned long int total_results) {
+  unsigned int num_results, double total_results) {
     int i;
     zet_SearchResultsObject * pyResult = PyObject_New(zet_SearchResultsObject,
       &zet_SearchResultsType);
@@ -1367,20 +1606,24 @@ static PyObject * index_results_to_PyObject(struct index_result * results,
 /*
  *  Module method forward declarations.
  */
-static PyObject * zet_search(PyObject *self, PyObject *args);
 static PyObject * zet_extract_words(PyObject *self, PyObject *args);
 static PyObject * zet_unpickle_search_result(PyObject * self, PyObject * args);
+static PyObject * zet_unpickle_search_results(PyObject * self, PyObject * args);
+static PyObject * zet_unpickle_vocab_entry(PyObject * self, PyObject * args);
 static PyObject * zet_hash(PyObject * self, PyObject * args);
 
 /*
  *  Methods as visible from Python.
  */
 static PyMethodDef ZetMethods[] = {
-    {"search", zet_search, METH_VARARGS, "Execute a zettair search."},
     {"extract_words", zet_extract_words, METH_VARARGS, 
         "Extract a list of words from a string, using the Zettair parser"},
     {"unpickle_search_result", zet_unpickle_search_result, METH_VARARGS,
+        "Constructor called when unpickling search result"},
+    {"unpickle_search_results", zet_unpickle_search_results, METH_VARARGS,
         "Constructor called when unpickling search results"},
+    {"unpickle_vocab_entry", zet_unpickle_vocab_entry, METH_VARARGS,
+        "Constructor called when unpickling a vocab entry"},
     {"hash", zet_hash, METH_VARARGS, 
         "Hash a string according to the zettair's hash algorithm"},
     { NULL, NULL, 0, NULL }
@@ -1389,45 +1632,6 @@ static PyMethodDef ZetMethods[] = {
 /*
  *  Method definitions.
  */
-static PyObject *
-zet_search(PyObject *self, PyObject *args) {
-    char * prefix;
-    char * query;
-    unsigned long startdoc;
-    unsigned long len;
-    struct index * idx;
-    struct index_result * result;
-    unsigned int results;
-    unsigned long int total_results;
-    int opts = INDEX_SEARCH_NOOPT;
-    struct index_search_opt opt;
-
-    if (!PyArg_ParseTuple(args, "sskk", &prefix, &query, &startdoc,
-          &len))
-        return NULL;
-    if ( (idx = index_load(prefix, MEMORY_DEFAULT,
-              INDEX_LOAD_NOOPT, NULL)) == NULL) {
-        PyErr_SetString(PyExc_StandardError, "Unable to load index");
-        return NULL;
-    }
-    if ( (result = malloc(sizeof(*result) * len)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Unable to allocate results");
-        index_delete(idx);
-        return NULL;
-    }
-    if (!index_search(idx, query, startdoc, len, result, 
-          &results, &total_results, opts, &opt)) {
-        PyErr_SetString(PyExc_StandardError, "Unable to perform search");
-        free(result);
-        index_delete(idx);
-        return NULL;
-    }
-    PyObject * results_tuple = index_results_to_PyObject(result, results,
-      total_results);
-    free(result);
-    index_delete(idx);
-    return results_tuple;
-}
 
 static PyObject * zet_extract_words(PyObject *self, PyObject *args) {
     char * buf;
@@ -1508,6 +1712,43 @@ static PyObject * zet_unpickle_search_result(PyObject * self, PyObject * args) {
     Py_INCREF(auxiliary);
     return (PyObject *) pyResult;
 }
+
+/* NOTE: this is a module method, _NOT_ a class method */
+static PyObject * zet_unpickle_search_results(PyObject * self, 
+  PyObject * args) {
+    double total_results;
+    PyObject * results;
+    zet_SearchResultsObject * pyResults;
+
+    if (!PyArg_ParseTuple(args, "dO", &total_results, &results))
+        return NULL;
+    if ( (pyResults = PyObject_New(zet_SearchResultsObject, 
+              &zet_SearchResultsType)) == NULL)
+        return NULL;
+    pyResults->total_results = total_results;
+    pyResults->results = results;
+    Py_INCREF(results);
+    return (PyObject *) pyResults;
+}
+
+static PyObject * zet_unpickle_vocab_entry(PyObject * self, 
+  PyObject * args) {
+    zet_VocabEntryObject * vocab_entry;
+
+    vocab_entry = PyObject_New(zet_VocabEntryObject,
+      &zet_VocabEntryType);
+    if (vocab_entry == NULL)
+        return NULL;
+    if (!PyArg_ParseTuple(args, "Skkkk", &vocab_entry->term,
+          &vocab_entry->size, &vocab_entry->docs,
+          &vocab_entry->occurs, &vocab_entry->last)) {
+        PyObject_Del(vocab_entry);
+        return NULL;
+    }
+    Py_INCREF(vocab_entry->term);
+    return (PyObject *) vocab_entry;
+}
+
 
 static PyObject *
 zet_hash(PyObject *self, PyObject *args) {
@@ -1614,4 +1855,13 @@ PyMODINIT_FUNC initzet(void) {
     /* Adding MLParser type to module */
     Py_INCREF(&zet_MLParserType);
     PyModule_AddObject(m, "MLParser", (PyObject *) &zet_MLParserType);
+
+    /* Add constants for the MLParser status flags */
+    PyModule_AddIntConstant(m, "MLPARSE_TAG",  MLPARSE_TAG);
+    PyModule_AddIntConstant(m, "MLPARSE_WORD",  MLPARSE_WORD);
+    PyModule_AddIntConstant(m, "MLPARSE_PARAM",  MLPARSE_PARAM);
+    PyModule_AddIntConstant(m, "MLPARSE_PARAMVAL",  MLPARSE_PARAMVAL);
+    PyModule_AddIntConstant(m, "MLPARSE_COMMENT",  MLPARSE_COMMENT);
+    PyModule_AddIntConstant(m, "MLPARSE_WHITESPACE",  MLPARSE_WHITESPACE);
+    PyModule_AddIntConstant(m, "MLPARSE_CDATA",  MLPARSE_CDATA);
 }

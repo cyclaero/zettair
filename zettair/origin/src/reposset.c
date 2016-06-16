@@ -17,7 +17,6 @@
 #include "def.h"
 #include "binsearch.h"
 #include "mime.h"
-#include "vec.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -79,7 +78,7 @@ static int rec_docno_cmp(const void *vone, const void *vtwo) {
     }
 }
 
-struct reposset *reposset_new() {
+struct reposset *reposset_new(void) {
     struct reposset *rset = malloc(sizeof(*rset));
 
     if (rset && (rset->rec = malloc(sizeof(*rset->rec) * INIT_ARRAY_SIZE))

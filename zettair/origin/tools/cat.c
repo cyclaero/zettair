@@ -1,4 +1,5 @@
 /* cat.c implements a tool to cat out an index fileset produced by
+ *
  * the search engine
  *
  * written nml 2003-02-25
@@ -51,17 +52,9 @@ int cat_vocab(FILE *output, struct index *idx, int verbose) {
             putc(' ', output);
 
             if (verbose) {
-                switch (vocab.location) {
-                case VOCAB_LOCATION_VOCAB:
-                    fprintf(output, "(location vocab) ");
-                    break;
-
-                default:
-                    fprintf(output, "(location %u %lu %u) ", 
-                      vocab.loc.file.fileno, 
-                      vocab.loc.file.offset, vocab.loc.file.capacity);
-                    break;
-                };
+                fprintf(output, "(location %u %lu) ", 
+                  vocab.loc.fileno, 
+                  vocab.loc.offset);
             }
             fprintf(output, "docs %lu occurrances %lu length %lu last %lu\n", 
               vocab.header.doc.docs, vocab.header.doc.occurs, 
@@ -104,7 +97,7 @@ static void off_out(FILE *output, off_t offset) {
 
     while (offset > 0) {
         assert(pos <= 20);
-        buf[pos++] = (offset % 10) + '0';
+        buf[pos++] = (char) ((offset % 10) + '0');
         offset /= 10;
     }
 
@@ -211,48 +204,32 @@ int cat_index(FILE *output, struct index *idx, int verbose) {
                 break;
             }
             
-            switch (vocab.location) {
-            case VOCAB_LOCATION_VOCAB:
-                v.pos = ((char *) addr) + vocab_len(&vocab) - vocab.size;
+            if (verbose) {
+                fprintf(output, " (location %u %lu size %lu)", 
+                  vocab.loc.fileno, vocab.loc.offset, vocab.size);
+            }
+            tmp = 0;
+            if (((fd = fdset_pin(idx->fd, idx->index_type, 
+                vocab.loc.fileno, vocab.loc.offset, SEEK_SET)) >= 0)
+              && (buf = v.pos = malloc(vocab.size))
+              && (read(fd, buf, vocab.size) == (ssize_t) vocab.size)
+              && (tmp = 1)
+              && (fdset_unpin(idx->fd, idx->index_type, 
+                  vocab.loc.fileno, fd) == FDSET_OK)) {
+                /* succeeded */
                 v.end = v.pos + vocab.size;
-                buf = NULL;
-
-                if (verbose) {
-                    fprintf(output, " (location vocab, size %lu)", vocab.size);
-                }
-                break;
-
-            default:
-                if (verbose) {
-                    fprintf(output, " (location %u %lu %u size %lu)", 
-                      vocab.loc.file.fileno, vocab.loc.file.offset, 
-                      vocab.loc.file.capacity, vocab.size);
-                }
-                tmp = 0;
-                if (((fd = fdset_pin(idx->fd, idx->index_type, 
-                    vocab.loc.file.fileno, vocab.loc.file.offset, SEEK_SET)) 
-                      >= 0)
-                  && (buf = v.pos = malloc(vocab.size))
-                  && (read(fd, buf, vocab.size) == (ssize_t) vocab.size)
-                  && (tmp = 1)
-                  && (fdset_unpin(idx->fd, idx->index_type, 
-                      vocab.loc.file.fileno, fd) == FDSET_OK)) {
-                    /* succeeded */
-                    v.end = v.pos + vocab.size;
-                } else {
-                    if (fd >= 0) {
-                        fdset_unpin(idx->fd, idx->index_type, 
-                          vocab.loc.file.fileno, fd);
-                        if (tmp) {
-                            free(buf);
-                        }
+            } else {
+                if (fd >= 0) {
+                    fdset_unpin(idx->fd, idx->index_type, 
+                      vocab.loc.fileno, fd);
+                    if (tmp) {
+                        free(buf);
                     }
-
-                    fprintf(stderr, "couldn't read vector\n");
-                    return 0;
                 }
-                break;
-            };
+
+                fprintf(stderr, "couldn't read vector\n");
+                return 0;
+            }
 
             /* decode vector */
             fprintf(output, ":");

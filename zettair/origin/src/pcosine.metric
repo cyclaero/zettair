@@ -25,12 +25,12 @@
 parameter float pivot;
 
 decode() {
-    const float w_qt = (float) (f_qt * (float) logf(1 + (N / (float) f_t)));
+    const float w_qt = f_qt * log(1 + (N / (float) f_t));
 
-	accumulator += w_qt * (1 + (float) logf(f_dt));
+	accumulator += w_qt * (1 + log(f_dt));
 }
 
 post() {
-    accumulator /= (1.0F - pivot) + pivot * (D_weight / (float) avg_D_weight);
+    accumulator /= (1.0 - pivot) + pivot * (D_weight / avg_D_weight);
 }
 

@@ -1,0 +1,65 @@
+This file biases the output of scripts/mime.py to number MIME types that i
+actually recognise as meaningful to be numbered lower, as well as
+ensuring the presence of some things that we want to recognise.  Listing
+things more than once boosts them in the rankings further.
+
+Content Types and Subtypes
+--------------------------
+
+Type            Subtype         Description                 Reference
+----            -------         -----------                 ---------
+text            plain                            
+                plain
+                plain
+                plain
+                html                            
+                html
+                html
+                html
+                css                           
+                xml                          
+                rtf                         
+  
+multipart       mixed                      
+                alternative               
+                digest                   
+                parallel                
+                signed                 
+                encrypted             
+                byteranges           
+
+message         rfc822                  
+                partial                
+                external-body         
+                http                 
+                s-http              
+
+application     octet-stream       
+                postscript        
+                pdf              
+                zip             
+                msword         
+                mathematica   
+                x-tar
+                x-trec
+                x-trec
+                x-trec
+                x-trec
+                x-inex
+                x-inex
+                x-inex
+                x-inex
+                x-gzip
+                x-bzip2
+
+image           jpeg              
+                gif              
+                tiff            
+                png            
+
+audio           basic         
+                mpeg         
+
+video           mpeg        
+                quicktime  
+     

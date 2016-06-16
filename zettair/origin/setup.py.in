@@ -11,7 +11,7 @@ zet_module = Extension('zet',
         sources = ['src/pyzet/zetmodule.c'])
 
 setup (name = 'PyZettair',
-       version = '0.6.0',
+       version = '0.9.3',
        package_dir = { '': 'src/pyzet' },
        description = 'This is a python wrapper for libzet',
        py_modules = ["pzet"],
