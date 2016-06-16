@@ -471,6 +471,8 @@ int str_split_test(const char *s1, const char *delim) {
     }
 }
 
+#define LONG_STR "ablaksjdflaksjdflkajsdfljaslfd"
+
 int test_file(FILE *fp, int argc, char **argv) {
 
     if (fp && (fp != stdin)) {
@@ -484,7 +486,7 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_len_test(""));
     rt_assert(str_len_test("a"));
     rt_assert(str_len_test("ab"));
-    rt_assert(str_len_test("ablaksjdflaksjdflkajsdfljaslfdj"));
+    rt_assert(str_len_test(LONG_STR));
 
     /* test str_cmp */
     rt_assert(str_cmp_test("", ""));
@@ -604,7 +606,7 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_dup_test(""));
     rt_assert(str_dup_test("a"));
     rt_assert(str_dup_test("ab"));
-    rt_assert(str_dup_test("ablaksjdflaksjdflkajsdfljaslfdj"));
+    rt_assert(str_dup_test(LONG_STR));
 
     /* test str_ndup */
     rt_assert(str_ndup_test("", 0));
@@ -617,15 +619,15 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_ndup_test("ab", 1));
     rt_assert(str_ndup_test("ab", 2));
     rt_assert(str_ndup_test("ab", 3));
-    rt_assert(str_ndup_test("ablaksjdflaksjdflkajsdfljaslfdj", 0));
-    rt_assert(str_ndup_test("ablaksjdflaksjdflkajsdfljaslfdj", 10));
-    rt_assert(str_ndup_test("ablaksjdflaksjdflkajsdfljaslfdj", 100));
+    rt_assert(str_ndup_test(LONG_STR, 0));
+    rt_assert(str_ndup_test(LONG_STR, 10));
+    rt_assert(str_ndup_test(LONG_STR, 100));
 
     /* test str_cpy */
     rt_assert(str_cpy_test(""));
     rt_assert(str_cpy_test("a"));
     rt_assert(str_cpy_test("ab"));
-    rt_assert(str_cpy_test("ablaksjdflaksjdflkajsdfljaslfdj"));
+    rt_assert(str_cpy_test(LONG_STR));
 
     /* test str_ncpy */
     rt_assert(str_ncpy_test("", 0));
@@ -641,13 +643,13 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_ncpy_test("ab", strlen("ab") + 1));
     rt_assert(str_ncpy_test("ab", strlen("ab") - 1));
     rt_assert(str_ncpy_test("ab", STRMAX));
-    rt_assert(str_ncpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj")));
-    rt_assert(str_ncpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj") + 1));
-    rt_assert(str_ncpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj") - 1));
-    rt_assert(str_ncpy_test("ablaksjdflaksjdflkajsdfljaslfdj", STRMAX));
+    rt_assert(str_ncpy_test(LONG_STR, 
+      strlen(LONG_STR)));
+    rt_assert(str_ncpy_test(LONG_STR, 
+      strlen(LONG_STR) + 1));
+    rt_assert(str_ncpy_test(LONG_STR, 
+      strlen(LONG_STR) - 1));
+    rt_assert(str_ncpy_test(LONG_STR, STRMAX));
 
     /* test str_lcpy */
     rt_assert(str_lcpy_test("", 0));
@@ -665,15 +667,15 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_lcpy_test("ab", strlen("ab") + 1));
     rt_assert(str_lcpy_test("ab", strlen("ab") + 2));
     rt_assert(str_lcpy_test("ab", strlen("ab") - 1));
-    rt_assert(str_lcpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj")));
-    rt_assert(str_lcpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj") + 1));
-    rt_assert(str_lcpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj") + 2));
-    rt_assert(str_lcpy_test("ablaksjdflaksjdflkajsdfljaslfdj", 
-      strlen("ablaksjdflaksjdflkajsdfljaslfdj") - 1));
-    rt_assert(str_lcpy_test("ablaksjdflaksjdflkajsdfljaslfdj", STRMAX));
+    rt_assert(str_lcpy_test(LONG_STR, 
+      strlen(LONG_STR)));
+    rt_assert(str_lcpy_test(LONG_STR, 
+      strlen(LONG_STR) + 1));
+    rt_assert(str_lcpy_test(LONG_STR, 
+      strlen(LONG_STR) + 2));
+    rt_assert(str_lcpy_test(LONG_STR, 
+      strlen(LONG_STR) - 1));
+    rt_assert(str_lcpy_test(LONG_STR, STRMAX));
 
     /* test str_cat */
     rt_assert(str_cat_test("", ""));

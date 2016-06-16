@@ -96,7 +96,7 @@ struct merge_inter {
 int merge_final_new(struct merge_final *merger, void *opaque,
   void *(*allocfn)(void *opaque, unsigned int size),
   void (*freefn)(void *opaque, void *mem), struct storagep *storage,
-  void *outbuf, unsigned int outbufsz);
+  void *outbuf, unsigned int outbufsz, int offsets);
 
 /* perform a final merge.  Keep on calling this function until it returns
  * FMERGE_OK.  It will return FMERGE_INPUT when it requires more input (the

@@ -51,7 +51,7 @@ struct rbtree *rbtree_ptr_new(int (*cmp)(const void *key1, const void *key2));
 
 /* create a new red-black tree that will have unsigned long ints as keys, with
  * natural ordering.  Returns NULL on failure. */
-struct rbtree *rbtree_luint_new();
+struct rbtree *rbtree_luint_new(void);
 
 /* delete a red-black tree.  This operation can fail (as traversing the tree to
  * free the contained nodes requires dynamic memory), but operates on a best

@@ -1,7 +1,7 @@
 /* hawkapi.c implements the hawkapi metric for the zettair query
  * subsystem.  This file was automatically generated from
  * src/hawkapi.metric and src/metric.c
- * by scripts/metric.py on Thu, 29 Jun 2006 04:12:41 GMT.  
+ * by scripts/metric.py on Mon, 02 Mar 2009 06:38:46 GMT.  
  *
  * DO NOT MODIFY THIS FILE, as changes will be lost upon 
  * subsequent regeneration (and this code is repetitive enough 
@@ -17,15 +17,94 @@
  * weighting of anchors', Hawking, Upstill and Craswell, SIGIR 2004 poster).
  * They called it 'AF1', but i find hawkapi a little less boring ;o).
  * It's basically a stripped-down version of the okapi metric.  No-one
- * really knows, at this stage (including Dave Hawking), what a good
- * value of alpha is.
+ * really knows, at this stage (including Dave Hawking, when i asked him),
+ * what a good value of alpha is.
  * 
  * written nml 2005-07-18
  *
  */
 
-
 #include "firstinclude.h"
+
+#include "search.h"
+#include "str.h"
+
+#include <stdlib.h>
+
+/* a structure describing the parameters used */
+struct hawkapi_param {
+    float alpha;
+    float k3;
+    int dummy;  /* dummy member to ensure non-empty struct */
+};
+
+/* Function for converting string args into the params structure. */
+static enum search_ret parse(void *ptr, const char *str) {
+    /* weak typing may suck sometimes, but it certainly has its uses */
+    struct hawkapi_param *param = ptr;
+    unsigned int i,
+                 parts,
+                 read = 0;
+    char *dup;
+    char **split = NULL;
+    char *endptr = NULL;
+
+    if (str == NULL) {
+        return SEARCH_EINVAL;
+    }
+
+    if ((dup = str_dup(str)) && (split = str_split(dup, ",", &parts)) 
+      && parts == 2) {
+        for (i = 0; i < parts; i++) {
+            if (!str_ncmp(split[i], "alpha=", 6)) {
+                if ((param->alpha = (float) strtod(split[i] + 6, &endptr)), !*endptr) {
+                    read |= (1 << 0);
+                } else {
+                    free(split);
+                    free(dup);
+                    return SEARCH_EINVAL;
+                }
+            }
+            else
+            if (!str_ncmp(split[i], "k3=", 3)) {
+                if ((param->k3 = (float) strtod(split[i] + 3, &endptr)), !*endptr) {
+                    read |= (1 << 1);
+                } else {
+                    free(split);
+                    free(dup);
+                    return SEARCH_EINVAL;
+                }
+            }
+        }
+        free(split);
+        free(dup);
+        if (read == ((1 << 0) | (1 << 1))) {
+            return SEARCH_OK;
+        } else {
+            return SEARCH_EINVAL;
+        }
+    } else {
+        if (dup) {
+            free(dup);
+        }
+        if (split) {
+            free(split);
+        }
+        return SEARCH_EINVAL;
+    }
+}
+
+
+/* processed contents from src/hawkapi.metric and src/metric.c follows... */
+
+
+/* XXX: METRIC_STRUCT should possibly be subsumed into METRIC_DECL?  Either way,
+ * it's messy */
+
+/* XXX: for the moment, [or,and,thresh]_decode have been copied to an 
+ * equivalent _decode_offsets function.  This is pretty nasty, but i expect to
+ * be able to remove this duplication once offsets have been de-interleaved 
+ * from the inverted lists. */
 
 #include "metric.h"
 
@@ -40,19 +119,27 @@
 #include "vec.h"
 
 #include <assert.h>
-#include <math.h>
 #include <float.h>
-#include <stdlib.h>
 
 static enum search_ret pre(struct index *idx, struct query *query, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_PRE */
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
 
-    return SEARCH_OK;
+    if (zpthread_mutex_lock(&idx->docmap_mutex) == ZPTHREAD_OK) {
+        /* METRIC_PRE */
+
+        zpthread_mutex_unlock(&idx->docmap_mutex);
+        return SEARCH_OK;
+    } else {
+        assert(!CRASH);
+        param = NULL;   /* avoid 'param not used' warning */
+        return SEARCH_EINVAL;
+    }
 }
 
 static enum search_ret post(struct index *idx, struct query *query, 
   struct search_acc_cons *acc, int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
     /* METRIC_POST */
 
 
@@ -63,6 +150,7 @@ static enum search_ret post(struct index *idx, struct query *query,
         acc = acc->next;
     }
 
+    param = NULL;   /* avoid 'param not used' warning */
     return SEARCH_OK;
 }
 
@@ -89,7 +177,7 @@ static enum search_ret post(struct index *idx, struct query *query,
             } else if (scanned < toscan) {                                    \
                 toscan -= scanned;                                            \
                 /* need to read more */                                       \
-                if ((sret = src->readlist(src, VEC_LEN(v),                    \
+                if ((sret = src->read(src, VEC_LEN(v),                        \
                     (void **) &(v)->pos, &bytes)) == SEARCH_OK) {             \
                                                                               \
                     (v)->end = (v)->pos + bytes;                              \
@@ -110,6 +198,7 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src, 
   int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
@@ -122,9 +211,94 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_t = (float) logf((N - (query->term[qterm].f_t) + 0.5F) / ((query->term[qterm].f_t) + 0.5F));
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
 
-    const float w_qt = (((opt->u.hawkapi.k3) + 1) * (query->term[qterm].f_qt)) / ((opt->u.hawkapi.k3) + (query->term[qterm].f_qt));
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+
+
+    /* METRIC_PER_CALL */
+
+
+    while (1) {
+        while (NEXT_DOC(&v, docno, f_dt)) {
+
+            /* merge into accumulator list */
+            while (acc && (docno > acc->acc.docno)) {
+                prevptr = &acc->next;
+                acc = acc->next;
+            }
+
+            if (acc && (docno == acc->acc.docno)) {
+                /* METRIC_PER_DOC */
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+            } else {
+                struct search_acc_cons *newacc;
+                assert(!acc || docno < acc->acc.docno); 
+
+                /* allocate a new accumulator (we have reserved allocators
+                 * earlier, so this should never fail) */
+                newacc = objalloc_malloc(results->alloc, sizeof(*newacc));
+                assert(newacc);
+                newacc->next = acc;
+                acc = newacc;
+                acc->acc.docno = docno;
+                acc->acc.weight = 0.0;
+                /* METRIC_PER_DOC */
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+                *prevptr = newacc;
+                accs_added++;
+            }
+            assert(acc);
+
+            /* go to next accumulator */
+            prevptr = &acc->next;
+            acc = acc->next;
+        }
+
+        /* need to read more data, preserving bytes that we already have */
+        if ((ret = src->read(src, VEC_LEN(&v),
+            (void **) &v.pos, &bytes)) == SEARCH_OK) {
+
+            v.end = v.pos + bytes;
+        } else if (ret == SEARCH_FINISH) {
+            /* finished, update number of accumulators */
+            results->accs += accs_added;
+            results->total_results += accs_added;
+
+            if (!VEC_LEN(&v)) {
+                return SEARCH_OK;
+            } else {
+                return SEARCH_EINVAL;
+            }
+        } else {
+            param = NULL;   /* avoid 'param not used' warning */
+            return ret;
+        }
+    }
+}
+ 
+static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
+  unsigned int qterm, unsigned long int docno, 
+  struct search_metric_results *results, struct search_list_src *src, 
+  int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
+    struct search_acc_cons *acc = results->acc,
+                           **prevptr = &results->acc;
+    unsigned int accs_added = 0;   /* number of accumulators added */
+    unsigned long int f_dt,        /* number of offsets for this document */
+                      docno_d;     /* d-gap */
+    unsigned int bytes;
+    struct vec v = {NULL, NULL};
+    enum search_ret ret;
+    /* METRIC_DECL */
+
+    const unsigned int N = docmap_entries(idx->map);
+
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
 
 
     /* METRIC_PER_CALL */
@@ -142,7 +316,7 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
 
             if (acc && (docno == acc->acc.docno)) {
                 /* METRIC_PER_DOC */
-                (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
             } else {
                 struct search_acc_cons *newacc;
@@ -157,7 +331,7 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
                 acc->acc.docno = docno;
                 acc->acc.weight = 0.0;
                 /* METRIC_PER_DOC */
-                (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
                 *prevptr = newacc;
                 accs_added++;
@@ -170,7 +344,7 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
         }
 
         /* need to read more data, preserving bytes that we already have */
-        if ((ret = src->readlist(src, VEC_LEN(&v),
+        if ((ret = src->read(src, VEC_LEN(&v),
             (void **) &v.pos, &bytes)) == SEARCH_OK) {
 
             v.end = v.pos + bytes;
@@ -185,6 +359,7 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
+            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -194,6 +369,7 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src,
   int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc;
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
@@ -210,9 +386,9 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_t = (float) logf((N - (query->term[qterm].f_t) + 0.5F) / ((query->term[qterm].f_t) + 0.5F));
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
 
-    const float w_qt = (((opt->u.hawkapi.k3) + 1) * (query->term[qterm].f_qt)) / ((opt->u.hawkapi.k3) + (query->term[qterm].f_qt));
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
 
 
     /* METRIC_PER_CALL */
@@ -220,7 +396,6 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
-            SCAN_OFFSETS(src, &v, f_dt);
             decoded++;
 
             /* merge into accumulator list */
@@ -230,7 +405,7 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
 
             if (acc && (docno == acc->acc.docno)) {
                 /* METRIC_PER_DOC */
-                (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
 
                 /* go to next accumulator */
@@ -242,7 +417,7 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
         }
 
         /* need to read more data, preserving bytes that we already have */
-        if ((ret = src->readlist(src, VEC_LEN(&v),
+        if ((ret = src->read(src, VEC_LEN(&v),
             (void **) &v.pos, &bytes)) == SEARCH_OK) {
 
             v.end = v.pos + bytes;
@@ -261,8 +436,7 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate 
-              *= (float) results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results / (float) results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -282,6 +456,106 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
+            param = NULL;   /* avoid 'param not used' warning */
+            return ret;
+        }
+    }
+}
+
+static enum search_ret and_decode_offsets(struct index *idx, 
+  struct query *query, 
+  unsigned int qterm, unsigned long int docno, 
+  struct search_metric_results *results, struct search_list_src *src,
+  int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
+    struct search_acc_cons *acc = results->acc;
+    unsigned long int f_dt,        /* number of offsets for this document */
+                      docno_d;     /* d-gap */
+    struct vec v = {NULL, NULL};
+    unsigned int bytes,
+                 missed = 0,       /* number of list entries that didn't match 
+                                    * an accumulator */
+                 hit = 0,          /* number of entries in both accs and list*/
+                 decoded = 0;      /* number of list entries seen */
+    enum search_ret ret;
+    float cooc_rate;               /* co-occurrance rate for list entries and 
+                                    * accumulators */
+    /* METRIC_DECL */
+
+    const unsigned int N = docmap_entries(idx->map);
+
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+
+
+    /* METRIC_PER_CALL */
+
+
+    while (1) {
+        while (NEXT_DOC(&v, docno, f_dt)) {
+            SCAN_OFFSETS(src, &v, f_dt);
+            decoded++;
+
+            /* merge into accumulator list */
+            while (acc && (docno > acc->acc.docno)) {
+                acc = acc->next;
+            }
+
+            if (acc && (docno == acc->acc.docno)) {
+                /* METRIC_PER_DOC */
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+
+                /* go to next accumulator */
+                acc = acc->next;
+                hit++;
+            } else {
+                missed++;
+            }
+        }
+
+        /* need to read more data, preserving bytes that we already have */
+        if ((ret = src->read(src, VEC_LEN(&v),
+            (void **) &v.pos, &bytes)) == SEARCH_OK) {
+
+            v.end = v.pos + bytes;
+        } else if (ret == SEARCH_FINISH) {
+            /* finished, estimate number of results */
+
+            /* list entries now divide up into two portions:
+             *   - matching an entry in the acc list (hit)
+             *   - missed
+             *
+             * cooccurrance rate is the percentage of list items hit */
+            assert(missed + hit == decoded);
+            cooc_rate = hit / (float) decoded;
+
+            /* now have sampled co-occurrance rate, use this to estimate 
+             * population co-occurrance rate (assuming unbiased sampling) 
+             * and then number of results from unrestricted evaluation */
+            assert(results->total_results >= results->accs);
+            cooc_rate *= results->total_results / (float) results->accs; 
+            assert(cooc_rate >= 0.0);
+            if (cooc_rate > 1.0) {
+                cooc_rate = 1.0;
+            }
+
+            /* add number of things we think would have been added from the
+             * things that were missed */
+            results->total_results += (1 - cooc_rate) * missed;
+
+            if (missed) {
+                results->estimated |= 1;
+            }
+
+            if (!VEC_LEN(&v)) {
+                return SEARCH_OK;
+            } else {
+                return SEARCH_EINVAL;
+            }
+        } else {
+            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -299,6 +573,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
   struct search_metric_results *results, 
   struct search_list_src *src, unsigned int postings, 
   int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc,
                            dummy;
@@ -327,9 +602,305 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_t = (float) logf((N - (query->term[qterm].f_t) + 0.5F) / ((query->term[qterm].f_t) + 0.5F));
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
 
-    const float w_qt = (((opt->u.hawkapi.k3) + 1) * (query->term[qterm].f_qt)) / ((opt->u.hawkapi.k3) + (query->term[qterm].f_qt));
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+
+
+    /* METRIC_PER_CALL */
+
+
+    rethresh_dist = rethresh = (postings + results->acc_limit - 1) 
+      / results->acc_limit;
+
+    if (results->v_t == FLT_MIN) {
+        unsigned long int docno_copy = docno;
+
+        /* this should be the first thresholded list, need to estimate 
+         * threshold */
+        assert(rethresh && rethresh < postings);
+        thresh = 0;
+
+        assert(rethresh < postings);
+        while (rethresh) {
+            while (rethresh && NEXT_DOC(&v, docno, f_dt)) {
+                rethresh--;
+                if (f_dt > thresh) {
+                    thresh = f_dt;
+                }
+            }
+
+            /* need to read more data, preserving bytes that we already have */
+            if (rethresh && (ret = src->read(src, VEC_LEN(&v),
+                (void **) &v.pos, &bytes)) == SEARCH_OK) {
+
+                v.end = v.pos + bytes;
+            } else if (rethresh) {
+                assert(ret != SEARCH_FINISH);
+                return ret;
+            }
+        }
+        thresh--;
+
+        acc = &dummy;
+        acc->acc.docno = UINT_MAX;   /* shouldn't be used */
+        acc->acc.weight = 0.0;
+        f_dt = thresh;
+        /* METRIC_CONTRIB */
+        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+        results->v_t = acc->acc.weight;
+
+        /* reset source/vector to start */
+        v.pos = v.end = NULL;
+        if ((ret = src->reset(src)) != SEARCH_OK) {
+            return ret;
+        }
+
+        acc = *prevptr;
+        docno = docno_copy;
+        rethresh = rethresh_dist;
+    } else {
+        /* translate the existing v_t threshold to an f_dt */
+        acc = &dummy;
+        acc->acc.docno = UINT_MAX;   /* shouldn't be used */
+        f_dt = 0;
+        do {
+            acc->acc.weight = 0.0;
+            f_dt++;
+            /* METRIC_CONTRIB */
+            (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+        } while (acc->acc.weight < results->v_t && f_dt < INF);
+        thresh = f_dt; 
+        acc = *prevptr;
+
+        if (thresh == INF) {
+            /* this is not a sensible term */
+            infinite = 1;
+            rethresh = postings + 1;
+        }
+    }
+
+    /* set step to 1/2 of the threshold */
+    step = (thresh + 1) / 2;
+    step += !step; /* but don't let it become 0 */
+
+    while (1) {
+        while (NEXT_DOC(&v, docno, f_dt)) {
+            decoded++;
+
+            /* merge into accumulator list */
+            while (acc && (docno > acc->acc.docno)) {
+                /* perform threshold test */
+                if (acc->acc.weight < results->v_t) {
+                    /* remove this accumulator */
+                    *prevptr = acc->next;
+                    objalloc_free(results->alloc, acc);
+                    acc = (*prevptr);
+                    results->accs--;
+                } else {
+                    /* retain this accumulator */
+                    prevptr = &acc->next;
+                    acc = acc->next;
+                }
+            }
+
+            if (acc && (docno == acc->acc.docno)) {
+                /* METRIC_PER_DOC */
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+
+                if (acc->acc.weight < results->v_t) {
+                    /* remove this accumulator */
+                    *prevptr = acc->next;
+                    objalloc_free(results->alloc, acc);
+                    acc = *prevptr;
+                    results->accs--;
+                } else {
+                    /* go to next accumulator */
+                    prevptr = &acc->next;
+                    acc = acc->next;
+                }
+                hit++;
+            } else {
+                if (f_dt > thresh) {
+                    struct search_acc_cons *newacc;
+                    assert(!acc || docno < acc->acc.docno); 
+
+                    if ((newacc = objalloc_malloc(results->alloc, 
+                      sizeof(*newacc)))) {
+                        newacc->acc.docno = docno;
+                        newacc->acc.weight = 0.0;
+                        newacc->next = acc;
+                        acc = newacc;
+                        /* note that we have to be careful around here to 
+                         * assign newacc to acc before using PER_DOC, 
+                         * otherwise we end up with nonsense in some 
+                         * accumulators */
+                        /* METRIC_PER_DOC */
+                        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+                        *prevptr = newacc;
+                        results->accs++;
+                    } else {
+                        return SEARCH_ENOMEM;
+                    }
+
+                    /* go to next accumulator */
+                    prevptr = &acc->next;
+                    acc = acc->next;
+                } else {
+                    missed++;
+                }
+            }
+
+            if (!--rethresh) {
+                int estimate,
+                    prev_thresh = thresh;
+
+                estimate = results->accs 
+                  + ((postings - decoded) 
+                    * ((float) results->accs - initial_accs)) / decoded;
+
+                if (estimate > TOLERANCE * results->acc_limit) {
+                    thresh += step;
+                } else if ((estimate < results->acc_limit / TOLERANCE) 
+                  && thresh) {
+                    if (thresh >= step) {
+                        thresh -= step;
+                    } else {
+                        thresh = 0;
+                    }
+                }
+
+                step = (step + 1) / 2;
+                assert(step);
+
+                /* note that we don't want to recalculate the threshold if it
+                 * doesn't change because this involves re-discretising it */
+                if (prev_thresh != thresh) {
+                    /* recalculate contribution that corresponds to the new 
+                     * threshold */
+                    f_dt = thresh;
+                    if (f_dt) {
+                        acc = &dummy;
+                        acc->acc.docno = UINT_MAX;   /* shouldn't be used */
+                        acc->acc.weight = 0.0;
+                        /* METRIC_CONTRIB */
+                        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
+
+                        results->v_t = acc->acc.weight;
+                        acc = *prevptr;
+                    } else {
+                        results->v_t = FLT_MIN;
+                    }
+                }
+
+                rethresh_dist *= 2;
+                rethresh = rethresh_dist;
+            }
+        }
+
+        /* need to read more data, preserving bytes that we already have */
+        if ((ret = src->read(src, VEC_LEN(&v),
+            (void **) &v.pos, &bytes)) == SEARCH_OK) {
+
+            v.end = v.pos + bytes;
+        } else if (ret == SEARCH_FINISH) {
+            /* finished, estimate total results count */
+            assert(postings == decoded);
+
+            results->total_results += (int) (results->accs - initial_accs);
+
+            /* list entries now divide up into three portions:
+             *   - matching an entry in the acc list (hit)
+             *   - missed
+             *   - added
+             *
+             * cooccurrance rate is the percentage of list items hit */
+            cooc_rate = hit / (float) decoded;
+
+            /* now have sampled co-occurrance rate, use this to estimate 
+             * population co-occurrance rate (assuming unbiased sampling) 
+             * and then number of results from unrestricted evaluation */
+            assert(results->total_results >= results->accs);
+            cooc_rate *= results->total_results / (float) results->accs; 
+            assert(cooc_rate >= 0.0);
+            if (cooc_rate > 1.0) {
+                cooc_rate = 1.0;
+            }
+
+            /* add number of things we think would have been added from the
+             * things that were missed */
+            results->total_results += (1 - cooc_rate) * missed;
+
+            /* note that the total results are not an estimate if either there
+             * were no accumulators in the list when we started (in which case
+             * missed records exactly the number, uh, missing from the
+             * accumulators) or there were none missed, in which case the
+             * accumulators have fully accounted for everything in this list.
+             * In either case, the (1 - cooc_rate) * missed maths above handles
+             * it exactly (modulo floating point errors of course). */
+            if (initial_accs && missed) {
+                results->estimated |= 1;
+            }
+
+            if (!VEC_LEN(&v)) {
+                if (!infinite) {
+                    /* continue threshold evaluation */
+                    return SEARCH_OK;
+                } else {
+                    /* switch to AND processing */
+                    return SEARCH_FINISH;
+                }
+            } else {
+                return SEARCH_EINVAL;
+            }
+        } else {
+            param = NULL;   /* avoid 'param not used' warning */
+            return ret;
+        }
+    }
+}
+
+static enum search_ret thresh_decode_offsets(struct index *idx, 
+  struct query *query, unsigned int qterm, unsigned long int docno, 
+  struct search_metric_results *results, 
+  struct search_list_src *src, unsigned int postings, 
+  int opts, struct index_search_opt *opt) {
+    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
+    struct search_acc_cons *acc = results->acc,
+                           **prevptr = &results->acc,
+                           dummy;
+    unsigned long int f_dt,           /* number of offsets for this document */
+                      docno_d;        /* d-gap */
+
+    /* initial number of accumulators */
+    unsigned int initial_accs = results->accs,
+
+                 decoded = 0,         /* number of postings decoded */
+                 thresh,              /* current discrete threshold */
+                 rethresh,            /* distance to recalculation of the 
+                                       * threshold */
+                 rethresh_dist,
+                 bytes,
+                 step,
+                 missed = 0,        /* number of list entries that didn't match 
+                                     * an accumulator */
+                 hit = 0;           /* number of entries in both accs and list*/
+ 
+    struct vec v = {NULL, NULL};
+    enum search_ret ret;
+    int infinite = 0;                 /* whether threshold is infinite */
+    float cooc_rate;
+    /* METRIC_DECL */
+
+    const unsigned int N = docmap_entries(idx->map);
+
+    const float w_t = log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+
+    const float w_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
 
 
     /* METRIC_PER_CALL */
@@ -357,7 +928,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
             }
 
             /* need to read more data, preserving bytes that we already have */
-            if (rethresh && (ret = src->readlist(src, VEC_LEN(&v),
+            if (rethresh && (ret = src->read(src, VEC_LEN(&v),
                 (void **) &v.pos, &bytes)) == SEARCH_OK) {
 
                 v.end = v.pos + bytes;
@@ -373,7 +944,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
         acc->acc.weight = 0.0;
         f_dt = thresh;
         /* METRIC_CONTRIB */
-        (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
         results->v_t = acc->acc.weight;
 
@@ -395,7 +966,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
             acc->acc.weight = 0.0;
             f_dt++;
             /* METRIC_CONTRIB */
-            (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+            (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
         } while (acc->acc.weight < results->v_t && f_dt < INF);
         thresh = f_dt; 
@@ -435,7 +1006,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
             if (acc && (docno == acc->acc.docno)) {
                 /* METRIC_PER_DOC */
-                (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
 
                 if (acc->acc.weight < results->v_t) {
@@ -466,7 +1037,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
                          * otherwise we end up with nonsense in some 
                          * accumulators */
                         /* METRIC_PER_DOC */
-                        (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
                         *prevptr = newacc;
                         results->accs++;
@@ -483,12 +1054,12 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
             }
 
             if (!--rethresh) {
-                int estimate;
-                unsigned int prev_thresh = thresh;
+                int estimate,
+                    prev_thresh = thresh;
 
-                estimate = (int) (results->accs 
+                estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded);
+                    * ((float) results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -515,7 +1086,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
                         acc->acc.docno = UINT_MAX;   /* shouldn't be used */
                         acc->acc.weight = 0.0;
                         /* METRIC_CONTRIB */
-                        (acc->acc.weight) += w_qt * (opt->u.hawkapi.alpha) * ((float) logf(f_dt + 1)) * w_t;
+                        (acc->acc.weight) += w_qt * (param->alpha) * log(f_dt + 1) * w_t;
 
                         results->v_t = acc->acc.weight;
                         acc = *prevptr;
@@ -530,7 +1101,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
         }
 
         /* need to read more data, preserving bytes that we already have */
-        if ((ret = src->readlist(src, VEC_LEN(&v),
+        if ((ret = src->read(src, VEC_LEN(&v),
             (void **) &v.pos, &bytes)) == SEARCH_OK) {
 
             v.end = v.pos + bytes;
@@ -552,8 +1123,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate 
-              *= (float) results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results / (float) results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -586,6 +1156,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
+            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -593,10 +1164,22 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
 /* Declare a function named the same as the metric that returns a structure 
  * containing function pointers */
-const struct search_metric * /* METRIC_NAME */ hawkapi () {
-    const static struct search_metric sm 
-      = {pre, /* METRIC_DEPENDS_POST */ 0 ? post : NULL, 
-         or_decode, and_decode, thresh_decode};
-    return &sm;
+const struct search_metric * /* METRIC_NAME */ hawkapi 
+  (struct search_metric *sm, int offsets) {
+    sm->pre = pre;
+    sm->post = post;
+    sm->name = /* METRIC_QUOTED_NAME */ "hawkapi";
+    sm->parse_params = parse;
+    if (offsets) {
+        sm->or_decode = or_decode_offsets;
+        sm->and_decode = and_decode_offsets;
+        sm->thresh_decode = thresh_decode_offsets;
+    } else {
+        sm->or_decode = or_decode;
+        sm->and_decode = and_decode;
+        sm->thresh_decode = thresh_decode;
+    }
+
+    return sm;
 }
 

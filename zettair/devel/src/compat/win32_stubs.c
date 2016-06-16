@@ -13,8 +13,7 @@
 #include <time.h>
 
 /* on windows we can use up to 4GB
- * (see http://support.microsoft.com/default.aspx?scid=kb;en-us;93496).  We
- * have to ifdef out the other stuff because windows doesn't have ftruncate. */
+ * (see http://support.microsoft.com/default.aspx?scid=kb;en-us;93496). */
 int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
     if (knownlimit > 4294967295U) {
         *limit = 4294967295U;
@@ -25,7 +24,7 @@ int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
 }
 
 int gettimeofday(struct timeval *tp, void *vp) {
-    tp->tv_sec = time(NULL);
+    tp->tv_sec = (long int) time(NULL);
     tp->tv_usec = 0;
     return 0;
 }

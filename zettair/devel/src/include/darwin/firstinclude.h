@@ -9,15 +9,12 @@
 #ifndef FIRSTINCLUDE_H
 #define FIRSTINCLUDE_H
 
-#ifndef _FILE_OFFSET_BITS
-#define _FILE_OFFSET_BITS 64           /* large file support */
-#endif
-
 /* indicate what the directory separator character is for this OS */
 #define OS_SEPARATOR '/'
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <math.h>
 
 #include "config.h"
 

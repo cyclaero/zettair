@@ -67,10 +67,10 @@ enum merge_states {
     STATE_WRITE_VOCAB_END = 14,
     STATE_WRITE_FILE_FIRST = 19,
     STATE_WRITE_FILE_VECTOR = 20,
-    STATE_WRITE_FILE_OVERALLOC = 21,
     STATE_WRITE_FILE_END = 22,
     STATE_WRITE_BTREE = 24,
     STATE_FLUSH_NEWFILE = 26,
+    STATE_FLUSH_BTREE = 38,
     STATE_FLUSH_SWITCH = 27,
     STATE_PRE_WRITEENTRY = 28,
     STATE_WRITEENTRY = 29,
@@ -80,7 +80,7 @@ enum merge_states {
     STATE_WRITEENTRY_LAST = 32,
     STATE_WRITEENTRY_SIZE = 33,
     STATE_WRITEENTRY_FIRST = 34,
-    STATE_WRITEENTRY_VECTOR = 35 
+    STATE_WRITEENTRY_VECTOR = 35
 };
 
 /* structure to represent inputs with enough information read in to
@@ -237,7 +237,7 @@ static void merge_free(void *ptr, void *mem) {
 int merge_final_new(struct merge_final *merger, void *opaque,
   void *(*allocfn)(void *opaque, unsigned int size),
   void (*freefn)(void *opaque, void *mem), struct storagep *storage,
-  void *outbuf, unsigned int outbufsz) {
+  void *outbuf, unsigned int outbufsz, int offsets) {
     unsigned int i,
                  j;
 
@@ -272,8 +272,11 @@ int merge_final_new(struct merge_final *merger, void *opaque,
         merger->state->finished = 0;
         merger->state->storage = storage;
 
-        merger->state->vv.attr = VOCAB_ATTRIBUTES_NONE;
-        merger->state->vv.type = VOCAB_VTYPE_DOCWP;
+        if (offsets) {
+            merger->state->vv.type = VOCAB_VTYPE_DOCWP;
+        } else {
+            merger->state->vv.type = VOCAB_VTYPE_DOC;
+        }
 
         assert(storage->max_filesize > storage->pagesize);
 
@@ -451,7 +454,6 @@ void merge_final_delete(struct merge_final *merger) {
     case STATE_WRITE_VOCAB_END: goto write_vocab_end_label;                   \
     case STATE_WRITE_FILE_FIRST: goto write_file_first_label;                 \
     case STATE_WRITE_FILE_VECTOR: goto write_file_vector_label;               \
-    case STATE_WRITE_FILE_OVERALLOC: goto write_file_overalloc_label;         \
     case STATE_WRITE_FILE_END: goto write_file_end_label;                     \
     case STATE_WRITE_BTREE: goto write_btree_label;                           \
     case STATE_FLUSH_NEWFILE: goto flush_newfile_label;                       \
@@ -465,6 +467,7 @@ void merge_final_delete(struct merge_final *merger) {
     case STATE_WRITEENTRY_SIZE: goto writeentry_size_label;                   \
     case STATE_WRITEENTRY_FIRST: goto writeentry_first_label;                 \
     case STATE_WRITEENTRY_VECTOR: goto writeentry_vector_label;               \
+    case STATE_FLUSH_BTREE: goto flush_btree_label;                           \
     default: goto err_label;                                                  \
     }
 
@@ -726,27 +729,20 @@ select_inputs_label:
 
         assert(merger->out.offset_out 
           <= merger->state->storage->max_filesize - merger->out.size_out);
-        if (merger->state->vv.size < merger->state->storage->vocab_lsize) {
-            merger->state->vv.location = VOCAB_LOCATION_VOCAB;
-            goto assign_vocab_label;
-
         /* check if file output will overflow current file */
-        } else if ((merger->state->vv.loc.file.capacity 
-            = merger->state->vv.size)
+        if (merger->state->vv.size 
           > merger->state->storage->max_filesize - merger->out.offset_out 
             - merger->out.size_out) {
 
-            merger->state->vv.location = VOCAB_LOCATION_FILE;
-            merger->state->vv.loc.file.fileno = merger->out.fileno_out + 1;
-            merger->state->vv.loc.file.offset = 0;
+            merger->state->vv.loc.fileno = merger->out.fileno_out + 1;
+            merger->state->vv.loc.offset = 0;
             merger->state->next_state = STATE_WRITE_FILE_FIRST;
             merger->state->state = STATE_FLUSH_NEWFILE;
             return MERGE_OUTPUT;
         } else {
             /* won't exceed current file, just write it */
-            merger->state->vv.location = VOCAB_LOCATION_FILE;
-            merger->state->vv.loc.file.fileno = merger->out.fileno_out;
-            merger->state->vv.loc.file.offset 
+            merger->state->vv.loc.fileno = merger->out.fileno_out;
+            merger->state->vv.loc.offset 
               = merger->out.offset_out + merger->out.size_out;
             goto write_file_first_label;
         }
@@ -771,8 +767,8 @@ prefinish_label:
         case BTBULK_FLUSH:
             /* need to start a new file */
             merger->state->next_state = STATE_PREFINISH;
-            merger->state->state = STATE_FLUSH_NEWFILE;
-            return MERGE_OUTPUT;
+            merger->state->state = STATE_FLUSH_BTREE;
+            return MERGE_OUTPUT_BTREE;
 
         case BTBULK_WRITE:
             /* need to write bucket to output */
@@ -840,8 +836,8 @@ assign_vocab_label:
         case BTBULK_FLUSH:
             /* need to start a new file */
             merger->state->next_state = STATE_ASSIGN_VOCAB;
-            merger->state->state = STATE_FLUSH_NEWFILE;
-            return MERGE_OUTPUT;
+            merger->state->state = STATE_FLUSH_BTREE;
+            return MERGE_OUTPUT_BTREE;
 
         case BTBULK_WRITE:
             /* need to write bucket to output */
@@ -861,14 +857,6 @@ assign_vocab_label:
     vec.end = vec.pos + merger->state->btree.datasize;
     vocab_encode(&merger->state->vv, &vec);
     assert(!VEC_LEN(&vec));
-
-    if (merger->state->vv.location == VOCAB_LOCATION_VOCAB) {
-        /* a bit hacky, if the destination is the vocab we still need to write
-         * it, otherwise we proceed straight to getting the next input. */
-        merger->state->addr = (char *) merger->state->btree.output.ok.data 
-          + vocab_len(&merger->state->vv) - merger->state->vv.size;
-        goto write_vocab_first_label;
-    }
 
     /* reload or finish input */
     merger->state->next_state = STATE_WRITE_END;
@@ -1020,7 +1008,7 @@ write_file_vector_label:
         return MERGE_OUTPUT;
     }
 
-    /* if its the last entry, write overallocation entry */
+    /* if its the last entry, write the vocab entry */
     if (merger->state->index + 1 < merger->inputs - merger->state->finished) {
         /* reload or finish input */
         merger->state->next_state = STATE_WRITE_FILE_END;
@@ -1030,30 +1018,9 @@ write_file_vector_label:
         merger->state->count = 0;
         goto readentry_label;
     } else {
-        /* calculate how much overallocation we need to write out */
-        merger->state->count = merger->state->vv.loc.file.capacity 
-            - merger->state->vv.size;
+        /* finished, write vocab entry */
+        goto assign_vocab_label;
     }
-    /* fallthrough to write_file_overalloc_label */
-
-write_file_overalloc_label:
-    /* need to write out extra space to accomodate overallocation scheme */
-    len = merger->state->outsize - merger->out.size_out;
-    if (merger->state->count && (len >= merger->state->count)) {
-        /* can output directly */
-        memset(&merger->out.buf_out[merger->out.size_out], 0, 
-          merger->state->count);
-        merger->out.size_out += merger->state->count;
-    } else if (merger->state->count) {
-        memset(&merger->out.buf_out[merger->out.size_out], 0, len);
-        merger->out.size_out = merger->state->outsize;
-        merger->state->count -= len;
-        merger->state->state = STATE_WRITE_FILE_OVERALLOC;
-        return MERGE_OUTPUT;
-    }
-
-    /* finished, write vocab entry */
-    goto assign_vocab_label;
 
 write_file_end_label:
     /* finished reading the entry, check to see if we need to put it
@@ -1073,6 +1040,12 @@ flush_newfile_label:
     /* the output has been flushed and we're starting a new file */
     merger->out.fileno_out++;
     merger->out.offset_out = 0;
+    JUMP(merger->state->next_state);
+
+flush_btree_label:
+    /* the btree output has been flushed and we're starting a new file */
+    merger->out_btree.fileno_out++;
+    merger->out_btree.offset_out = 0;
     JUMP(merger->state->next_state);
 
 flush_switch_label:
@@ -1519,9 +1492,9 @@ write_vocab_vector_label:
 write_vocab_end_label:
 write_file_first_label:
 write_file_vector_label:
-write_file_overalloc_label:
 write_file_end_label:
 write_btree_label:
+flush_btree_label:
 flush_newfile_label:
     /* fallthrough to err_label */
     assert(!CRASH);

@@ -13,7 +13,7 @@
 struct crc;
 
 /* create a new CRC object */
-struct crc *crc_new();
+struct crc *crc_new(void);
 
 /* reinitialise the CRC object, to restart the checksumming */
 void crc_reinit(struct crc *crc);

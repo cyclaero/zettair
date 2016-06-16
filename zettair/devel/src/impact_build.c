@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 #include <float.h>
 
@@ -23,6 +22,7 @@
 #include "vec.h"
 #include "fdset.h"
 #include "str.h"
+#include "ioutil.h"
 
 #define IMPACT_UNSET -1.0F
 #define W_QT_UNSET -1.0F
@@ -233,10 +233,10 @@ enum impact_ret impact_order_index(struct index *idx) {
             }
         }
 
-        nwritten = index_atomic_write(new_vector_fd_out, vec_mem, vec_size);
+        nwritten = ioutil_atomic_write(new_vector_fd_out, vec_mem, vec_size);
         fdset_unpin(idx->fd, new_vector_fd_type, new_vector_fileno,
           new_vector_fd_out);
-        if (nwritten != (ssize_t) vec_size) {
+        if (nwritten != vec_size) {
             ERROR3("writing vector of size %lu to temporary vector file "
               "number %lu, offset %lu", vec_size, new_vector_fileno,
               vector_file_offset);
@@ -247,8 +247,6 @@ enum impact_ret impact_order_index(struct index *idx) {
            entries; but the policy for this is still unclear. */
 
         /* Add vocab entry for impact vector to existing vocab entries. */
-        vocab_entry_out.attr = VOCAB_ATTRIBUTES_NONE;
-        vocab_entry_out.attribute = 0;
         vocab_entry_out.type = VOCAB_VTYPE_IMPACT;
         vocab_entry_out.size = vec_size;
         switch (vocab_in.type) {
@@ -265,10 +263,8 @@ enum impact_ret impact_order_index(struct index *idx) {
         default:
             assert("shouldn't happen" && 0);
         }
-        vocab_entry_out.location = VOCAB_LOCATION_FILE;
-        vocab_entry_out.loc.file.capacity = vec_size;
-        vocab_entry_out.loc.file.fileno = new_vector_fileno;
-        vocab_entry_out.loc.file.offset = vector_file_offset;
+        vocab_entry_out.loc.fileno = new_vector_fileno;
+        vocab_entry_out.loc.offset = vector_file_offset;
 
         vocab_entry_out_len = vocab_len(&vocab_entry_out);
         vocab_vector_out_len = datalen + vocab_entry_out_len;
@@ -344,7 +340,7 @@ enum impact_ret impact_order_index(struct index *idx) {
     idx->impact_stats.quant_bits = quant_bits;
     idx->impact_stats.w_qt_min = w_qt_min;
     idx->impact_stats.w_qt_max = w_qt_max;
-    idx->impact_vectors = 1;
+    idx->vector_types |= VOCAB_VTYPE_IMPACT;
     
     dummy_offset = 0;
     dummy_size = vector_file_offset;
@@ -532,25 +528,14 @@ static enum impact_ret load_vector(struct index * idx, const char * term,
     }
     *vec_len = vocab->size;
 
-    switch (vocab->location) {
-    case VOCAB_LOCATION_VOCAB:
-        memcpy(*vec_mem, vocab->loc.vocab.vec, vocab->size);
-        /* XXX does loc.vocab.vec need to be freed? */
-        break;
-
-    case VOCAB_LOCATION_FILE:
-        if ( (fd_in = fdset_pin(idx->fd, idx->index_type,
-                  vocab->loc.file.fileno, vocab->loc.file.offset,
-                  SEEK_SET)) < 0) 
-            return IMPACT_IO_ERROR;
-        read = index_atomic_read(fd_in, *vec_mem, vocab->size);
-        fdset_unpin(idx->fd, idx->index_type, vocab->loc.file.fileno, fd_in);
-        if (read < 0)
-            return IMPACT_IO_ERROR;
-        break;
-    default:
-        assert("shouldn't get here" && 0);
-    }
+    if ((fd_in = fdset_pin(idx->fd, idx->index_type,
+              vocab->loc.fileno, vocab->loc.offset,
+              SEEK_SET)) < 0) 
+        return IMPACT_IO_ERROR;
+    read = ioutil_atomic_read(fd_in, *vec_mem, vocab->size);
+    fdset_unpin(idx->fd, idx->index_type, vocab->loc.fileno, fd_in);
+    if (read < 0)
+        return IMPACT_IO_ERROR;
     return IMPACT_OK;
 }
 
@@ -711,9 +696,8 @@ double impact_normalise(double impact, double norm_B, double slope,
 
 unsigned int impact_quantise(double impact, unsigned int quant_bits, 
   double max_impact, double min_impact) {
-    return (unsigned int) floor(pow(2, quant_bits) 
-        * ((impact - min_impact) / (max_impact - min_impact + E_VALUE))) 
-      + 1;
+    return floor(pow(2, quant_bits) * ((impact - min_impact) 
+          / (max_impact - min_impact + E_VALUE))) + 1;
 }
 
 static enum impact_ret get_doc_vec(struct index * idx, const char * term,
@@ -743,7 +727,7 @@ static void impact_transform_list(struct list_decomp * list,
   double max_impact, double min_impact, double slope, 
   unsigned int quant_bits, double norm_B, double *w_qt_min, 
   double *w_qt_max, double f_t_avg) {
-    unsigned int d;
+    int d;
     double impact;
     double w_qt;
     
@@ -831,7 +815,7 @@ static enum impact_ret compress_impact_ordered_list(struct list_decomp * list,
             /* Check for space only at the start of each block.  This
                frees us from having to check for any of the vbyte_writes. */
             space_for_block = (2 + block_size) * VEC_VBYTE_MAX;
-            if (vec_len(&vec) < space_for_block) {
+            if (vec.end - vec.pos < space_for_block) {
                 char * new_vec_mem;
                 unsigned int new_vec_mem_len;
                 unsigned long int offset;
@@ -853,7 +837,7 @@ static enum impact_ret compress_impact_ordered_list(struct list_decomp * list,
                 vec.pos = new_vec_mem + offset;
                 vec.end = new_vec_mem + new_vec_mem_len;
                 assert(vec.end > vec.pos);
-                assert(vec_len(&vec) >= space_for_block);
+                assert(vec.end - vec.pos >= space_for_block);
             }
             vec_vbyte_write(&vec, block_size);
 
@@ -897,9 +881,9 @@ static enum impact_ret fdset_write(unsigned int fileno,
         ERROR2("opening output file number %u to offset %lu", fileno, offset);
         return IMPACT_IO_ERROR;
     }
-    nwritten = index_atomic_write(fd, data, data_len);
+    nwritten = ioutil_atomic_write(fd, data, data_len);
     fdset_unpin(fdset, filetype, fileno, fd);
-    if (nwritten != (ssize_t) data_len) {
+    if (nwritten != data_len) {
         ERROR3("writing %u bytes to file number %u at offset %lu", 
           data_len, fileno, offset);
         return IMPACT_IO_ERROR;

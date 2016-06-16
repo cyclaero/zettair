@@ -368,7 +368,7 @@ struct freemap *freemap_new(enum freemap_strategies strategy,
 
     if ((map = malloc(sizeof(*map))) 
       && (map->index = rbtree_ptr_new(freerec_cmp))
-      && (map->rand = lcrand_new(time(NULL)))
+      && (map->rand = lcrand_new((unsigned int) time(NULL)))
       && (map->alloc 
         /* XXX: should allow setting of chunksize and underlying allocator for 
          * object alloctor from outside interface */
@@ -1482,7 +1482,7 @@ void freemap_print_profile(const struct freemap *map, FILE *output) {
         unsigned int count,
                      sum;
 
-        count = sizelist_size(map->sizeindex[i], &sum);
+	    count = sizelist_size(map->sizeindex[i], &sum);
         fprintf(output, "%u - %u: %u entries %u bytes, %f%%\n", 
           BIT_POW2(i), BIT_POW2(i) + (BIT_POW2(i) - 1), count, sum, 
           sum * 100.0 / total);

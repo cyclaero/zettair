@@ -8,8 +8,6 @@
 
 /* FIXME: seems to accept args for NONE types */
 
-#include "firstinclude.h"
-
 #include "getlongopt.h"
 
 #include "str.h"

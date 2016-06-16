@@ -16,7 +16,7 @@ struct crc {
     uint32_t sum;              /* checksum */
 };
 
-static unsigned int *crc_table() {
+static unsigned int *crc_table(void) {
     static unsigned int table[256];
     static int initialised = 0;
 
@@ -42,7 +42,7 @@ static unsigned int *crc_table() {
     return table;
 }
 
-struct crc *crc_new() {
+struct crc *crc_new(void) {
     struct crc *crc;
 
     assert(sizeof(unsigned int) >= 4);

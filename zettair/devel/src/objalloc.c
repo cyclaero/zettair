@@ -1,14 +1,21 @@
 /* objalloc.c implements an object that efficiently returns allocations of a 
  * set size.  Our implementation is fairly simple, in that we request memory
- * from the underlying allocation mechanism in chunks, which we arrange into a
- * singly-linked list.  We also maintain a singly-linked list of free objects,
- * which we manipulate as objects are allocated/freed.
- *
- * Naturally, the next step for this bit of code would be to *accept* an
- * allocator and free functions to be able to chain allocators.
+ * from the underlying allocation mechanism in chunks of (at least) a given 
+ * size.  Once a chunk has been allocated, memory is freshly allocated from 
+ * that chunk in preference to returning previously allocated memory from the
+ * linked list.  This optimises bulk allocation and freeing of objects, slowing
+ * allocate-one-free-one style allocation.  Once the allocator has run out of
+ * fresh memory to allocate, it returns freed objects until it runs out of them,
+ * and then allocates a new chunk.
  *
  * written nml 2004-08-30
  *
+ */
+
+/* FIXME:
+     - restore redzones
+     - drain can be subsumed into reserve
+     - ptr arg to _memsize? (something to do with alloc interface?)
  */
 
 #include "firstinclude.h"
@@ -22,7 +29,6 @@
 #include "zvalgrind.h"
 
 #include <assert.h>
-#include <stdlib.h>
 
 /* integer value we use to fill up space */
 #define SPACE_FILL 0xdeadbeefU
@@ -30,16 +36,30 @@
 #define FILL_BYTE(i) ((unsigned char) (SPACE_FILL >> (8 * (3 - ((i) % 4)))))
 
 struct objalloc_chunk { 
+    char *pos;                       /* next free position in this chunk */
+    char *end;                       /* pointer to the end of the chunk */
     struct objalloc_chunk *next;     /* linked list of chunks */
-    unsigned int size;               /* size of the rest of the chunk */
+    unsigned int size;               /* size of chunk, excluding header */
     /* more memory than this is allocated, and is managed below */
 };
 
-struct objalloc_alloc {
-    struct objalloc_alloc *next;     /* linked list of alloc objects */
+struct objalloc_object {
+    struct objalloc_object *next;     /* linked list of objects */
 };
 
 struct objalloc {
+    struct objalloc_chunk chunk;     /* chunk currently being allocated from,
+                                      * followed by chunks that have been fully
+                                      * allocated.  Note that this is not a
+                                      * pointer.  Chunk headers are copied in
+                                      * and out of this member as they become
+                                      * active or exhausted, so as to minimise
+                                      * indirection when allocating. */
+    struct objalloc_object *free;    /* list of free locations */
+
+    struct objalloc_chunk *reserved; /* reserved chunks (those that have not 
+                                      * serviced any allocations yet) */
+    struct alloc alloc;              /* underlying allocator */
     unsigned int allocsize;          /* size of objects we're allocating */
     unsigned int redzone;            /* size of redzone we're putting after 
                                       * objects */
@@ -47,140 +67,119 @@ struct objalloc {
                                       * the underlying allocation mechanism */
     unsigned int allocated;          /* how many objects are currently 
                                       * allocated */
-    unsigned int reserved;           /* how many objects are currently on the 
-                                      * next linked list, ready for 
-                                      * allocation */
     unsigned int align;              /* object alignment */
-    struct alloc alloc;              /* underlying allocator */
-    struct objalloc_alloc *next;     /* linked list of objects ready for 
-                                      * allocation */
-    struct objalloc_chunk chunk;     /* first chunk */
 };
 
-/* internal function to check that the object allocator is in a sane state */
+/* macro to detect the first chunk of the object allocator (that shares space
+ * with the aggregate header).  Note that this method works even when the chunk
+ * is copied into the aggregate header. */
+#define IS_FIRST_CHUNK(obj, chunk) \
+  ((((char *) (obj)) + (obj)->chunksize) == ((chunk)->end))
+
+/* macro to return the memory position of the true header of a given chunk */
+#define CHUNK_ADDR(chunk) ((struct objalloc_chunk *) \
+  (((char *) (chunk)->end) - (chunk)->size - sizeof(*(chunk))))
+
+static int is_first_chunk(struct objalloc *obj, struct objalloc_chunk *chunk) {
+    return IS_FIRST_CHUNK(obj, chunk);
+}
+
+static struct objalloc_chunk *chunk_addr(struct objalloc_chunk *chunk) {
+    return CHUNK_ADDR(chunk);
+}
+
 static int objalloc_invariant(struct objalloc *obj) {
-    struct objalloc_alloc *alloc = obj->next,
-                          *nextalloc;
-    struct objalloc_chunk *chunk,
+    struct objalloc_chunk *chunk = &obj->chunk,
                           *next;
-    unsigned int reserved = 0;
 
     if (!DEAR_DEBUG) {
         return 1;
     }
 
-    /* check all allocations are from our set of memory */
-    while (alloc) {
-        /* check alignment */
-        assert((((unsigned long int) alloc) / obj->align) * obj->align 
-          == (unsigned long int) alloc);
-        VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-        nextalloc = alloc->next;
-        /* this check is a bit too expensive even for DEAR_DEBUG
-        if (!objalloc_is_managed(obj, alloc)) {
-            assert(!CRASH);
-            return 0;
-        } */
-        VALGRIND_MAKE_NOACCESS(alloc, sizeof(*alloc));
-        alloc = nextalloc;
-        reserved++;
-    }
-
-    /* check we have the number reserved that we said we did */
-    if (reserved != obj->reserved) {
-        assert(!CRASH);
-        return 0;
-    }
-
-    /* check each chunk */
-    chunk = &obj->chunk;
-    while (chunk) {
-        void *curr,
-             *end;
-
-        /* mark header as accessable */
+    /* process active and exhausted chunks */
+    do {
         VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
-
-        curr = mem_align(mem_ptradd(chunk, sizeof(*chunk)), obj->align);
-        end = mem_ptradd(chunk, sizeof(*chunk) + chunk->size);
-
-        while (MEM_PTRADD(curr, obj->allocsize + obj->redzone) <= end) {
-            unsigned int i;
-
-            /* make redzone valid */
-            VALGRIND_MAKE_READABLE(MEM_PTRADD(curr, obj->allocsize), 
-              obj->redzone);
-
-            /* check redzone value */
-            for (i = 0; i < obj->redzone; i++) {
-                if (((unsigned char *) mem_ptradd(curr, obj->allocsize))[i] 
-                  != FILL_BYTE(i)) {
-                    /* redzone has been violated */
-                    assert(!CRASH);
-                }
-            }
-
-            /* make redzone invalid again */
-            VALGRIND_MAKE_NOACCESS(MEM_PTRADD(curr, obj->allocsize), 
-              obj->redzone);
-
-            curr = MEM_PTRADD(curr, obj->allocsize + obj->redzone);
-        }
-
+        VALGRIND_MAKE_READABLE(CHUNK_ADDR(chunk), sizeof(*chunk));
         next = chunk->next;
 
-        /* make header invalid again */
-        VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
+        /* if it isn't the aggregate chunk, it should be exhausted */
+        if (chunk != &obj->chunk) {
+            if (chunk->pos <= chunk->end - (obj->allocsize + obj->redzone)) {
+                assert("failed invariant" && 0);
+                return 0;
+            }
+        }
 
-        chunk = next;
+        /* check that the size is laid out sensibly */
+        if (chunk != &obj->chunk) {
+            if ((char *) chunk->end 
+              != ((char *) chunk) + chunk->size + sizeof(*chunk)) {
+                assert("failed invariant" && 0);
+                return 0;
+            }
+        }
+        if (chunk->pos < chunk->end - chunk->size) {
+            assert("failed invariant" && 0);
+            return 0;
+        }
+
+        /* check that this chunk doesn't overlap the next */
+        if (next) {
+            VALGRIND_MAKE_READABLE(next, sizeof(*next));
+            if (!((void *) next->end <= (void *) CHUNK_ADDR(chunk) 
+              || (void *) next >= (void *) (CHUNK_ADDR(chunk))->end)) {
+                assert("failed invariant" && 0);
+                return 0;
+            }
+            VALGRIND_MAKE_NOACCESS(next, sizeof(*next));
+        }
+
+        /* check that the space on this chunk is sensible */
+        if (chunk->pos > chunk->end 
+          || chunk->pos < chunk->end - chunk->size) {
+            assert("failed invariant" && 0);
+            return 0;
+        }
+
+        if (!next) {
+            assert(is_first_chunk(obj, chunk));
+            assert((void *) CHUNK_ADDR(chunk) == (void *) (obj + 1));
+        } else {
+            assert(chunk_addr(chunk) == chunk 
+              || (void *) chunk == (void *) obj);
+        }
+        VALGRIND_MAKE_NOACCESS(CHUNK_ADDR(chunk), sizeof(*chunk));
+        VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
+    } while ((chunk = next));
+
+    /* process reserved chunks */
+    next = obj->reserved;
+    while ((chunk = next)) {
+        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
+        next = chunk->next;
+        assert(chunk->pos < chunk->end);
+        assert(chunk->pos == chunk->end - chunk->size);
+        VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
     }
 
     return 1;
 }
 
-/* internal function to break up the memory in a chunk and allocate it to the
- * list in the alloc object.  free indicates whether allocations should be
- * free'd as we go (so that valgrind doesn't report leaks). */
-static void objalloc_chunkify(struct objalloc *obj,
-  struct objalloc_chunk *chunk, int free) {
-    void *curr = mem_align(mem_ptradd(chunk, sizeof(*chunk)), obj->align),
-         *end = mem_ptradd(chunk, sizeof(*chunk) + chunk->size);
-    struct objalloc_alloc *alloc;
-
-    while (MEM_PTRADD(curr, obj->allocsize + obj->redzone) <= end) {
-        /* append allocation to the start of the object's linked list */
-        unsigned int i;
-
-        alloc = curr;
-        alloc->next = obj->next;
-        obj->next = alloc;
-        obj->reserved++;
-
-        /* free the memory from valgrind's point of view */
-        if (RUNNING_ON_VALGRIND && free) {
-            VALGRIND_FREELIKE_BLOCK(alloc, 0);
-        }
-
-        /* mark the redzone with fill value */
-        for (i = 0; i < obj->redzone; i++) {
-            ((unsigned char *) mem_ptradd(alloc, obj->allocsize))[i] 
-              = FILL_BYTE(i);
-        }
-
-        /* mark the redzone out of bounds using valgrind */
-        VALGRIND_MAKE_NOACCESS(MEM_PTRADD(curr, obj->allocsize), obj->redzone);
-
-        curr = MEM_PTRADD(curr, obj->allocsize + obj->redzone);
-    }
-
-    /* mark chunk header out of bounds using valgrind (acts as red-zone above
-     * the objects) */
+/* internal function to initialise members of a new chunk */
+static void chunk_init(struct objalloc *obj, struct objalloc_chunk *chunk, 
+  void *start, unsigned int size, struct objalloc_chunk *next) {
+    assert(size);
+    assert(size >= obj->allocsize + obj->redzone);
+    chunk->next = next;
+    chunk->pos = start;
+    chunk->size = size - sizeof(*chunk);
+    chunk->end = chunk->pos + chunk->size;
+    assert(chunk->pos < chunk->end);
+    VALGRIND_MAKE_NOACCESS(chunk->pos, chunk->size);
     VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
-
-    assert(objalloc_invariant(obj));
 }
 
-struct objalloc *objalloc_new(unsigned int size, unsigned int align,
+struct objalloc *objalloc_new(unsigned int size, unsigned int align, 
   unsigned int redzone, unsigned int bulkalloc, const struct alloc *alloc) {
     struct objalloc *obj;
     unsigned int min;
@@ -198,9 +197,10 @@ struct objalloc *objalloc_new(unsigned int size, unsigned int align,
         align = mem_align_max();
     }
 
-    /* ensure that size is a multiple of the alignment */
-    if (size < sizeof(struct objalloc_alloc)) {
-        size = sizeof(struct objalloc_alloc);
+    /* ensure that size is a multiple of the alignment, and is big enough to
+     * store a pointer. */
+    if (size < sizeof(struct objalloc_object)) {
+        size = sizeof(struct objalloc_object);
     }
     if (align * (size / align) != size) {
         /* round up to nearest alignment boundary */
@@ -212,7 +212,8 @@ struct objalloc *objalloc_new(unsigned int size, unsigned int align,
 
     /* figure out minimum size that we need bulkalloc to be to allocate the
      * object, a chunk header, one redzone and one object */
-    min = sizeof(struct objalloc) + align + size + redzone;
+    min = sizeof(struct objalloc) + sizeof(struct objalloc_chunk) 
+      + size + redzone;
     if (bulkalloc < min) {
         bulkalloc = min;
     }
@@ -222,13 +223,19 @@ struct objalloc *objalloc_new(unsigned int size, unsigned int align,
         obj->allocsize = size;
         obj->redzone = redzone;
         obj->chunksize = bulkalloc;
-        obj->next = NULL;
-        obj->chunk.next = NULL;
-        obj->chunk.size = bulkalloc - sizeof(*obj);
+        obj->reserved = NULL;
+        obj->free = NULL;
         obj->allocated = 0;
-        obj->reserved = 0;
         obj->alloc = *alloc;
-        objalloc_chunkify(obj, &obj->chunk, 0);
+
+        /* set up first chunk (first chunk starts immediately after object
+         * header in memory, first allocated position starts immediately after
+         * first chunk header).  Note that this a little deceptive, because we
+         * aren't using the first chunk header yet, as it is 'copied' into the
+         * immediate member in the object header. */
+        VALGRIND_MAKE_NOACCESS(obj + 1, sizeof(obj->chunk));
+        chunk_init(obj, &obj->chunk, ((char *) (obj + 1)) + sizeof(obj->chunk),
+          bulkalloc - sizeof(*obj), NULL);
 
         if (!objalloc_invariant(obj)) {
             objalloc_delete(obj);
@@ -240,126 +247,116 @@ struct objalloc *objalloc_new(unsigned int size, unsigned int align,
 }
 
 void objalloc_delete(struct objalloc *obj) {
-    struct objalloc_chunk *chunk,
+    struct objalloc_chunk *chunk = &obj->chunk,
                           *next;
 
-    /* bring chunk headers back into addressable space */
-    VALGRIND_MAKE_READABLE(&obj->chunk, sizeof(obj->chunk));
+    assert(objalloc_invariant(obj));
 
-    chunk = obj->chunk.next;
-    while (chunk) {
-        void *curr,
-             *end;
-
-        /* bring chunk headers back into addressable space */
+    do {
         VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
         next = chunk->next;
-
-        curr = mem_align(mem_ptradd(chunk, sizeof(*chunk)), obj->align);
-        end = mem_ptradd(chunk, sizeof(*chunk) + chunk->size);
-
-        while (obj->redzone 
-          && MEM_PTRADD(curr, obj->allocsize + obj->redzone) <= end) {
-            unsigned int i;
-
-            /* make redzone valid */
-            VALGRIND_MAKE_READABLE(MEM_PTRADD(curr, obj->allocsize), 
-              obj->redzone);
-
-            /* check redzone value */
-            for (i = 0; i < obj->redzone; i++) {
-                if (((unsigned char *) mem_ptradd(curr, obj->allocsize))[i] 
-                  != FILL_BYTE(i)) {
-                    /* redzone has been violated */
-                    assert(!CRASH);
-                }
-            }
-
-            curr = MEM_PTRADD(curr, obj->allocsize + obj->redzone);
+        assert(chunk->pos >= chunk->end - chunk->size);
+        if (!IS_FIRST_CHUNK(obj, chunk)) {
+            assert((void *) obj != (void *) CHUNK_ADDR(chunk));
+            obj->alloc.free(obj->alloc.opaque, CHUNK_ADDR(chunk));
         }
+    } while ((chunk = next));
 
+    /* free reserved blocks */
+    for (chunk = obj->reserved; chunk; chunk = next) {
+        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
+        next = chunk->next;
+        assert(!IS_FIRST_CHUNK(obj, chunk));
+        assert(CHUNK_ADDR(chunk) == chunk);
         obj->alloc.free(obj->alloc.opaque, chunk);
-        chunk = next;
     }
 
     obj->alloc.free(obj->alloc.opaque, obj);
-}
-
-unsigned int objalloc_reserve(struct objalloc *obj, unsigned int reserve) {
-    /* have to allocate a new chunk */
-    struct objalloc_chunk *chunk;
-
-    while ((obj->reserved < reserve) 
-      && (chunk = obj->alloc.malloc(obj->alloc.opaque, obj->chunksize))) {
-        VALGRIND_MAKE_READABLE(&obj->chunk, sizeof(obj->chunk));
-
-        chunk->next = obj->chunk.next;
-        chunk->size = obj->chunksize - sizeof(*chunk);
-        obj->chunk.next = chunk;
-
-        VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
-
-        objalloc_chunkify(obj, chunk, 0);
-        assert(obj->next);
-    }
-
-    return obj->reserved;
 }
 
 void *objalloc_malloc(struct objalloc *obj, unsigned int size) {
     void *ptr;
 
     if (size <= obj->allocsize) {
-        if (!obj->next) {
-            if (!objalloc_reserve(obj, 1)) {
-                return NULL;
-            }
-        }
+        VALGRIND_MAKE_READABLE(&obj->chunk, sizeof(obj->chunk));
+        if (obj->chunk.pos + obj->allocsize + obj->redzone <= obj->chunk.end) {
+            /* allocate from current chunk */
+            ptr = obj->chunk.pos;
+            obj->chunk.pos += obj->allocsize;
+            VALGRIND_MALLOCLIKE_BLOCK(ptr, obj->allocsize, 0, 0);
 
-        assert(obj->reserved);
-        assert(obj->next);
-        ptr = obj->next;
-        VALGRIND_MAKE_READABLE(ptr, obj->allocsize);
-        obj->next = obj->next->next;
-        VALGRIND_MAKE_WRITABLE(ptr, obj->allocsize);
-        obj->allocated++;
-        obj->reserved--;
-        VALGRIND_MALLOCLIKE_BLOCK(ptr, obj->allocsize, 0, 0);
-        return ptr;
-    } else {
-        return NULL;
-    }
+            obj->chunk.pos += obj->redzone;
+            obj->allocated++;
+            VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
+            return ptr;
+        } else if (obj->free) {
+            VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
+
+            /* allocate from free list */
+            ptr = obj->free;
+            VALGRIND_MAKE_READABLE(obj->free, sizeof(*obj->free));
+            obj->free = obj->free->next;
+            VALGRIND_MALLOCLIKE_BLOCK(ptr, obj->allocsize, 0, 0);
+
+
+            obj->allocated++;
+            return ptr;
+        } else if (obj->reserved 
+          || ((obj->reserved 
+              = obj->alloc.malloc(obj->alloc.opaque, obj->chunksize))
+            && (chunk_init(obj, obj->reserved, obj->reserved + 1, 
+                obj->chunksize, NULL), 1))) {
+
+            struct objalloc_chunk *chunk,
+                                  *next;
+
+
+            /* note that objalloc_invariant reprotects all chunks */
+            assert(objalloc_invariant(obj));
+            VALGRIND_MAKE_READABLE(obj->reserved, sizeof(*obj->reserved));
+            VALGRIND_MAKE_READABLE(&obj->chunk, sizeof(obj->chunk));
+
+            /* copy exhausted chunk out into indirect header */
+            chunk = CHUNK_ADDR(&obj->chunk);
+            VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
+            *chunk = obj->chunk;
+
+            /* copy new chunk into aggregate header */
+            obj->chunk = *obj->reserved;
+            next = obj->reserved->next;
+            obj->chunk.next = chunk;  /* link to exhausted chunks */
+            obj->reserved = next;
+
+            /* recursively allocate, because it prevents code duplication,
+             * happens very rarely, and doesn't ever recurse further */
+            assert(obj->chunk.pos + obj->allocsize + obj->redzone 
+              <= obj->chunk.end);
+            VALGRIND_MAKE_NOACCESS(CHUNK_ADDR(&obj->chunk), sizeof(obj->chunk));
+            VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
+            VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
+            assert(objalloc_invariant(obj));
+            return objalloc_malloc(obj, size);
+        }
+    } 
+
+    return NULL;
 }
 
 void objalloc_free(struct objalloc *obj, void *ptr) {
-    struct objalloc_alloc *alloc = ptr;
-    unsigned char *cptr = ptr;
-    unsigned int i;
+    struct objalloc_object *object = ptr;
 
     if (!ptr) {
         return;
     }
 
     assert(objalloc_is_managed(obj, ptr));
-
-    alloc->next = obj->next;
-    obj->next = alloc;
-    obj->allocated--;
-    obj->reserved++;
-
-    /* check that redzone is intact */
-    cptr += obj->allocsize;
-    VALGRIND_MAKE_READABLE(cptr, obj->redzone);
-    for (i = 0; i < obj->redzone; i++) {
-        if (cptr[i] != FILL_BYTE(i)) {
-            /* redzone has been violated */
-            assert(!CRASH);
-        }
-    }
-    VALGRIND_MAKE_NOACCESS(cptr, obj->redzone);
-
+    assert(obj->allocated);
+    object->next = obj->free;
+    obj->free = object;
     VALGRIND_FREELIKE_BLOCK(ptr, 0);
-    VALGRIND_MAKE_NOACCESS(ptr, obj->allocsize);
+    obj->allocated--;
+    assert(objalloc_invariant(obj));
+    return;
 }
 
 void *objalloc_realloc(struct objalloc *obj, void *ptr, unsigned int size) {
@@ -374,189 +371,194 @@ void *objalloc_realloc(struct objalloc *obj, void *ptr, unsigned int size) {
             return objalloc_malloc(obj, size);
         }
     } else {
-        if (ptr) {
-            assert(objalloc_is_managed(obj, ptr));
-            objalloc_free(obj, ptr);
-        }
+        objalloc_free(obj, ptr);
     }
 
     return NULL;
 }
 
 void objalloc_clear(struct objalloc *obj) {
-    struct objalloc_chunk *chunk,
-                          *next;
-    struct objalloc_alloc *alloc;
+    struct objalloc_chunk *chunk = &obj->chunk,
+                          *next,
+                          *indirect;
 
-    /* in order to call FREELIKE_BLOCK on all current allocations, we're going
-     * to call MALLOCLIKE_BLOCK on all allocations *not* allocated, and then
-     * FREELIKE_BLOCK them all in chunkify.  Its a little hacky, but its simple
-     * and it works */
+    assert(objalloc_invariant(obj));
+
     if (RUNNING_ON_VALGRIND) {
-        alloc = obj->next;
-        while (alloc) {
-            VALGRIND_MALLOCLIKE_BLOCK(alloc, obj->allocsize, 0, 0);
-            VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-            alloc = alloc->next;
+        struct objalloc_object *object;
+
+        /* first, allocate all of the freed objects, so that we can free all
+         * possibly allocated chunks without worrying about which ones have 
+         * already been returned */
+        for (object = obj->free; object; object = object->next) {
+            VALGRIND_MALLOCLIKE_BLOCK(object, obj->allocsize, 0, 1);
         }
     }
 
-    obj->next = NULL;
-    obj->allocated = 0;
-    obj->reserved = 0;
-
-    chunk = &obj->chunk;
+    /* free all allocated objects */
     do {
-        /* make chunk contents valid */
-        VALGRIND_MAKE_READABLE(chunk, obj->chunksize);
-        next = chunk->next;
+        char *pos;
+        unsigned int frees = 0,
+                     predicted;
+   
+        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
 
-        objalloc_chunkify(obj, chunk, 1);
+        pos = chunk->end - chunk->size;
+        next = chunk->next;
+        predicted = (chunk->pos - pos) / (obj->allocsize + obj->redzone);
+   
+        if (RUNNING_ON_VALGRIND) {
+            assert(pos <= chunk->pos);
+            while (pos < chunk->pos) {
+                /* ensure that the address we've calculated is valid */
+                assert(objalloc_is_managed(obj, pos));
+
+                VALGRIND_FREELIKE_BLOCK(pos, 0);
+                pos += obj->allocsize + obj->redzone;
+                frees++;
+            }
+            assert(frees == predicted);
+        }
+ 
+        /* reset pos within chunk */
+        chunk->pos = chunk->end - chunk->size;
+        VALGRIND_MAKE_NOACCESS(chunk->pos, chunk->size);
+        VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
     } while ((chunk = next));
+
+    /* clear list of free objects, as they are absorbed back into the chunks */
+    obj->free = NULL;  
+    obj->allocated = 0;
+
+    /* place chunk in aggregate back onto reserved list */
+    VALGRIND_MAKE_READABLE(&obj->chunk, sizeof(obj->chunk));
+    indirect = CHUNK_ADDR(&obj->chunk);
+    VALGRIND_MAKE_READABLE(indirect, sizeof(*indirect));
+    *indirect = obj->chunk;
+    indirect->next = obj->reserved;
+    obj->reserved = indirect;
+    VALGRIND_MAKE_NOACCESS(indirect, sizeof(*indirect));
+
+    /* place chunks on exhausted list back onto reserved list */
+    while (obj->chunk.next) {
+        VALGRIND_MAKE_READABLE(obj->chunk.next, sizeof(obj->chunk));
+        next = obj->chunk.next->next;
+        obj->chunk.next->next = obj->reserved;
+        obj->reserved = obj->chunk.next;
+        VALGRIND_MAKE_NOACCESS(obj->chunk.next, sizeof(obj->chunk));
+        obj->chunk.next = next;
+    }
+
+    /* copy first element on reserved list back into aggregate header
+     * (note that it should be the first chunk) */
+    VALGRIND_MAKE_READABLE(obj->reserved, sizeof(*indirect));
+    assert(IS_FIRST_CHUNK(obj, obj->reserved));
+    obj->chunk = *obj->reserved;
+    obj->reserved = obj->reserved->next;
+    VALGRIND_MAKE_NOACCESS(obj->reserved, sizeof(*indirect));
+    obj->chunk.next = NULL;
+    VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
+
+    assert(objalloc_invariant(obj));
+    return;
 }
 
 void objalloc_drain(struct objalloc *obj) {
     struct objalloc_chunk *chunk,
-                          *next,
-                          *prevchunk;
-    struct objalloc_alloc *alloc,
-                          *prev,
-                          *nextalloc;
-    unsigned int capacity,
-                 count;
+                          *next = obj->reserved;
 
-    if (!obj->next) {
-        return;
-    }
-
-    /* try to free as much memory as possible.  This algorithm sucks (iterates
-     * over the list of objects *way* too many times), but its simple and
-     * unlikely to cause problems */
-
-    chunk = obj->chunk.next;
-    prevchunk = &obj->chunk;
-    while (chunk) {
-        /* make chunk header valid */
-        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
-
+    while ((chunk = next)) {
         next = chunk->next;
-        capacity = chunk->size / (obj->allocsize + obj->redzone);
-        count = 0;
-
-        for (alloc = obj->next; alloc; alloc = nextalloc) {
-            if ((((void *) alloc) >= mem_ptradd(chunk, sizeof(*chunk))) 
-              && (((void *) alloc) 
-                < mem_ptradd(chunk, sizeof(*chunk) + chunk->size))) {
-
-                count++;
-            }
-            VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-            nextalloc = alloc->next;
-            VALGRIND_MAKE_NOACCESS(alloc, sizeof(*alloc));
-        }
-
-        assert(count <= capacity);
-        if (count == capacity) {
-            /* can remove this chunk */
-
-            obj->reserved -= capacity;
-            alloc = obj->next;
-            while (alloc 
-              && (((void *) alloc) >= mem_ptradd(chunk, sizeof(*chunk))) 
-              && (((void *) alloc) 
-                < mem_ptradd(chunk, sizeof(*chunk) + chunk->size))) {
-
-                VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-                alloc = obj->next = alloc->next;
-            }
-
-            prev = alloc;
-            while (alloc) {
-                if ((((void *) alloc) >= mem_ptradd(chunk, sizeof(*chunk))) 
-                  && (((void *) alloc) 
-                    < mem_ptradd(chunk, sizeof(*chunk) + chunk->size))) {
-
-                    VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-                    VALGRIND_MAKE_WRITABLE(prev, sizeof(*prev));
-                    prev->next = alloc = alloc->next;
-                    VALGRIND_MAKE_NOACCESS(prev, sizeof(*prev));
-                } else {
-                    prev = alloc;
-                    VALGRIND_MAKE_READABLE(alloc, sizeof(*alloc));
-                    nextalloc = alloc->next;
-                    VALGRIND_MAKE_NOACCESS(alloc, sizeof(*alloc));
-                    alloc = nextalloc;
-                }
-            }
-
-            assert(prevchunk);
-            prevchunk->next = next;
-            obj->alloc.free(obj->alloc.opaque, chunk);
-        } else {
-            prevchunk = chunk;
-            /* make chunk header invalid */
-            VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
-        }
-
-        chunk = next;
+        obj->alloc.free(obj->alloc.opaque, chunk);
     }
+
+    obj->reserved = NULL;
+    return;
+}
+
+unsigned int objalloc_reserve(struct objalloc *obj, unsigned int reserve) {
+    struct objalloc_chunk *chunk,
+                          *next = obj->reserved;
+    unsigned int reserved = 0,
+                 size;
+
+    while ((chunk = next)) {
+        next = chunk->next;
+        reserved += chunk->size / (obj->allocsize + obj->redzone);
+    }
+
+    /* attempt to allocate one chunk to satisfy entire reserve, ignoring size
+     * restriction */
+    size = (reserved - reserve) * (obj->allocsize + obj->redzone) 
+      + sizeof(*chunk) > obj->chunksize;
+    if (reserved < reserve && (size > obj->chunksize)
+      && (chunk = obj->alloc.malloc(obj->alloc.opaque, size))) {
+        chunk_init(obj, chunk, chunk + 1, size, obj->reserved);
+        obj->reserved = chunk;
+
+        reserved += (size - sizeof(*chunk)) / (obj->allocsize + obj->redzone);
+        assert(reserved == reserve);
+    }
+
+    while (reserved < reserve 
+      && (chunk = obj->alloc.malloc(obj->alloc.opaque, obj->chunksize))) {
+        chunk_init(obj, chunk, chunk + 1, obj->chunksize, obj->reserved);
+        obj->reserved = chunk;
+
+        reserved += (obj->chunksize - sizeof(*chunk)) 
+          / (obj->allocsize + obj->redzone);
+    }
+
+    return reserved;
+}
+
+int objalloc_is_managed(struct objalloc *obj, void *ptr) {
+    struct objalloc_chunk *chunk = &obj->chunk,
+                          *next;
+
+    do {
+        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
+        next = chunk->next;
+
+        if (ptr < (void *) chunk->pos 
+          && ptr >= (void *) (chunk->end - chunk->size)) {
+            return 1;
+        }
+
+        VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
+    } while ((chunk = next));
+
+    return 0;
 }
 
 unsigned int objalloc_allocated(struct objalloc *obj) {
     return obj->allocated;
 }
 
-int objalloc_is_managed(struct objalloc *obj, void *ptr) {
-    struct objalloc_chunk *chunk,
-                          *next;
+unsigned int objalloc_objsize(struct objalloc *obj) {
+    return obj->allocsize;
+}
 
-    chunk = &obj->chunk;
-    do {
-        /* make chunk header valid */
-        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
+unsigned int objalloc_overhead_first(void) {
+    return sizeof(struct objalloc) + sizeof(struct objalloc_chunk);
+}
 
-        if ((ptr >= mem_ptradd(chunk, sizeof(*chunk))) 
-          && (ptr < mem_ptradd(chunk, sizeof(*chunk) + chunk->size))) {
-            return 1;
-        }
-
-        next = chunk->next;
-        /* make chunk header invalid */
-        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
-    } while ((chunk = next));
-
-    return 0;
+unsigned int objalloc_overhead(void) {
+    return sizeof(struct objalloc_chunk);
 }
 
 unsigned int objalloc_memsize(struct objalloc *obj, void *ptr) {
     struct objalloc_chunk *chunk,
                           *next;
-    unsigned int chunks = 0;
+    unsigned int size = sizeof(*obj);
 
     chunk = &obj->chunk;
     do {
-        /* make chunk header valid */
-        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
-        chunks++;
+        size += chunk->size + sizeof(*chunk);
         next = chunk->next;
-        /* make chunk header invalid */
-        VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
     } while ((chunk = next));
 
-    return sizeof(*obj) - sizeof(obj->chunk) + chunks * obj->chunksize;
-}
-
-
-unsigned int objalloc_overhead_first() {
-    return sizeof(struct objalloc);
-}
-
-unsigned int objalloc_overhead() {
-    return sizeof(struct objalloc_chunk);
-}
-
-unsigned int objalloc_objsize(struct objalloc *obj) {
-    return obj->allocsize;
+    return size;
 }
 
 #ifdef OBJALLOC_TEST
@@ -687,7 +689,8 @@ int main() {
         objalloc_free(alloc, arr[i]);
     }
 
-    objalloc_delete(alloc); 
+    /* objalloc_clear(alloc); */
+    objalloc_delete(alloc);
 
     /* use clear */
 

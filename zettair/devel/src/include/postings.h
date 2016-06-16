@@ -31,7 +31,7 @@ struct stop;
 /* structure to allow returning of statistics from update.  More per
  * document stats can easily be added and calculated */
 struct postings_docstats {
-    float weight;                      /* vector space length of document */
+    unsigned weight;                   /* vector space length of document */
     unsigned int terms;                /* number of terms in document */
     unsigned int distinct;             /* number of distinct terms in document*/
 };
@@ -39,9 +39,11 @@ struct postings_docstats {
 /* constructor, creates a new (empty) postings list.  tablesize is
  * the size of the hashtable to create.  stem and opaque define the stemming to
  * be used, where both can be NULL (for no stemming).  stop is the build-time
- * stoplist to be used, or NULL for none. */
+ * stoplist to be used, or NULL for none.  offsets declares whether offsets are
+ * to be indexed or not. */
 struct postings* postings_new(unsigned int tablesize, 
-  void (*stem)(void *opaque, char *term), void *opaque, struct stop *list);
+  void (*stem)(void *opaque, char *term), void *opaque, struct stop *list,
+  int offsets);
 
 /* remove a postings structure */
 void postings_delete(struct postings *post);
@@ -51,13 +53,10 @@ void postings_delete(struct postings *post);
  * function, it will add to document 0 */
 void postings_adddoc(struct postings *post, unsigned long int docno);
 
-/* a reference to a word in a document, identified by term, wordno and docno
- * respectively.  Returns true on success and 0 on failure. vocab is a pointer
- * to the current vocabulary, can be NULL, and is used to look up the last docno
- * encoded for this word.  Note that the term will be stemmed in this function
- * if needed. */
-int postings_addword(struct postings *post, char *term, 
-  unsigned long int wordno);
+/* add postings in text (of length len bytes), separated by '\0' markers, to 
+ * the current document.  Returns true on success and 0 on failure. 
+ * Note that the term will be stemmed in this function if needed. */
+int postings_addwords(struct postings *post, char *text, unsigned int len);
 
 /* whether postings list needs an update */
 int postings_needs_update(struct postings *post);

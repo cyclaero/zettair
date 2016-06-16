@@ -8,10 +8,10 @@
 #include "firstinclude.h"
 
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "alloc.h"
 #include "chash.h"
 #include "def.h"
 #include "error.h"
@@ -244,7 +244,7 @@ enum search_ret impact_ord_eval(struct index *idx, struct query *query,
                 enum search_ret sret;
 
                 if ((sret 
-                  = largest->src->readlist(largest->src, VEC_LEN(&largest->v), 
+                  = largest->src->read(largest->src, VEC_LEN(&largest->v), 
                     (void **) &largest->v.pos, &bytes)) == SEARCH_OK) {
 
                     /* read succeeded */
