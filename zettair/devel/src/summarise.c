@@ -634,20 +634,18 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
     unsigned int i,
                  heap_len = 0,            /* number of items in heap */
                  heap_size = 0,           /* capacity of heap */
-                 heap_bytes = 0,          /* length of heap in total buffered 
-                                           * bytes */
+                 heap_bytes = 0,          /* length of heap in total buffered bytes */
                  selected,                /* number of sentences selected */
-                 *occs,                   /* array for counting query term 
-                                           * occurrances */
-                 fileno,                  /* repository of given document */
-                 bytes;                   /* size of given document */
-    off_t offset,                         /* repository offset of given doc */
+                 *occs,                   /* array for counting query term occurrances */
+                 fileno = 0,              /* repository of given document */
+                 bytes = 0;               /* size of given document */
+    off_t offset = 0,                     /* repository offset of given doc */
           curroffset,
           physoffset;
     int finished = 0;                     /* continued iteration indicator */
     enum docmap_ret dmret = DOCMAP_ARG_ERROR;
-    enum docmap_flag dmflags;
-    enum mime_types mtype;
+    enum docmap_flag dmflags = DOCMAP_NO_FLAGS;
+    enum mime_types mtype = MIME_TYPE_TEXT_HTML;
     struct stream_filter *filter;
 
     if (!(occs = malloc(sizeof(*occs) * query->terms))) {

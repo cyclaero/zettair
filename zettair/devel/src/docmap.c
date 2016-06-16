@@ -784,7 +784,7 @@ enum docmap_ret docmap_add(struct docmap *dm,
     struct docmap_entry entry;
     char *tmp;
     unsigned int tmplen,
-                 reposno;
+                 reposno = 0;
     enum reposset_ret rret;
 
     assert(offset >= 0);
@@ -1513,7 +1513,7 @@ static enum docmap_ret docmap_cache_int(struct docmap *dm,
 
     /* ensure that we've got initial memory for cached items */
     dm->cache.cache = tocache;
-    if (!(dmret = cache_realloc(dm)) == DOCMAP_OK) {
+    if ((!(dmret = cache_realloc(dm))) == DOCMAP_OK) {
         assert(!CRASH);
         dm->cache.cache = prev;
         cache_cleanup(dm);
@@ -1690,7 +1690,7 @@ const char *docmap_strerror(enum docmap_ret dmret) {
 }
 
 enum docmap_ret docmap_save(struct docmap *dm) {
-    enum docmap_ret dmret;
+    enum docmap_ret dmret = DOCMAP_ARG_ERROR;
     unsigned int fileno,
                  docno;
     unsigned long int offset;
@@ -1964,7 +1964,7 @@ struct docmap *docmap_load(struct fdset *fdset,
         prev_fd,
         corrupt,
         map;
-    unsigned long int offset,
+    unsigned long int offset = 0,
                       tmpl;
     unsigned int fileno,
                  page,

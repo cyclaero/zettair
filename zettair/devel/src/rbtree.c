@@ -480,7 +480,7 @@ void rbtree_rotate(struct rbtree *rb, struct rbtree_node *x,
     if (x->parent == &rb->nil) {                  /* 5 */
         rb->root = y;                             /* 6 */
     } else {
-        if ((x == x->parent->child[left])) {      /* 7 */
+        if (x == x->parent->child[left]) {        /* 7 */
             x->parent->child[left] = y;           /* 8 */
         } else {
             assert(x->parent->child[right] == x);
@@ -527,12 +527,12 @@ static void rbtree_insert_fixup(struct rbtree *rb, struct rbtree_node *z) {
             z = z->parent->parent;                                  /* 8 */
         } else {
             if (z == z->parent->child[right]) {                     /* 9 */
-                z = z->parent;                                      /* 10 */
-                rbtree_rotate(rb, z, left);                         /* 11 */
+                z = z->parent;                                     /* 10 */
+                rbtree_rotate(rb, z, left);                        /* 11 */
             }
-            z->parent->red = 0;                                     /* 12 */
-            z->parent->parent->red = 1;                             /* 13 */
-            rbtree_rotate(rb, z->parent->parent, right);            /* 14 */
+            z->parent->red = 0;                                    /* 12 */
+            z->parent->parent->red = 1;                            /* 13 */
+            rbtree_rotate(rb, z->parent->parent, right);           /* 14 */
         }
     }
     rb->nil.parent = &rb->nil;
@@ -628,7 +628,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                       == STACK_OK)) {                                         \
                         rbi->curr = rbi->curr->child[left];                   \
                     } else {                                                  \
-                        return sret;                                          \
+                        return (enum rbtree_ret)sret;                         \
                     }                                                         \
                 }                                                             \
                                                                               \
@@ -649,7 +649,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                     if ((sret == STACK_ENOENT) && !stack_size(rbi->stack)) {  \
                         return RBTREE_ITER_END;                               \
                     } else {                                                  \
-                        return sret;                                          \
+                        return (enum rbtree_ret)sret;                         \
                     }                                                         \
                 }                                                             \
                 assert(0);  /* can't get here */                              \
@@ -674,7 +674,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                             rbi->curr = rbi->curr->child[left];               \
                             return RBTREE_OK;                                 \
                         } else {                                              \
-                            return sret;                                      \
+                            return (enum rbtree_ret)sret;                     \
                         }                                                     \
                     }                                                         \
                 } while (((sret = stack_ptr_pop(rbi->stack, &ptr))            \
@@ -684,7 +684,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                 if ((sret == STACK_ENOENT) && !stack_size(rbi->stack)) {      \
                     return RBTREE_ITER_END;                                   \
                 } else {                                                      \
-                    return sret;                                              \
+                    return (enum rbtree_ret)sret;                             \
                 }                                                             \
                 assert(0);  /* can't get here */                              \
                 break;                                                        \
@@ -699,7 +699,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                       == STACK_OK)) {                                         \
                         rbi->curr = rbi->curr->child[left];                   \
                     } else {                                                  \
-                        return sret;                                          \
+                        return (enum rbtree_ret)sret;                         \
                     }                                                         \
                 }                                                             \
                                                                               \
@@ -735,7 +735,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                             rbi->order = RBTREE_ITER_POSTORDER;               \
                             break; /* loop to t2 */                           \
                         } else {                                              \
-                            return sret;                                      \
+                            return (enum rbtree_ret)sret;                     \
                         }                                                     \
                     }                                                         \
                 } else {                                                      \
@@ -743,7 +743,7 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
                         rbi->order = RBTREE_ITER_POSTORDER + 1;               \
                         return RBTREE_ITER_END;                               \
                     } else {                                                  \
-                        return sret;                                          \
+                        return (enum rbtree_ret)sret;                         \
                     }                                                         \
                 }                                                             \
                 assert(0);  /* can't get here */                              \

@@ -426,8 +426,8 @@ int postings_dump(struct postings* post, void *buf, unsigned int bufsize,
                  stopped = 0,
                  pos,                     /* position in current vector */
                  len,                     /* length of current term */
-                 wlen,                    /* length of last write */
                  dbufsz;                  /* size of dbuf */
+    int          wlen;                    /* length of last write */
     struct postings_node* node,           /* current node */
                         ** arr;           /* array of postings nodes */
     char *dbuf,                           /* dumping buffer */

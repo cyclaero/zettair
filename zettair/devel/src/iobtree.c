@@ -1579,8 +1579,7 @@ static enum iobtree_ret split_nodes(struct iobtree *btree, const char *term,
     return IOBTREE_ERR;
 }
 
-/* internal function to split a leaf node, then use split_nodes to recursively
- * push the split up the tree */
+/* internal function to split a leaf node, then use split_nodes to recursively push the split up the tree */
 static void *split_leaf(struct iobtree *btree, struct page *curr, 
   struct page *parent, const char *term, unsigned int termlen, 
   unsigned int newsize, enum split_fn fn, enum iobtree_ret *err) {
@@ -1590,10 +1589,8 @@ static void *split_leaf(struct iobtree *btree, struct page *curr,
                  fileno,                 /* file number of page */
                  oldsize;                /* size of old allocation for term */
     unsigned long int offset;            /* offset of page */
-    int leftcmp,                         /* whether term being changed goes in 
-                                          * right or left bucket */
-        toobig;                          /* whether allocations are too big 
-                                          * for a bucket */
+    int leftcmp,                         /* whether term being changed goes in right or left bucket */
+        toobig = 0;                      /* whether allocations are too big for a bucket */
     void *ret;                           /* return value */
     enum iobtree_ret iobret;
 
@@ -2319,7 +2316,7 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
     }
 
     if (seektermlen) {
-        unsigned int entries,
+        unsigned int entries = 0,
                      currtermlen,
                      datalen,
                      index;
@@ -2389,12 +2386,10 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
 
         }
 
-        assert(parent);  /* shouldn't have iterated off the top of the tree in 
-                          * either case */
+        assert(parent);  /* shouldn't have iterated off the top of the tree in either case */
         assert(entries); /* shouldn't have an empty internal node */
 
-        /* now descend down to appropriate leaf (note that we traverse starting
-         * at the parent we just found) */
+        /* now descend down to appropriate leaf (note that we traverse starting at the parent we just found) */
         if ((ret = traverse(btree, seekterm, seektermlen, parent, NULL, NULL))
           != IOBTREE_OK) {
             return ret;

@@ -1488,8 +1488,7 @@ int build(struct args *args, FILE *output) {
 }
 
 int main(int argc, char **argv) {
-    struct args argspace,
-               *args;
+    struct args argspace, *args;
     FILE *output;
     struct index *idx;
     struct index_result *results;
@@ -1642,4 +1641,3 @@ int main(int argc, char **argv) {
 
     return EXIT_SUCCESS;
 }
-

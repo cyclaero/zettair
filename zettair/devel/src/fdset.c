@@ -119,10 +119,10 @@ static struct fd * new_fd(void) {
 
 static struct fd **make_fd_array(unsigned int size) {
     struct fd **fd = NULL;
-    unsigned int i;
     if (!(fd = calloc(size, sizeof(*fd))))
         return NULL;
 
+    int i;
     for (i = 0; i < size; i++) {
         if (!(fd[i] = new_fd())) {
             for (i--; i >= 0; i--)
@@ -436,8 +436,6 @@ int fdset_set_fd_delete_name(struct fdset *set, unsigned int typeno,
 	struct type *type;
     void **find;
     struct specific *sp = NULL;
-    struct fd key,
-              *found;
 
     /* find target fd */
     if ((chash_luint_ptr_find(set->typehash, typeno, &find) == CHASH_OK)

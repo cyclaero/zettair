@@ -1008,7 +1008,7 @@ int bucket1_set_term(void *mem, unsigned int bucketsize, unsigned int termno,
 
 int bucket1_resize(void *mem, unsigned int oldsize, unsigned int newsize) {
     unsigned int i;
-    uint16_t ptr,
+    uint16_t ptr = 0,
              lastptr,
              entries;
 
@@ -1755,7 +1755,7 @@ int bucket2_set_term(void *mem, unsigned int bucketsize, unsigned int termno,
 
 int bucket2_resize(void *mem, unsigned int oldsize, unsigned int newsize) {
     unsigned int i;
-    uint16_t ptr,
+    uint16_t ptr = 0,
              lastptr,
              entries;
 
@@ -2138,13 +2138,11 @@ unsigned int bucket_find_split_entry(void *bucketmem, unsigned int bucketsize,
     const void *ret;                /* return value from bucket functions */
     void *dataptr;                  /* data location of vector in bucket */
     int tmpsmaller = 0,             /* value to be copied into smaller */
-        consumed = 0,               /* whether the additional term has been 
-                                     * consumed */ 
-        cmp;                        /* result of string comparison */
+        consumed = 0,               /* whether the additional term has been consumed */
+        cmp = 0;                    /* result of string comparison */
     unsigned int shortest,          /* size of the shortest entry we've seen */
                  index,             /* split bucket term index */
-                 disp,              /* displacement of shortest entry from a 
-                                     * perfectly balanced split */
+                 disp,              /* displacement of shortest entry from a perfectly balanced split */
                  terms = 0,         /* number of terms seen thus far */
                  sum = 0,           /* sum of data thus far */
                  len,               /* length of string entry */
