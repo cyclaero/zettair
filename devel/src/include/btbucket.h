@@ -58,7 +58,7 @@ int btbucket_set_prefix(void *btbucket, unsigned int bucketsize,
   void *prefix, unsigned int *prefix_size);
 
 /* size of a btbucket internal node entry */
-unsigned int btbucket_entry_size();
+unsigned int btbucket_entry_size(void);
 
 /* decodes a btbucket internal node entry (entry must be of size
  * btbucket_entry_size) */

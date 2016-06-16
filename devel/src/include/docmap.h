@@ -124,6 +124,7 @@ enum docmap_ret docmap_add(struct docmap *docmap,
  *  DOCNO is the document number to retrieve.  It must be less than
  *  the current number of documents.
  *
+ *
  *  TRECNO_BUF must be an allocated buffer of length TRECNO_BUF_LEN.  The
  *  length of the DOCNO, even if it is truncated by insufficient space, is
  *  set in TRECNO_LEN.

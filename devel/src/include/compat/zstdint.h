@@ -20,12 +20,5 @@
 #define UINT16_MAX USHRT_MAX
 #endif
 
-/* define an appropriate string for printing off_t quantities */
-#if _FILE_OFFSET_BITS == 64
- #define ZPRI_OFF PRId64
-#else
- #define ZPRI_OFF PRId32
-#endif
-
 #endif
 

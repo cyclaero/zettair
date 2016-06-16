@@ -1,11 +1,5 @@
-Zettair can be compiled using two different build systems.  The first
-(most commonly used) is using GNU configure and make.  The second is
-via Visual C++.  Instructions on configuration, compilation and
-installation using GNU configure and make are below.  See the section
-on Visual C++ below for instructions on compiling Zettair on windows.
-
-Note that in both cases, compilation of Zettair requires the presence
-of the zlib compression library.
+Zettair is configured using the GNU configure system, and compiled and
+installed using GNU make.
 
 1. Configuration
 ================
@@ -77,24 +71,6 @@ shell, edit the file ~/.bash_profile, and add a line something like:
 This will probably not be necessary if you used the default prefix of
 '/usr/local'.
 
-4. Visual C++ configuration, compilation and installation
-=========================================================
-
-First, obtain the latest Zettair distribution and decompress it.
-Obtain the latest zlib source distribution (do NOT download the precompiled DLL)
-from http://www.zlib.net/ and decompress it into a seperate directory.
-Follow the zlib directions to create a statically-linked zlib.lib using 
-Visual C++.
-Locate zlib.lib within your zlib directory tree, and copy it to the
-root zettair-X.X/ directory.  
-In addition, copy zlib.h and zconf.h into zettair-X.X/src/include.
-
-Load zettair-X.X/win32/visualc6/zettair.dsw into Visual C++.
-Using the Build/Set Active Configuration menu option, select the
-executable that you wish to build.
-Build the executable by selecting Build/Rebuild All.  (Repeat for any
-further executables that you wish to build).  You may then copy the
-created executables whereever you like, and use them.
 
 4. Running
 ==========

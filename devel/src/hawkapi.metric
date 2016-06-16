@@ -5,8 +5,8 @@
 # weighting of anchors', Hawking, Upstill and Craswell, SIGIR 2004 poster).
 # They called it 'AF1', but i find hawkapi a little less boring ;o).
 # It's basically a stripped-down version of the okapi metric.  No-one
-# really knows, at this stage (including Dave Hawking), what a good
-# value of alpha is.  
+# really knows, at this stage (including Dave Hawking, when i asked him), 
+# what a good value of alpha is.  
 #
 # written nml 2005-07-18
 
@@ -14,10 +14,10 @@ parameter float alpha;
 parameter float k3;
 
 decode() {
-	const float w_t = (float) logf((N - f_t + 0.5F) / (f_t + 0.5F));
+	const float w_t = log((N - f_t + 0.5) / (f_t + 0.5));
 	const float w_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
 
-	accumulator += w_qt * alpha * ((float) logf(f_dt + 1)) * w_t;
+	accumulator += w_qt * alpha * log(f_dt + 1) * w_t;
 }
 
 post() {

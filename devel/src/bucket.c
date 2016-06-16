@@ -1034,7 +1034,7 @@ int bucket1_resize(void *mem, unsigned int oldsize, unsigned int newsize) {
 
         /* update pointer entries */
         for (i = 0; i < entries; i++) {
-            MEM_NTOH(&ptr, B1_PTR_ADDR(mem, i), sizeof(ptr));
+            MEM_NTOH(&lastptr, B1_PTR_ADDR(mem, i), sizeof(ptr));
             ptr -= (oldsize - newsize);
             MEM_HTON(B1_PTR_ADDR(mem, i), &ptr, sizeof(ptr));
         }
@@ -1781,7 +1781,7 @@ int bucket2_resize(void *mem, unsigned int oldsize, unsigned int newsize) {
 
         /* update pointer entries */
         for (i = 0; i < entries; i++) {
-            MEM_NTOH(&ptr, B2_PTR_ADDR(mem, i), sizeof(ptr));
+            MEM_NTOH(&lastptr, B2_PTR_ADDR(mem, i), sizeof(ptr));
             ptr -= (oldsize - newsize);
             MEM_HTON(B2_PTR_ADDR(mem, i), &ptr, sizeof(ptr));
         }

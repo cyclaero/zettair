@@ -20,17 +20,11 @@
 #include "stem.h" 
 #include "stop.h" 
 #include "vec.h"
+#include "zpthread.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef MT_ZET
-#include <pthread.h>
-
-static pthread_mutex_t vocab_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#endif /* MT_ZET */
 
 /* maximum length of an in-vocab vector. */
 #define MAX_VOCAB_VECTOR_LEN 4096
@@ -48,8 +42,9 @@ static int get_vocab_vector_locked(struct iobtree * vocab,
     struct vec v;
 
     ve_data = iobtree_find(vocab, term, term_len, 0, &veclen);
-    if (!ve_data)
+    if (!ve_data) {
         return 0;
+    }
     v.pos = ve_data;
     v.end = v.pos + veclen;
     if (!impact) {
@@ -66,11 +61,6 @@ static int get_vocab_vector_locked(struct iobtree * vocab,
                 return -1; 
             }
         } while (entry_out->type != VOCAB_VTYPE_IMPACT);
-    }
-    if (entry_out->location == VOCAB_LOCATION_VOCAB) {
-        assert(entry_out->size <= (unsigned int) vec_buf_len);
-        memcpy(vec_buf, entry_out->loc.vocab.vec, entry_out->size);
-        entry_out->loc.vocab.vec = vec_buf;
     }
     return 1;
 }
@@ -92,19 +82,22 @@ static int get_vocab_vector_locked(struct iobtree * vocab,
  *  the vocab (entry_out will hold the vocab entry for the
  *  term); < 0 on error.
  */
-static int get_vocab_vector(struct iobtree * vocab, 
+static int get_vocab_vector(struct index *idx, struct iobtree * vocab, 
   struct vocab_vector * entry_out, const char * term, unsigned int term_len,
   char * vec_buf, int vec_buf_len, int impact) {
-    int retval = 0;
-#ifdef MT_ZET
-    pthread_mutex_lock(&vocab_mutex);
-#endif /* MT_ZET */
-    retval = get_vocab_vector_locked(vocab, entry_out, term, term_len,
-      vec_buf, vec_buf_len, impact);
-#ifdef MT_ZET
-    pthread_mutex_unlock(&vocab_mutex);
-#endif /* MT_ZET */
-    return retval;
+    int retval = 0,
+        pret;
+
+    if ((pret = zpthread_mutex_lock(&idx->vocab_mutex)) == ZPTHREAD_OK) {
+        retval = get_vocab_vector_locked(vocab, entry_out, term, term_len,
+          vec_buf, vec_buf_len, impact);
+        pret = zpthread_mutex_unlock(&idx->vocab_mutex);
+        assert(pret == ZPTHREAD_OK);
+        return retval;
+    } else {
+        assert(pret > 0);
+        return -pret;
+    }
 }
 
 /* internal function to append a new word to a conjunct */
@@ -129,18 +122,6 @@ static int conjunct_append(struct query *query,
         }
         memcpy(&currterm->vocab, sve, sizeof(*sve));
 
-        /* allocate memory for vector part of vector */
-        if (currterm->vocab.location == VOCAB_LOCATION_VOCAB) {
-            if ((currterm->vecmem = malloc(currterm->vocab.size))) {
-                memcpy(currterm->vecmem, 
-                  currterm->vocab.loc.vocab.vec, currterm->vocab.size);
-            } else {
-                free(currterm->term);
-                return 0;
-            }
-        } else {
-            currterm->vecmem = NULL;
-        }
         currterm->next = NULL;
         conj->terms++;
     }
@@ -156,15 +137,10 @@ static struct conjunct *conjunct_find(struct query *query,
     for (i = 0; i < query->terms; i++) {
         if ((query->term[i].type == type) 
           && (sve->size == query->term[i].term.vocab.size)
-          && (sve->location == query->term[i].term.vocab.location)
-          && (((sve->location == VOCAB_LOCATION_VOCAB) 
-              && (query->term[i].term.term) 
-              && !str_ncmp(term, query->term[i].term.term, termlen))
-            || ((sve->location == VOCAB_LOCATION_FILE) 
-              && (sve->loc.file.fileno 
-                == query->term[i].term.vocab.loc.file.fileno)
-              && (sve->loc.file.offset 
-                == query->term[i].term.vocab.loc.file.offset)))) {
+          && (sve->loc.fileno 
+            == query->term[i].term.vocab.loc.fileno)
+          && (sve->loc.offset 
+            == query->term[i].term.vocab.loc.offset)) {
 
             return &query->term[i];
         }
@@ -201,17 +177,6 @@ static struct conjunct *conjunct_add(struct query *query,
                 ret = NULL;
             }
             memcpy(&ret->term.vocab, sve, sizeof(*sve));
-            /* allocate memory for vector part of vector */
-            if (ret->term.vocab.location == VOCAB_LOCATION_VOCAB) {
-                if ((ret->term.vecmem = malloc(sve->size))) {
-                    memcpy(ret->term.vecmem, sve->loc.vocab.vec, sve->size);
-                } else {
-                    free(ret->term.term);
-                    return 0;
-                }
-            } else {
-                ret->term.vecmem = NULL;
-            }
         }
         /* else we might have to steal a slot (OPTIMIZE) */
     }
@@ -242,17 +207,6 @@ static struct conjunct *conjunct_copy(struct query *query,
             return NULL;
         }
 
-        /* allocate memory for vector part of vector */
-        if (next->term.vocab.location == VOCAB_LOCATION_VOCAB) {
-            if ((next->term.vecmem = malloc(conj->term.vocab.size))) {
-                memcpy(next->term.vecmem, conj->term.vecmem, 
-                  conj->term.vocab.size);
-            } else {
-                free(next->term.term);
-                return NULL;
-            }
-        }
-
         next->term.next = NULL;
         next->terms = 1;
         next->f_qt = 1;
@@ -272,16 +226,6 @@ static struct conjunct *conjunct_copy(struct query *query,
                 return NULL;
             }
 
-            /* allocate memory for vector part of vector */
-            if (nextterm->vocab.location == VOCAB_LOCATION_VOCAB) {
-                if ((nextterm->vecmem = malloc(currterm->vocab.size))) {
-                    memcpy(nextterm->vecmem, currterm->vecmem, 
-                      currterm->vocab.size);
-                } else {
-                    free(nextterm->term);
-                    return NULL;
-                }
-            }
             next->terms++;
         }
         nextterm->next = NULL;
@@ -296,16 +240,6 @@ static struct conjunct *conjunct_copy(struct query *query,
                 return NULL;
             }
             memcpy(&currterm->vocab, sve, sizeof(*sve));
-            /* allocate memory for vector part of vector */
-            if (currterm->vocab.location == VOCAB_LOCATION_VOCAB) {
-                if ((currterm->vecmem = malloc(currterm->vocab.size))) {
-                    memcpy(currterm->vecmem, currterm->vocab.loc.vocab.vec,
-                      currterm->vocab.size);
-                } else {
-                    free(nextterm->term);
-                    return NULL;
-                }
-            }
             currterm->next = NULL;
             next->terms++;
         }
@@ -408,7 +342,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                 stem(idx->stem, word);
                 wordlen = str_len(word);
             }
-            retval = get_vocab_vector(idx->vocab, &entry, word, wordlen,
+            retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen,
               vec_buf, sizeof(vec_buf), impacts);
             if (retval < 0) {
                 return 0;
@@ -571,9 +505,6 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                     ret->f_qt++;
                     assert(current == &query->term[query->terms - 1]);
                     free(current->term.term);
-                    if (current->term.vocab.location == VOCAB_LOCATION_VOCAB) {
-                        free(current->term.vecmem);
-                    }
                     query->terms--;
                 }
             }

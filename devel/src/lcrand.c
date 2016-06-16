@@ -5,8 +5,6 @@
  *
  */
 
-#include "firstinclude.h"
-
 #include "lcrand.h"
 
 #include "zstdint.h"

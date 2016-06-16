@@ -20,17 +20,24 @@
 #if defined(TIME_BUILD) && !defined(WIN32)
 
 #define TIMINGS_DECL() struct timeval timings_now, timings_then;              \
-                       unsigned long int timings_diff   
+                       unsigned long int timings_diff;                        \
+                       unsigned long int timings_udiff
 
 #define TIMINGS_START() gettimeofday(&timings_then, NULL)
 
 #define TIMINGS_END(name)                                                     \
     gettimeofday(&timings_now, NULL);                                         \
     timings_diff = timings_now.tv_sec - timings_then.tv_sec;                  \
-    printf("%s time: %02i:%02i:%02i (%lu seconds, %lu millis)\n", name,       \
+    if (timings_now.tv_usec < timings_then.tv_usec) {                         \
+        timings_diff -= 1;                                                    \
+        timings_udiff = 1000000 - timings_then.tv_usec + timings_now.tv_usec; \
+    } else {                                                                  \
+        timings_udiff = timings_now.tv_usec - timings_then.tv_usec;           \
+    }                                                                         \
+    printf("%s time: %02i:%02i:%02i (%lu seconds, %lu micros)\n", name,       \
       (int) timings_diff / 60 / 60, ((int) (timings_diff) / 60) % 60,         \
       ((int) timings_diff) % 60, timings_diff,                                \
-      timings_now.tv_usec - timings_then.tv_usec + timings_diff * 1000000)
+      timings_udiff + timings_diff * 1000000)
 
 #else
 

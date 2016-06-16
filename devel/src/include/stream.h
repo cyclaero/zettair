@@ -154,7 +154,7 @@ struct stream_filter {
 };
 
 /* create a new stream */
-struct stream *stream_new();
+struct stream *stream_new(void);
 
 /* flush output from a stream.  The exact behaviour depends on which flush value
  * is given.  Currently only FLUSH_FINISH is available, which flushes all output

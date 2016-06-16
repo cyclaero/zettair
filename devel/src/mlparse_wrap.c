@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
 
     if (argc > 1) {
         for (i = 1; i < argc; i++) {
-            if (((fd = open(argv[i], O_RDONLY)) >= 0)
+            if (((fd = open(argv[i], O_RDONLY | O_BINARY)) >= 0)
               && (wrapper 
                 = mlparse_wrap_new_fd(WORDLEN, LOOKAHEAD, fd, BUFSIZ, 0))) {
 

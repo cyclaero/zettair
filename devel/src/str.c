@@ -606,7 +606,7 @@ in_delim_label:
     return arr;
 }
 
-int str_signed_char() {
+int str_signed_char(void) {
     return STR_SIGNED_CHAR;
 }
 

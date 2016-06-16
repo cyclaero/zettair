@@ -36,7 +36,7 @@ extern char tu_sample_data[];
 
 extern int tu_sample_data_inited;
 
-void tu_sample_data_rand_init();
+void tu_sample_data_rand_init(void);
 
 int tu_sample_data_file_init(const char * fname);
 

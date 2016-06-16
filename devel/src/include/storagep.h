@@ -20,10 +20,6 @@ struct storagep {
     unsigned int pagesize;           /* size of one 'disk block' */
     unsigned int max_termlen;        /* maximum length of one term */
     unsigned int max_filesize;       /* maximum file size */
-    unsigned int vocab_lsize;        /* size of inverted lists to try to 
-                                      * store in the vocabulary */
-    unsigned int file_lsize;         /* maximum size of inverted lists to try 
-                                      * to store in files */
     uint8_t btleaf_strategy;         /* btree leaf bucket format */
     uint8_t btnode_strategy;         /* btree internal node bucket format */
     uint8_t bigendian;               /* whether to store stuff in big-endian 
@@ -34,7 +30,7 @@ struct storagep {
 };
 
 /* return the space needed to store a set of storage parameters */
-unsigned int storagep_size();
+unsigned int storagep_size(void);
 
 /* read a set of storage parameters from memory (where memory is at least
  * storagep_size bytes long) */

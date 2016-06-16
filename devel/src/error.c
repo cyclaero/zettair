@@ -15,7 +15,7 @@ static int error_stream_inited = 0;
 static char error_buf[ERROR_BUF_SIZE] = "";
 static int error_code = 0;
 
-static void ensure_error_stream_inited() {
+static void ensure_error_stream_inited(void) {
     if (error_stream_inited == 0) {
 #ifdef LOGERRORS
         error_stream = stderr;

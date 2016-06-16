@@ -260,8 +260,7 @@ static int write_page(struct iobtree *btree, struct page *page) {
         errno = 0;
         if (((prev = lseek(fd, 0, SEEK_CUR)) != (off_t) -1)
           && (lseek(fd, page->h.offset, SEEK_SET) == (off_t) page->h.offset)
-          && (write(fd, page->mem, btree->pagesize) 
-            == (ssize_t) btree->pagesize)
+          && (write(fd, page->mem, btree->pagesize) == btree->pagesize)
           && (lseek(fd, prev, SEEK_SET) != (off_t) -1)) {
 
             if ((ret = fdset_unpin(btree->fd, btree->fdset, page->h.fileno, fd))
@@ -2521,7 +2520,7 @@ void *iobtree_iter_realloc(struct iobtree_iter *iter,
   unsigned int newsize, int *toobig) {
     struct iobtree *btree = iter->btree;
     const char *term;
-    unsigned int termlen = 0,
+    unsigned int termlen,
                  datalen;
     void *data,
          *ret;

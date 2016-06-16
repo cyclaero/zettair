@@ -18,7 +18,6 @@
 #include "summarise.h"
 #include "error.h"
 #include "signals.h"
-#include "svnversion.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -73,6 +72,10 @@ void print_usage(const char *progname, FILE *output, int verbose) {
       "with alpha given\n");
     fprintf(output, "    --dirichlet=[uint]: use Dirichlet-smoothed LM "
       "metric, with mu given\n");
+    fprintf(output, "    --metric=[string]: use named metric, with given "
+      "parameters\n");
+    fprintf(output, "    --metric-parameters=[string]: parameters for metric, "
+      "in the form [name]=[value], separated by commas\n");
 
     fprintf(output, "\n");
     fprintf(output, "usage to index: '%s -i file1 ... fileN'\n", 
@@ -88,6 +91,7 @@ void print_usage(const char *progname, FILE *output, int verbose) {
       "                    (default is light)\n");
     fprintf(output, "    --add: add indexed files to an existing index\n");
     fprintf(output, "    --anh-impact: generate impact-ordered lists\n");
+    fprintf(output, "    --no-offsets: generate lists without offsets\n");
 
     return;
 }
@@ -230,12 +234,13 @@ enum {
     OPT_DUMP_VECS, OPT_REBUILD, OPT_REMERGE, OPT_INPLACE, OPT_MAXFILESIZE, 
     OPT_FILELIST, OPT_ADD, OPT_ADD_STATS, OPT_OKAPI, OPT_K1, OPT_K3, OPT_B,
     OPT_PIVOTED_COSINE, OPT_COSINE, OPT_WORD_LIMIT, OPT_HAWKAPI, 
-    OPT_SORT_ACCESSES, OPT_VOCAB_LISTSIZE, 
-    OPT_FRAPPEND, OPT_MAXFLIST,
+    OPT_SORT_ACCESSES, OPT_NO_OFFSETS,
+    OPT_FRAPPEND, 
     OPT_STEM, OPT_BUILD_STOP, OPT_QUERY_STOP, OPT_ACCUMULATOR_LIMIT, 
     OPT_IGNORE_VERSION,
     OPT_DIRICHLET, OPT_ANH_IMPACT, 
-    OPT_TABLESIZE, OPT_PARSEBUF, OPT_BIG_AND_FAST, OPT_QUERYLIST
+    OPT_TABLESIZE, OPT_PARSEBUF, OPT_BIG_AND_FAST, OPT_QUERYLIST,
+    OPT_DYNAMIC, OPT_DYNAMIC_PARAMS
 };
 
 static struct args *parse_args(unsigned int argc, char **argv, 
@@ -298,6 +303,9 @@ static struct args *parse_args(unsigned int argc, char **argv,
         {"hawkapi", '\0', GETLONGOPT_ARG_REQUIRED, OPT_HAWKAPI},
         {"anh-impact", '\0', GETLONGOPT_ARG_NONE, OPT_ANH_IMPACT},
         {"dirichlet", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DIRICHLET},
+        {"metric", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DYNAMIC},
+        {"metric-parameters", '\0', GETLONGOPT_ARG_REQUIRED, 
+          OPT_DYNAMIC_PARAMS},
 
         {"accumulation-memory", '\0', GETLONGOPT_ARG_REQUIRED, 
           OPT_ACCUMULATION_MEMORY},
@@ -306,7 +314,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
         {"dump-memory", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DUMP_MEMORY},
         {"dump-vecs", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DUMP_VECS},
         {"max-file-size", '\0', GETLONGOPT_ARG_REQUIRED, OPT_MAXFILESIZE},
-        {"file-listsize", '\0', GETLONGOPT_ARG_REQUIRED, OPT_MAXFLIST},
+        {"no-offsets", '\0', GETLONGOPT_ARG_NONE, OPT_NO_OFFSETS},
     };
 
     /* set defaults */
@@ -318,7 +326,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
 
     /* null out the others */
     args->results = 0;
-    args->type = NULL;
+    args->type = INDEX_DOCTYPE_ERR;
     args->prefix = NULL;
     args->config_file = NULL;
     args->stop_file = NULL;
@@ -333,10 +341,10 @@ static struct args *parse_args(unsigned int argc, char **argv,
     args->nopts = INDEX_NEW_NOOPT;
     args->lopts = INDEX_LOAD_NOOPT;
 
-    /* provide okapi defaults */
-    args->sopt.u.okapi_k3.k1 = 1.2F;
-    args->sopt.u.okapi_k3.k3 = 1e10; /* inf */
-    args->sopt.u.okapi_k3.b = 0.75;
+    /* provide okapi defaults (so that --okapi just works) */
+    args->sopt.u.okapi.k1 = 1.2;
+    args->sopt.u.okapi.k3 = 1e10; /* inf */
+    args->sopt.u.okapi.b = 0.75;
 
     args->sopt.summary_type = INDEX_SUMMARISE_NONE;
 
@@ -443,6 +451,10 @@ static struct args *parse_args(unsigned int argc, char **argv,
             }
             break;
 
+        case OPT_NO_OFFSETS:
+            /* specified no offsets in index */
+            args->nopts |= INDEX_NEW_NO_OFFSETS;
+            break;
 
         case OPT_MAXFILESIZE:
             /* they want to set the maximum filesize */
@@ -607,7 +619,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
             } else if (!str_casecmp(arg, "light")) {
                 args->nopt.stemmer = INDEX_STEM_LIGHT;
             } else if (!str_casecmp(arg, "none")) {
-                /* in fact, don't stem */
+                /* in fact, don't stem... */
                 args->nopts ^= INDEX_NEW_STEM;
             } else if (!str_casecmp(arg, "porters")
               || (!str_casecmp(arg, "porter"))) {
@@ -845,7 +857,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                 errno = 0;
                 dnum = strtod(arg, &tmp);
                 if (!errno && !*tmp) {
-                    args->sopt.u.okapi_k3.k1 = (float) dnum;
+                    args->sopt.u.okapi.k1 = dnum;
                 } else {
                     fprintf(output, 
                       "error converting start result value '%s'\n", arg);
@@ -865,7 +877,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                 errno = 0;
                 dnum = strtod(arg, &tmp);
                 if (!errno && !*tmp) {
-                    args->sopt.u.okapi_k3.k3 = (float) dnum;
+                    args->sopt.u.okapi.k3 = dnum;
                 } else {
                     fprintf(output, 
                       "error converting start result value '%s'\n", arg);
@@ -885,7 +897,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                 errno = 0;
                 dnum = strtod(arg, &tmp);
                 if (!errno && !*tmp) {
-                    args->sopt.u.okapi_k3.b = (float) dnum;
+                    args->sopt.u.okapi.b = dnum;
                 } else {
                     fprintf(output, 
                       "error converting start result value '%s'\n", arg);
@@ -917,7 +929,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                     errno = 0;
                     dnum = strtod(arg, &tmp);
                     if (!errno && !*tmp) {
-                        args->sopt.u.dirichlet.mu = (float) dnum;
+                        args->sopt.u.dirichlet.mu = dnum;
                     } else {
                         fprintf(output, 
                           "error converting mu value '%s'\n", arg);
@@ -945,7 +957,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                     errno = 0;
                     dnum = strtod(arg, &tmp);
                     if (!errno && !*tmp) {
-                        args->sopt.u.hawkapi.alpha = (float) dnum;
+                        args->sopt.u.hawkapi.alpha = dnum;
                         args->sopt.u.hawkapi.k3 = 1e10; /* ~= inf */
                     } else {
                         fprintf(output, 
@@ -978,7 +990,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
                     errno = 0;
                     dnum = strtod(arg, &tmp);
                     if (!errno && !*tmp) {
-                        args->sopt.u.pcosine.pivot = (float) dnum;
+                        args->sopt.u.pcosine.pivot = dnum;
                     } else {
                         fprintf(output, 
                           "error converting start result value '%s'\n", arg);
@@ -1014,18 +1026,32 @@ static struct args *parse_args(unsigned int argc, char **argv,
             }
             break;
 
-        case OPT_VOCAB_LISTSIZE: 
-            errno = 0;
-            num = strtol(arg, &tmp, 10);
-            if (!errno && !*tmp) {
-                args->lopt.vocab_size = args->nopt.vocab_size = num;
-                args->lopts |= INDEX_LOAD_VOCAB;
-                args->nopts |= INDEX_NEW_VOCAB;
+        case OPT_DYNAMIC:
+            if (!must_index && !must_stat) {
+                must_search = 1;
+                if (metric) {
+                    err = 1;
+                    fprintf(output, "metric set multiple times\n");
+                } else {
+                    metric = 1;
+                    args->sopts |= INDEX_SEARCH_DYNAMIC_RANK;
+                    args->sopt.u.dynamic.metric = arg;
+                }
             } else {
-                fprintf(output, 
-                  "error converting vocab list-size value '%s'\n", arg);
-                verbose = 0;
                 err = 1;
+                fprintf(output, 
+                  "metric option must be used with search options\n");
+            }
+            break;
+
+        case OPT_DYNAMIC_PARAMS:
+            if (!must_index && !must_stat) {
+                must_search = 1;
+                args->sopt.u.dynamic.params = arg;
+            } else {
+                err = 1;
+                fprintf(output, "metric-parameters option must be used with "
+                  "search options\n");
             }
             break;
 
@@ -1043,20 +1069,6 @@ static struct args *parse_args(unsigned int argc, char **argv,
             } else {
                 fprintf(output, 
                   "error converting accumulator limit value '%s'\n", arg);
-                verbose = 0;
-                err = 1;
-            }
-            break;
-
-        case OPT_MAXFLIST: 
-            errno = 0;
-            num = strtol(arg, &tmp, 10);
-            if (!errno && !*tmp) {
-                args->lopt.maxflist_size = num;
-                args->lopts |= INDEX_LOAD_MAXFLIST;
-            } else {
-                fprintf(output, 
-                  "error converting vocab list-size value '%s'\n", arg);
                 verbose = 0;
                 err = 1;
             }
@@ -1317,17 +1329,17 @@ int build(struct args *args, FILE *output) {
 
     fprintf(output, "%s version %s", PACKAGE, PACKAGE_VERSION);
 
-    if (1) {
-        /* print a little more info */
+    if (!isdigit(PACKAGE_VERSION[0])) {
+        /* its not a release, print a little more info */
         int ndebug = 0;
 
 #ifdef NDEBUG
         ndebug = 1;
 #endif
 
-        fprintf(output, ", %s%s", 
-          ndebug ? "" : "no NDEBUG, ", 
-          DEAR_DEBUG ? "DEAR_DEBUG! (may run EXTREMELY slowly)" : "");
+        fprintf(output, ", %s%s",  
+          ndebug ? "" : ", no NDEBUG", 
+          DEAR_DEBUG ? ", DEAR_DEBUG! (may run EXTREMELY slowly)" : "");
     }
     fprintf(output, "\n");
 
@@ -1382,7 +1394,7 @@ int build(struct args *args, FILE *output) {
               + (now.tv_usec - (double) then.tv_usec) / 1000000.0);
 
             /* succeded */
-            fprintf(output, "found %u doc%s, %s%s%s%f seconds\n", docs, 
+            fprintf(output, "found %u doc%s, %s%s%s%.2f seconds\n", docs, 
               docs == 1 ? "": "s", 
               !args->type ? "type " : "",
               !args->type 
@@ -1411,8 +1423,8 @@ int build(struct args *args, FILE *output) {
         /* successful, do nothing */
     } else {
         fprintf(stderr, "error committing...\n");
-        index_rm(idx);
-        index_delete(idx);
+        /* index_rm(idx);
+        index_delete(idx); */
         return 0;
     }
 
@@ -1452,7 +1464,6 @@ int build(struct args *args, FILE *output) {
             printf("avg_words: %f\n", estats.avg_words);
             printf("avg_length: %f\n", estats.avg_length);
             printf("maxtermlen: %u\n", stats.maxtermlen);
-            printf("vocab_listsize: %u\n", stats.vocab_listsize);
             printf("updates: %u\n", stats.updates);
             printf("tablesize: %u\n", stats.tablesize);
             printf("parsebuf: %u\n", stats.parsebuf); 

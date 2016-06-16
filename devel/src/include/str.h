@@ -161,7 +161,7 @@ unsigned int str_strip(char *str);
 
 /* indicates whether characters are signed or not by default (1 if they are, 0
  * if they are not) */
-int str_signed_char();
+int str_signed_char(void);
 #define STR_SIGNED_CHAR (((int) ((char) 255)) == -1)     /* macro version */
 
 /* get an integer value from a character, forcing character values into [0,255]

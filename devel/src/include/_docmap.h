@@ -29,9 +29,9 @@ struct fdset;
 
 /* represents a single entry within the docmap */
 struct docmap_entry {
-    off_t offset;                     /* offset within repository file */
     unsigned int docno;               /* doc number */
     unsigned int fileno;              /* repository file number */
+    unsigned int offset;              /* offset within repository file */
     unsigned int dwords;              /* number of distinct words in doc */
     unsigned int words;               /* number of words in doc */
     float weight;                     /* the cosine weight of the doc */
@@ -112,11 +112,11 @@ struct docmap {
         float *weight;                /* cosine weight cache */
 
         unsigned int *trecno_off;     /* trec docnos, as offsets 
-                                       * into trecno array */
+                                       * into trecno_buf array */
         struct docmap_cbuf trecno;    /* buffer for front-coded trecnos */
 
         unsigned int *loc_off;        /* length-in-bytes cache, as offsets 
-                                       * into loc array */
+                                       * into loc_buf array */
         struct docmap_cbuf loc;       /* buffer for encoded locations */
 
         struct docmap_type_ex *typeex;/* type exceptions (not X_TREC) */

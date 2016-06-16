@@ -16,7 +16,12 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <signal.h>
+#include <unistd.h>
 
 int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
     off_t fsize;                    /* current size of the file */
@@ -195,7 +200,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if ((fd = open(argv[2], flags | O_CREAT, 0xffffffff))) {
+    if ((fd = open(argv[2], flags | O_CREAT | O_BINARY, 0xffffffff))) {
         if ((getrlimit(RLIMIT_FSIZE, &limits) == 0) 
           && (getmaxfsize(fd, limits.rlim_cur, &limit))) { 
             printf("limit for file '%s' is %u\n", argv[1], limit);

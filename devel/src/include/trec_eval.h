@@ -79,7 +79,7 @@ struct treceval_statistics {
 /* initialises an new treceval: sets memory aside for raw results;
  * returns a pointer to a new struct treceval which needs to be freed by
  * a call to the next function after useage */
-struct treceval *treceval_new();
+struct treceval *treceval_new(void);
 
 /* releases all memory and points *trecResults to NULL;
  * expects a pointer to a pointer of a treceval structure for which

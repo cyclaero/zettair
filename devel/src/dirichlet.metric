@@ -28,11 +28,11 @@
 parameter float mu;
 
 decode() {
-    float w_t = (float) (terms / (mu * F_t));
-    accumulator += (float) logf(1 + f_dt * w_t);
+    float w_t = terms / (mu * F_t);
+    accumulator += log(1 + f_dt * w_t);
 }
 
 post() {
-    accumulator += Q_terms * (float) logf(mu / (mu + D_terms));
+    accumulator += Q_terms * log(mu / (mu + D_terms));
 }
 

@@ -94,7 +94,7 @@ int staticalloc_is_managed(struct staticalloc *alloc, void *ptr) {
     return (ptr == MEM_PTRADD(alloc, sizeof(*alloc)));
 }
 
-unsigned int staticalloc_overhead() {
+unsigned int staticalloc_overhead(void) {
     return sizeof(struct staticalloc);
 }
 
@@ -102,7 +102,7 @@ unsigned int staticalloc_overhead() {
 
 #define BYTES sizeof(int)
 
-int main() {
+int main(void) {
     STATICALLOC_DECL(alloc, BYTES);
     void *ptr;
     int *intptr;

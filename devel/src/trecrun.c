@@ -21,6 +21,7 @@
 #include "summarise.h"
 #include "trec_eval.h"
 #include "timings.h"
+#include "zpthread.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -115,6 +116,8 @@ struct args {
     int dummy;                         /* whether to print dummy results */
     int cont;                          /* whether to continue evaluation 
                                         * through errors */
+    int parallel;                      /* whether to evaluate topics from 
+                                        * different files in parallel */
     char *stoplist;                    /* stop file */
 };
 
@@ -219,7 +222,7 @@ enum {
     OPT_VERSION, OPT_QRELS, OPT_TIMING, OPT_ACCUMULATOR_LIMIT,
     OPT_IGNORE_VERSION, OPT_MEMORY, OPT_ANH_IMPACT, OPT_PHRASE, OPT_DUMMY, 
     OPT_CUTOFF, OPT_PARSEBUF, OPT_TABLESIZE, OPT_BIG_AND_FAST, OPT_NONSTOP,
-    OPT_STOP
+    OPT_STOP, OPT_PARALLEL, OPT_DYNAMIC, OPT_DYNAMIC_PARAMS
 };
 
 static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
@@ -251,6 +254,9 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
         {"pivoted-cosine", 'p', GETLONGOPT_ARG_REQUIRED, OPT_PIVOTED_COSINE},
         {"cosine", 'c', GETLONGOPT_ARG_NONE, OPT_COSINE},
         {"anh-impact", '\0', GETLONGOPT_ARG_NONE, OPT_ANH_IMPACT},
+        {"metric", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DYNAMIC},
+        {"metric-parameters", '\0', GETLONGOPT_ARG_REQUIRED, 
+          OPT_DYNAMIC_PARAMS},
 
         {"title", 't', GETLONGOPT_ARG_NONE, OPT_TITLE},
         {"description", 'd', GETLONGOPT_ARG_NONE, OPT_DESCRIPTION},
@@ -271,6 +277,7 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
         {"dummy", '\0', GETLONGOPT_ARG_NONE, OPT_DUMMY},
         {"non-stop", '\0', GETLONGOPT_ARG_NONE, OPT_NONSTOP},
         {"query-stop", '\0', GETLONGOPT_ARG_OPTIONAL, OPT_STOP},
+        {"parallel", '\0', GETLONGOPT_ARG_OPTIONAL, OPT_PARALLEL},
         {NULL, 'V', GETLONGOPT_ARG_NONE, OPT_VERSION}
     };
 
@@ -299,9 +306,9 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
     args->descr = 0;
     args->narr = 0;
     args->qrels = NULL;
-    args->sopt.u.okapi_k3.k1 = 1.2F;
-    args->sopt.u.okapi_k3.k3 = 1e10;
-    args->sopt.u.okapi_k3.b = 0.75;
+    args->sopt.u.okapi.k1 = 1.2;
+    args->sopt.u.okapi.k3 = 1e10;
+    args->sopt.u.okapi.b = 0.75;
     args->lopt.docmap_cache = DOCMAP_CACHE_TRECNO;
     args->print_queries = args->timing = 0;
     args->memory = MEMORY_DEFAULT;
@@ -309,6 +316,7 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
     args->cutoff = 0;
     args->dummy = 0;
     args->cont = 0;
+    args->parallel = 0;
 
     /* parse arguments */
     while (!err 
@@ -369,6 +377,19 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
                 args->lopt.tablesize = num;
             } else {
                 fprintf(output, "error converting tablesize value '%s'\n", 
+                  arg);
+                err = 1;
+            }
+            break;
+
+        case OPT_PARALLEL:
+            /* they've specified parallel evaluation */
+            if (!arg || !str_casecmp(arg, "yes") || !str_casecmp(arg, "true")) {
+                args->parallel = 1;
+            } else if (!str_casecmp(arg, "no") || !str_casecmp(arg, "false")) {
+                args->parallel = 0;
+            } else {
+                fprintf(output, "unknown value for parallel option: '%s'\n", 
                   arg);
                 err = 1;
             }
@@ -524,6 +545,17 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
             }
             break;
 
+        case OPT_DYNAMIC:
+            /* they want to use named metric */
+            args->sopts |= INDEX_SEARCH_DYNAMIC_RANK;
+            args->sopt.u.dynamic.metric = arg;
+            break;
+
+        case OPT_DYNAMIC_PARAMS:
+            /* they want to use named metric parameters */
+            args->sopt.u.dynamic.params = arg;
+            break;
+
         case OPT_OKAPI:
             /* they want to use okapi */
             args->sopts |= INDEX_SEARCH_OKAPI_RANK;
@@ -531,7 +563,7 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
 
         case OPT_K1:
             /* set okapi k1 parameter */
-            if (sscanf(arg, "%f", &args->sopt.u.okapi_k3.k1)) {
+            if (sscanf(arg, "%f", &args->sopt.u.okapi.k1)) {
                 /* do nothing */
             } else {
                 fprintf(output, "can't read k1 value '%s'\n", arg);
@@ -541,7 +573,7 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
 
         case OPT_K3:
             /* set okapi k3 parameter */
-            if (sscanf(arg, "%f", &args->sopt.u.okapi_k3.k3)) {
+            if (sscanf(arg, "%f", &args->sopt.u.okapi.k3)) {
                 /* do nothing */
             } else {
                 fprintf(output, "can't read k3 value '%s'\n", arg);
@@ -551,7 +583,7 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
 
         case OPT_B:
             /* set okapi b parameter */
-            if (sscanf(arg, "%f", &args->sopt.u.okapi_k3.b)) {
+            if (sscanf(arg, "%f", &args->sopt.u.okapi.b)) {
                 /* do nothing */
             } else {
                 fprintf(output, "can't read b value '%s'\n", arg);
@@ -858,8 +890,7 @@ static char *get_next_query(struct mlparse_wrap *parser, char *querynum,
                         APPEND(buf, buflen, bufcapacity, "\0", 1);
                         return buf;
                     } else {
-                        APPEND(buf, buflen, bufcapacity, "\0", 1);
-                        return buf;
+                        return "";
                     }
                 } else {
                     fprintf(stderr, 
@@ -959,7 +990,7 @@ static char *get_next_query(struct mlparse_wrap *parser, char *querynum,
 /* internal function to execute queries from a topic file against an
  * index and output the results in trec_eval format */
 static int process_topic_file(FILE *fp, struct args *args, FILE *output, 
-  struct treceval *teresults) {
+  struct treceval *teresults, zpthread_mutex_t *teresults_mutex) {
     struct index_stats stats;
     char *query,
          *querynum = NULL;
@@ -989,10 +1020,8 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
 
             /* check that we actually got a query */
             if (!str_len(query)) {
-                if (!args->cont) {
-                    fprintf(stderr, "failed to extract query for topic %s\n", 
-                      querynum);
-                }
+                fprintf(stderr, "failed to extract query for topic %s\n", 
+                  querynum);
                 if (atoi((const char *) querynum) == 201) {
                     fprintf(stderr, "looks like it occurred on TREC topics "
                       "201-250, which is probably because you specified a "
@@ -1008,7 +1037,6 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                     }
                 } else {
                     /* give up evaluation */
-                    free(query);
                     free(results);
                     free(querynum);
                     mlparse_wrap_delete(parser);
@@ -1037,7 +1065,16 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                 }
 
                 /* print results */
-                for (i = 0; i < returned; i++) {
+                if (teresults 
+                  && zpthread_mutex_lock(teresults_mutex) != ZPTHREAD_OK) {
+                    fprintf(stderr, "failed to lock results structure\n");
+                    free(results);
+                    free(querynum);
+                    free(query);
+                    mlparse_wrap_delete(parser);
+                    return 0;
+                }
+                for (i = 0; i < returned && !args->timing; i++) {
                     char *docno = NULL;
 
                     /* hack: any document that doesn't have a TREC docno will
@@ -1088,6 +1125,9 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                         free(docno);
                         free(query);
                         mlparse_wrap_delete(parser);
+                        if (teresults) {
+                            zpthread_mutex_unlock(teresults_mutex);
+                        }
                         return 0;
                     } else {
                         /* couldn't copy the docno */
@@ -1097,8 +1137,14 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                         free(results);
                         free(querynum);
                         mlparse_wrap_delete(parser);
+                        if (teresults) {
+                            zpthread_mutex_unlock(teresults_mutex);
+                        }
                         return 0;
                     }
+                }
+                if (teresults) {
+                    zpthread_mutex_unlock(teresults_mutex);
                 }
 
                 if (returned == 0 && args->dummy) {
@@ -1150,12 +1196,35 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
     return 0;
 }
 
+struct pertopic {
+    FILE *input;
+    FILE *output;
+    struct args *args;
+    zpthread_t pid;
+    struct index_search_opt sopt;
+    struct treceval *teresults;
+    zpthread_mutex_t *teresults_mutex;
+};
+
+static void *process_topic_file_wrap(void *handle) {
+    struct pertopic *pt = handle;
+
+    if (process_topic_file(pt->input, pt->args, pt->output, pt->teresults, 
+      pt->teresults_mutex)) {
+        return pt;
+    } else {
+        return NULL;
+    }
+}
+
 int main(int argc, char **argv) {
     struct args *args;
     unsigned int i;
     FILE *fp,
          *output;
     struct treceval *results = NULL;
+    struct pertopic *pt;
+    zpthread_mutex_t results_mutex = ZPTHREAD_MUTEX_INITIALIZER;
 
     if (isatty(STDOUT_FILENO)) {
         output = stdout;
@@ -1175,28 +1244,78 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (!(pt = malloc(sizeof(*pt) * args->topic_files))) {
+        fprintf(stderr, "failed to initialise results structure\n");
+        treceval_delete(&results);
+        zpthread_mutex_destroy(&results_mutex);
+        return EXIT_FAILURE;
+    }
+
     if (args) {
         for (i = 0; i < args->topic_files; i++) {
-            if ((fp = fopen((const char *) args->topic_file[i], "rb"))) {
-                if (!process_topic_file(fp, args, stdout, results)) {
-                    if (results) {
-                        treceval_delete(&results);
-                    }
-                    fprintf(output, "failed to process topic file '%s'\n", 
-                      args->topic_file[i]);
+            pt[i].args = args;
+            pt[i].sopt = args->sopt;
+            pt[i].teresults = results;
+            pt[i].teresults_mutex = &results_mutex;
+            if (args->parallel) {
+                char output[FILENAME_MAX + 1];
+
+                str_lcpy(output, str_basename(args->topic_file[i]), 
+                  FILENAME_MAX + 1);
+                str_lcat(output, ".out", FILENAME_MAX + 1);
+
+                if (!(pt[i].output = fopen(output, "wb"))) {
+                    fprintf(stderr, "failed to open output file '%s'\n", 
+                      output);
                     fclose(fp);
                     free_args(args);
+                    free(pt);
+                    zpthread_mutex_destroy(&results_mutex);
                     return EXIT_FAILURE;
                 }
-                fclose(fp);
             } else {
+                pt[i].output = stdout;
+            }
+
+            if ((pt[i].input = fopen(args->topic_file[i], "rb"))
+              && zpthread_create(&pt[i].pid, NULL, process_topic_file_wrap, 
+                  &pt[i]) == ZPTHREAD_OK) {
+
+                if (!args->parallel) {
+                    void *pret;
+                    int ret;
+
+                    ret = zpthread_join(pt[i].pid, &pret);
+                    assert(ret == ZPTHREAD_OK);
+                }
+            } else {
+                if (!pt[i].input) {
+                    fprintf(output, "couldn't open topic file '%s': %s\n", 
+                      args->topic_file[i], strerror(errno));
+                } else {
+                    fprintf(output, "failed to spawn thread: %s\n", 
+                      strerror(errno));
+                }
                 if (results) {
                     treceval_delete(&results);
                 }
-                fprintf(output, "couldn't open topic file '%s': %s\n", 
-                  args->topic_file[i], strerror(errno));
                 free_args(args);
+                free(pt);
+                zpthread_mutex_destroy(&results_mutex);
                 return EXIT_FAILURE;
+            }
+        }
+
+        for (i = 0; i < args->topic_files; i++) {
+            if (args->parallel) {
+                void *pret;
+                int ret;
+                ret = zpthread_join(pt[i].pid, &pret);
+                assert(ret == ZPTHREAD_OK);
+            }
+            fclose(pt[i].input);
+            if (pt[i].output != stdout) {
+                fclose(pt[i].output);
             }
         }
 
@@ -1213,6 +1332,8 @@ int main(int argc, char **argv) {
         free_args(args);
     }
 
+    free(pt);
+    zpthread_mutex_destroy(&results_mutex);
     return EXIT_SUCCESS;
 }
 

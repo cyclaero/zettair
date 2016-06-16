@@ -63,17 +63,17 @@
 /*
  *  Is there an error to report?.
  */
-int error_has_msg();
+int error_has_msg(void);
 
 /*
  *  Get the last error message as set by error_loc()/ERROR().
  */
-const char * error_last_msg();
+const char * error_last_msg(void);
 
 /*
  *  Get the last error code as set by error_loc()/ERROR().
  */
-int error_last_code();
+int error_last_code(void);
 
 /*
  *  Set the stream that errors are logged to.

@@ -34,16 +34,18 @@ class TrecResult:
     """Data for single line of a trec result.
     This contains the topic number, trec docid, score, and run-id."""
 
-    def __init__(self, topic_number, trec_doc_id, score=0.0, run_id="zettair"):
+    def __init__(self, topic_number, trec_doc_id, score=0.0, run_id="zettair",
+            ordnum=0):
         self.topic_number = topic_number
         self.trec_doc_id = trec_doc_id
         self.score = score
         self.run_id = run_id
+        self.ordnum = ordnum
 
     def fmt(self):
         """Return as formatted string in trec_eval format"""
-        return "%s\tQ0\t%s\t0\t%f\t%s" % (self.topic_number, 
-                self.trec_doc_id, self.score, self.run_id)
+        return "%s\tQ0\t%s\t%d\t%f\t%s" % (self.topic_number, 
+                self.trec_doc_id, self.ordnum, self.score, self.run_id)
 
 class ZetSearchResults:
     """Wrapper for C-module SearchResults."""
@@ -64,9 +66,11 @@ class ZetSearchResults:
     def to_trec_eval_list(self, topic_num, run_id="zettair"):
         "Convert to a list of TrecResults"
         trec_results = []
+        ordnum = 0
         for result in self.results:
+            ordnum += 1
             trec_results.append(TrecResult(topic_num, result.auxiliary,
-                    result.score, run_id))
+                    result.score, run_id, ordnum=ordnum))
         return trec_results
 
     def order_by_score(self):

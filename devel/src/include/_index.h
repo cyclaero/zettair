@@ -18,13 +18,11 @@ extern "C" {
 #include "index.h"
 #include "storagep.h"
 #include "stream.h"
+#include "vocab.h"
+#include "zpthread.h"
 
 enum index_flags {
     INDEX_BUILT = (1 << 0),             /* the index has been constructed */
-    INDEX_SORTED = (1 << 1),            /* the index is sorted by vocabulary 
-                                         * order (more or less) */
-    INDEX_SOURCE = (1 << 2),            /* source text for the documents is 
-                                         * available */
     INDEX_STEMMED = (3 << 3),           /* mask to tell whether index is 
                                          * stemmed */
     INDEX_STEMMED_PORTERS = (1 << 3),   /* whether its stemmed with porter's 
@@ -33,6 +31,14 @@ enum index_flags {
                                          * stemmer */
     INDEX_STEMMED_LIGHT = (3 << 3)      /* whether its stemmed with the light 
                                          * stemmer */
+};
+
+/* structure holding all members that are required on a per-query basis.
+ * We maintain a list of them, so that parellel queries can grab one per-query
+ * structure and proceed on without interference. */
+struct index_perquery {
+    struct index_perquery *next;
+    struct summarise *sum;
 };
 
 struct index {
@@ -49,11 +55,30 @@ struct index {
     struct iobtree *vocab;              /* vocabulary */
     struct docmap *map;                 /* document map */
     struct psettings *settings;         /* parser settings */
-    struct summarise *sum;              /* summary producing object */
 
     struct stem_cache *stem;            /* stemmer cache (or NULL) */
     struct stop *istop;                 /* construction stoplist (or NULL) */
-    struct stop *qstop;                 /* construction stoplist (or NULL) */
+    struct stop *qstop;                 /* query stoplist (or NULL) */
+
+    struct index_perquery *perquery;    /* stuff required to evaluate queries 
+                                         * in parellel */
+
+    /* locks for multithreaded stuff.  Note that we use hierarchical locking 
+     * to avoid deadlock, in order, from first-obtained to last-obtained, that
+     * they appear below.  Some of the structures (notably the fdset) have
+     * internal locks, but they should play nicely with this scheme, so long 
+     * as locks are acquired before any accesses to them are attempted */
+
+    struct mrwlock *biglock;            /* big lock, which controls 
+                                         * multi-threaded access (though not 
+                                         * necessarily exclusive access) to 
+                                         * the index */
+    zpthread_mutex_t vocab_mutex;       /* mutex which controls access to the 
+                                         * vocabulary structure */
+    zpthread_mutex_t docmap_mutex;      /* mutex which controls access to the 
+                                         * docmap structure */
+    zpthread_mutex_t perquery_mutex;    /* mutex controlling access to the 
+                                         * perquery list */
 
     /* construction stuff */
     struct postings *post;              /* accumulated in-memory postings */
@@ -89,31 +114,21 @@ struct index {
     } stats;
 
     struct imp_stats {
-        double avg_f_t;          /* average term frequency */
-        double slope;            /* used in normalising */
-        unsigned int quant_bits; /* used in quantising */
+        double avg_f_t;                 /* average term frequency */
+        double slope;                   /* used in normalising */
+        unsigned int quant_bits;        /* used in quantising */
         double w_qt_min;
         double w_qt_max;
-    } impact_stats;              /* statistics required at query time for 
-                                    impact ordered vectors */
+    } impact_stats;                     /* statistics required at query time 
+                                         * for impact ordered vectors */
 
-    unsigned int doc_order_vectors; /* indicates if standard document order 
-                                       vectors are in index */
-    unsigned int doc_order_word_pos_vectors; /* indicates if document 
-                                       ordered with word 
-                                       positions vectors are in index */
-    unsigned int impact_vectors;    /* indicates if impact ordered vectors 
-                                       are in index */
+    enum vocab_vtype vector_types;      /* types of vectors available in 
+                                           this index */
 };
 
 /* internal function to merge the current postings into the index */
 int index_remerge(struct index *idx, unsigned int commitopts, 
   struct index_commit_opt *commitopt);
-
-/* commit the superblock of an index to disk.  Only here for usage
- * of programs bypassing the normal building mechanism, such as 
- * partitioning programs. */
-int index_commit_superblock(struct index *idx);
 
 /* internal function to atomically perform a read */
 ssize_t index_atomic_read(int fd, void *buf, unsigned int size);
@@ -136,6 +151,14 @@ void (*index_stemmer(struct index *idx))(void *, char *);
 /* utility function to read into a stream from a file/buffer */
 enum stream_ret index_stream_read(struct stream *instream, int fd, 
   char *buf, unsigned int bufsize);
+
+/* functions to allocate and delete perquery objects */
+struct index_perquery *index_perquery_new(struct index *idx);
+void index_perquery_delete(struct index_perquery *perquery);
+
+/* functions to fetch and store perquery objects in the idx->perquery list */
+struct index_perquery *index_perquery_fetch(struct index *idx);
+int index_perquery_store(struct index *idx, struct index_perquery *perquery);
 
 #ifdef __cplusplus
 }

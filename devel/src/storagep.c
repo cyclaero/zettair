@@ -17,11 +17,10 @@
 #include "zvalgrind.h"
 
 #include <limits.h>
-#include <math.h>
 
 unsigned int storagep_size() {
-    return 2 * sizeof(uint16_t) /* uint_fast16_t members */
-      + 3 * sizeof(uint32_t)    /* uint_fast32_t members */
+    return 1 * sizeof(uint16_t) /* uint_fast16_t members */
+      + 2 * sizeof(uint32_t)    /* uint_fast32_t members */
       + 3 * sizeof(uint8_t);    /* uint8_t members */
 }
 
@@ -40,8 +39,6 @@ int storagep_write(const struct storagep *sp, void *vaddr) {
     WRITE_MEMBER(addr, sp->pagesize, uint32_t);
     WRITE_MEMBER(addr, sp->max_termlen, uint16_t);
     WRITE_MEMBER(addr, sp->max_filesize, uint32_t);
-    WRITE_MEMBER(addr, sp->vocab_lsize, uint16_t);
-    WRITE_MEMBER(addr, sp->file_lsize, uint32_t);
 
     WRITE_MEMBER(addr, sp->btleaf_strategy, uint8_t);
     WRITE_MEMBER(addr, sp->btnode_strategy, uint8_t);
@@ -66,8 +63,6 @@ int storagep_read(struct storagep *sp, const void *vaddr) {
     READ_MEMBER(addr, sp->pagesize, uint32_t);
     READ_MEMBER(addr, sp->max_termlen, uint16_t);
     READ_MEMBER(addr, sp->max_filesize, uint32_t);
-    READ_MEMBER(addr, sp->vocab_lsize, uint16_t);
-    READ_MEMBER(addr, sp->file_lsize, uint32_t);
 
     READ_MEMBER(addr, sp->btleaf_strategy, uint8_t);
     READ_MEMBER(addr, sp->btnode_strategy, uint8_t);
@@ -88,8 +83,6 @@ int storagep_defaults(struct storagep *storage, int fd) {
         return -1;
     }
 
-    storage->vocab_lsize = 0;
-    storage->file_lsize = storage->max_filesize;
     storage->btleaf_strategy = 1;               /* 1 is sorted, general */
     storage->btnode_strategy = 1;               /* 1 is sorted, general */
 

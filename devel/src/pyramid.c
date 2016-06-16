@@ -33,7 +33,7 @@ struct file {
     unsigned int fileno;          /* number of file in fdset */
     unsigned int level;           /* how many times this fileset has merged */
     int limited;                  /* whether this entry is at maximum size */
-    int fd;                       /* file descriptor for this file, 
+    int fd;                       /* file descriptor for this file,
                                    * typically closed */
 };
 
@@ -45,7 +45,7 @@ struct pyramid {
     struct file *file;            /* array of files */
     unsigned int files;           /* how many in array */
     unsigned int capacity;        /* how many array can handle */
-    unsigned int width;           /* how many files can be on each level 
+    unsigned int width;           /* how many files can be on each level
                                      before we need to merge them */
 
     struct fdset *fds;            /* temporary files */
@@ -54,19 +54,20 @@ struct pyramid {
     unsigned int vocab_type;      /* type number of vocab files */
 
     struct storagep *storagep;    /* storage parameters for final merge */
-    struct freemap *map;          /* freemap to remove stuff from in final 
+    struct freemap *map;          /* freemap to remove stuff from in final
                                    * merge */
-    struct freemap *vmap;         /* vocab freemap to remove stuff from in 
+    struct freemap *vmap;         /* vocab freemap to remove stuff from in
                                    * final merger */
 
-    int finished;                 /* whether the merger object has performed a 
+    int finished;                 /* whether the merger object has performed a
                                    * final merge or not */
+    int offsets;                  /* whether to store offsets */
 };
 
-struct pyramid* pyramid_new(struct fdset *fds, unsigned int tmp_type, 
+struct pyramid* pyramid_new(struct fdset *fds, unsigned int tmp_type,
   unsigned int final_type, unsigned int vocab_type,
-  unsigned int maxfiles, struct storagep *storagep, 
-  struct freemap *map, struct freemap *vmap) {
+  unsigned int maxfiles, int offsets,
+  struct storagep *storagep, struct freemap *map, struct freemap *vmap) {
     struct pyramid* p = malloc(sizeof(*p));
 
     if (p) {
@@ -81,6 +82,7 @@ struct pyramid* pyramid_new(struct fdset *fds, unsigned int tmp_type,
         p->storagep = storagep;
         p->map = map;
         p->vmap = vmap;
+        p->offsets = offsets;
     }
 
     return p;
@@ -90,7 +92,7 @@ struct pyramid* pyramid_new(struct fdset *fds, unsigned int tmp_type,
  * returns the first file requiring merging in entry, and the number
  * of files requiring merging in count.  Returns true if pyramid is
  * required. */
-static int pyramid_merge_required(struct pyramid* pyramid, unsigned int* entry, 
+static int pyramid_merge_required(struct pyramid* pyramid, unsigned int* entry,
   unsigned int* count) {
     unsigned int pos = 0,          /* our position in the array */
                  level = UINT_MAX, /* current level, starts highest level */
@@ -120,7 +122,7 @@ static int pyramid_merge_required(struct pyramid* pyramid, unsigned int* entry,
 
         /* else check for a level change, cos we have to reset state then */
         } else if (pf->level != level) {
-            /* if we have a same-level consecutive run of greater than our 
+            /* if we have a same-level consecutive run of greater than our
              * width parameter, we need to merge */
             if (consecutive >= pyramid->width) {
                 *entry = pos - consecutive;
@@ -182,7 +184,9 @@ void pyramid_delete(struct pyramid* pyramid) {
     pyramid->files = 0;
 
     if (pyramid->file) {
+        fprintf(stderr, "About to free pyramid file\n");
         free(pyramid->file);
+        fprintf(stderr, "Freed pyramid file\n");
     }
 
     free(pyramid);
@@ -194,9 +198,9 @@ void pyramid_delete(struct pyramid* pyramid) {
    merge_fail(pyramid, entry, count, ofd, vfd, fileno, vf, fm, imerge))
 
 /* internal function to clean up after failed merging */
-static void merge_fail(struct pyramid *pyramid, unsigned int entry, 
-  unsigned int count, int outfd, int vfd, unsigned int fileno, 
-  unsigned int vfileno, struct merge_final *fmerge, 
+static void merge_fail(struct pyramid *pyramid, unsigned int entry,
+  unsigned int count, int outfd, int vfd, unsigned int fileno,
+  unsigned int vfileno, struct merge_final *fmerge,
   struct merge_inter *imerge) {
     unsigned int i;
 
@@ -210,8 +214,8 @@ static void merge_fail(struct pyramid *pyramid, unsigned int entry,
 
     for (i = 0; i < count; i++) {
         if (pyramid->file[entry + i].fd >= 0) {
-            fdset_unpin(pyramid->fds, pyramid->tmp_type, 
-              pyramid->file[entry + i].fileno, 
+            fdset_unpin(pyramid->fds, pyramid->tmp_type,
+              pyramid->file[entry + i].fileno,
               pyramid->file[entry + i].fd);
             pyramid->file[entry + i].fd = -1;
         }
@@ -224,32 +228,32 @@ static void merge_fail(struct pyramid *pyramid, unsigned int entry,
     }
 }
 
-int pyramid_merge(struct pyramid *pyramid, unsigned int *files, 
-  unsigned int *vocabs, unsigned long int *dterms, unsigned int *terms_high, 
-  unsigned int *terms_low, unsigned int *root_fileno, 
+int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
+  unsigned int *vocabs, unsigned long int *dterms, unsigned int *terms_high,
+  unsigned int *terms_low, unsigned int *root_fileno,
   unsigned long int *root_offset, void *buf, unsigned int bufsize) {
     struct merge_final merge;            /* merge object */
     struct merge_input *inputs = buf;    /* inputs array for merge */
     char *inbuf,                         /* input buffers */
          *outbuf,                        /* output buffer */
          *bigbuf,                        /* buffer for big reads */
-         *tmp;                           /* writing location, so we don't 
+         *tmp;                           /* writing location, so we don't
                                           * move buf_out */
     unsigned int inbufsz,                /* size of each input buffer */
                  outbufsz,               /* size of output buffer */
                  bigbufsz;               /* size of big buffer */
     int len;                             /* length of write */
     enum merge_ret ret;                  /* return value from merge_final */
-    unsigned int file = 0,               /* file we're writing to */ 
+    unsigned int file = 0,               /* file we're writing to */
                  vfile = 0,              /* vocab file we're writing to */
-                 i, 
+                 i,
                  input,                  /* id of the input we need to renew */
                  next_read;              /* how big the next read will be */
     int outfd = -1,                      /* output file descriptor */
         voutfd = -1;                     /* vocab output file descriptor */
-    unsigned long int start,             /* where we began writing current 
+    unsigned long int start,             /* where we began writing current
                                           * file */
-                      end,               /* where we ended writing current 
+                      end,               /* where we ended writing current
                                           * file */
                       vpos = 0;          /* where we are in vocab output file */
 
@@ -273,7 +277,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
     /* split up the remaining buffer evenly (one third for regular input,
      * one third for output, one third for large reads)  */
-    inbufsz = outbufsz = bigbufsz 
+    inbufsz = outbufsz = bigbufsz
       = (bufsize - (sizeof(*inputs) * pyramid->files)) / 3;
 
     if (pyramid->files) {
@@ -292,16 +296,16 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
     /* pin all required fds */
     i = 0;
-    while ((i < pyramid->files) 
-      && ((pyramid->file[i].fd 
-        = fdset_pin(pyramid->fds, pyramid->tmp_type, 
+    while ((i < pyramid->files)
+      && ((pyramid->file[i].fd
+        = fdset_pin(pyramid->fds, pyramid->tmp_type,
           pyramid->file[i].fileno, 0, SEEK_SET)) >= 0)) {
         inputs[i].next_in = inbuf + inbufsz * i;
         inputs[i].avail_in = 0;
         i++;
     }
 
-    /* we may not have opened all of the files, fail (could possibly partial 
+    /* we may not have opened all of the files, fail (could possibly partial
      * merge here, although what good it would do is questionable) */
     if (i < pyramid->files) {
         unsigned int j;
@@ -309,15 +313,15 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
         assert(!CRASH);
 
         for (j = 0; j < i; j++) {
-            fdset_unpin(pyramid->fds, pyramid->tmp_type, 
+            fdset_unpin(pyramid->fds, pyramid->tmp_type,
               pyramid->file[i].fileno, pyramid->file[i].fd);
         }
 
         assert(pinned == fdset_pinned(pyramid->fds));
         return -EMFILE;
-    } else if (!i) {
+    } else if (!i && pyramid->files) {
         assert(!CRASH);
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           NULL, NULL);
         assert(pinned == fdset_pinned(pyramid->fds));
         return -EINVAL;
@@ -326,21 +330,21 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
     merge.input = inputs;
     merge.inputs = pyramid->files;
 
-    if (!(merge_final_new(&merge, NULL, NULL, NULL, pyramid->storagep, 
-        outbuf, outbufsz))) {
+    if (!(merge_final_new(&merge, NULL, NULL, NULL, pyramid->storagep,
+        outbuf, outbufsz, pyramid->offsets))) {
 
         assert(!CRASH);
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           NULL, NULL);
         assert(pinned == fdset_pinned(pyramid->fds));
         return -EINVAL;
     }
 
     /* pin output fd and seek it to start */
-    if (((outfd = fdset_create_seek(pyramid->fds, pyramid->final_type, file, 
-        merge.out.offset_out)) < 0) 
-      && ((outfd != -EEXIST) 
-        || ((outfd = fdset_pin(pyramid->fds, pyramid->final_type, file, 
+    if (((outfd = fdset_create_seek(pyramid->fds, pyramid->final_type, file,
+        merge.out.offset_out)) < 0)
+      && ((outfd != -EEXIST)
+        || ((outfd = fdset_pin(pyramid->fds, pyramid->final_type, file,
             merge.out.offset_out, SEEK_SET)) < 0))) {
 
         unsigned int j;
@@ -349,10 +353,10 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
         assert(!CRASH);
 
         for (j = 0; j < i; j++) {
-            fdset_unpin(pyramid->fds, pyramid->tmp_type, 
+            fdset_unpin(pyramid->fds, pyramid->tmp_type,
               pyramid->file[i].fileno, pyramid->file[i].fd);
         }
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           &merge, NULL);
 
         assert(pinned == fdset_pinned(pyramid->fds));
@@ -362,10 +366,10 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
     if ((voutfd = fdset_create_seek(pyramid->fds, pyramid->vocab_type, vfile,
         0)) < 0) {
 
-        ERROR1("unable to open vocab output file number %u for final merge", 
+        ERROR1("unable to open vocab output file number %u for final merge",
           vfile);
         assert(!CRASH);
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           &merge, NULL);
 
         assert(pinned == fdset_pinned(pyramid->fds));
@@ -382,9 +386,9 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
             if ((bigbufsz > inbufsz) && (next_read > inbufsz)) {
                 /* ensure that the big buffer is not in use */
                 for (i = 0; i < pyramid->files; i++) {
-                    assert(((merge.input[i].next_in < bigbuf) 
-                        || (merge.input[i].next_in 
-                          > bigbuf + bigbufsz)) 
+                    assert(((merge.input[i].next_in < bigbuf)
+                        || (merge.input[i].next_in
+                          > bigbuf + bigbufsz))
                       || (merge.input[i].avail_in == 0));
                 }
 
@@ -402,7 +406,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
             /* use the normal buffer */
             errno = 0;
-            if ((len = read(pyramid->file[input].fd, 
+            if ((len = read(pyramid->file[input].fd,
                 merge.input[input].next_in, next_read)) > 0) {
 
                 /* read succeeded (note that we can't assign to avail_in
@@ -414,17 +418,17 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
               && (merge_final_input_finish(&merge, input) == MERGE_OK)
 
               /* unlink file */
-              && (fdset_unpin(pyramid->fds, pyramid->tmp_type, 
+              && (fdset_unpin(pyramid->fds, pyramid->tmp_type,
                   pyramid->file[input].fileno, pyramid->file[input].fd)
                 == FDSET_OK)
               && ((pyramid->file[input].fd = -1), 1)
-              && (fdset_unlink(pyramid->fds, pyramid->tmp_type, 
+              && (fdset_unlink(pyramid->fds, pyramid->tmp_type,
                   pyramid->file[input].fileno) == FDSET_OK)) {
 
                 /* succeeded, do nothing */
             } else {
                 assert(!CRASH);
-                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, 
+                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file,
                   vfile, &merge, NULL);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return errno ? -errno : -EINVAL;
@@ -440,13 +444,13 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 unsigned int tmp = (unsigned int) vpos;
 
                 /* allocate space used in current file */
-                if (!pyramid->vmap 
-                  || freemap_malloc(pyramid->vmap, &vfile, &vpos, &tmp, 
+                if (!pyramid->vmap
+                  || freemap_malloc(pyramid->vmap, &vfile, &vpos, &tmp,
                     FREEMAP_OPT_EXACT | FREEMAP_OPT_LOCATION, vfile, 0)) {
                     /* allocation succeeded, do nothing */
                 } else {
                     assert(!CRASH);
-                    MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, 
+                    MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd,
                       file, vfile, &merge, NULL);
                     assert(pinned == fdset_pinned(pyramid->fds));
                     return errno ? -errno : -EINVAL;
@@ -454,10 +458,10 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 vpos = 0;
 
                 /* unpin existing output file */
-                if ((fdset_unpin(pyramid->fds, pyramid->vocab_type, 
-                    vfile, voutfd) == FDSET_OK) 
-                  && ((voutfd = fdset_create_seek(pyramid->fds, 
-                      pyramid->vocab_type, ++vfile, 
+                if ((fdset_unpin(pyramid->fds, pyramid->vocab_type,
+                    vfile, voutfd) == FDSET_OK)
+                  && ((voutfd = fdset_create_seek(pyramid->fds,
+                      pyramid->vocab_type, ++vfile,
                       merge.out_btree.offset_out)) >= 0)) {
 
                 } else {
@@ -471,19 +475,19 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 /* don't know whats going on */
                 assert(0);
 
-                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, 
+                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file,
                   vfile, &merge, NULL);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return -EINVAL;
             }
 
             assert(vfile == merge.out_btree.fileno_out);
-            assert((off_t) merge.out_btree.offset_out 
+            assert((off_t) merge.out_btree.offset_out
               == lseek(voutfd, 0, SEEK_CUR));
 
             /* write output to file */
             tmp = merge.out_btree.buf_out;
-            while (merge.out_btree.size_out 
+            while (merge.out_btree.size_out
               && ((len = write(voutfd, tmp, merge.out_btree.size_out)) >= 0)) {
                 merge.out_btree.size_out -= len;
                 tmp += len;
@@ -493,7 +497,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
             if (merge.out_btree.size_out) {
                 assert(!CRASH);
-                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, 
+                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file,
                   vfile, &merge, NULL);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return errno ? -errno : -EINVAL;
@@ -509,8 +513,8 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 unsigned int tmpsize = end - start;
 
                 /* allocate space used in current file */
-                if (!pyramid->map 
-                  || freemap_malloc(pyramid->map, &file, &start, &tmpsize, 
+                if (!pyramid->map
+                  || freemap_malloc(pyramid->map, &file, &start, &tmpsize,
                     FREEMAP_OPT_EXACT | FREEMAP_OPT_LOCATION, file, start)) {
                     /* allocation succeeded, do nothing */
                 } else {
@@ -522,10 +526,10 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 }
 
                 /* unpin existing output file */
-                if ((fdset_unpin(pyramid->fds, pyramid->final_type, 
-                    file, outfd) == FDSET_OK) 
-                  && ((outfd = fdset_create_seek(pyramid->fds, 
-                      pyramid->final_type, ++file, 
+                if ((fdset_unpin(pyramid->fds, pyramid->final_type,
+                    file, outfd) == FDSET_OK)
+                  && ((outfd = fdset_create_seek(pyramid->fds,
+                      pyramid->final_type, ++file,
                       merge.out.offset_out)) >= 0)) {
 
                     start = merge.out.offset_out;
@@ -540,7 +544,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
                 /* don't know whats going on */
                 assert(0);
 
-                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, 
+                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file,
                   vfile, &merge, NULL);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return -EINVAL;
@@ -553,7 +557,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
             /* write output to file */
             tmp = merge.out.buf_out;
-            while (merge.out.size_out 
+            while (merge.out.size_out
               && ((len = write(outfd, tmp, merge.out.size_out)) >= 0)) {
                 merge.out.size_out -= len;
                 tmp += len;
@@ -562,7 +566,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
             if (merge.out.size_out) {
                 assert(!CRASH);
-                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, 
+                MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file,
                   vfile, &merge, NULL);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return errno ? -errno : -EINVAL;
@@ -571,7 +575,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
         default:
             assert(!CRASH);
-            MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+            MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
               &merge, NULL);
             assert(pinned == fdset_pinned(pyramid->fds));
             return -EINVAL;
@@ -581,25 +585,25 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
     /* allocate space used in current files */
     i = end - start;
-    if (!pyramid->map 
-      || freemap_malloc(pyramid->map, &file, &start, &i, 
+    if (!pyramid->map
+      || freemap_malloc(pyramid->map, &file, &start, &i,
         FREEMAP_OPT_EXACT | FREEMAP_OPT_LOCATION, file, start)) {
         /* allocation succeeded, do nothing */
     } else {
         assert(!CRASH);
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           &merge, NULL);
         assert(pinned == fdset_pinned(pyramid->fds));
         return errno ? -errno : -EINVAL;
     }
     i = vpos;
-    if (!pyramid->vmap 
-      || freemap_malloc(pyramid->vmap, &vfile, &vpos, &i, 
+    if (!pyramid->vmap
+      || freemap_malloc(pyramid->vmap, &vfile, &vpos, &i,
         FREEMAP_OPT_EXACT | FREEMAP_OPT_LOCATION, vfile, 0)) {
         /* allocation succeeded, do nothing */
     } else {
         assert(!CRASH);
-        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile, 
+        MERGE_FAIL(pyramid, 0, pyramid->files, outfd, voutfd, file, vfile,
           &merge, NULL);
         assert(pinned == fdset_pinned(pyramid->fds));
         return errno ? -errno : -EINVAL;
@@ -607,7 +611,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
     *files = file + 1;
     *vocabs = vfile + 1;
-    if (merge_final_finish(&merge, root_fileno, root_offset, dterms, 
+    if (merge_final_finish(&merge, root_fileno, root_offset, dterms,
         terms_high, terms_low) == MERGE_OK) {
 
         merge_final_delete(&merge);
@@ -615,7 +619,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
         /* unpin fds */
         for (i = 0; i < pyramid->files; i++) {
             if (pyramid->file[i].fd >= 0) {
-                fdset_unpin(pyramid->fds, pyramid->tmp_type, 
+                fdset_unpin(pyramid->fds, pyramid->tmp_type,
                   pyramid->file[i].fileno, pyramid->file[i].fd);
                 pyramid->file[i].fd = -1;
             }
@@ -643,7 +647,7 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
         /* unpin fds */
         for (i = 0; i < pyramid->files; i++) {
-            fdset_unpin(pyramid->fds, pyramid->tmp_type, 
+            fdset_unpin(pyramid->fds, pyramid->tmp_type,
               pyramid->file[i].fileno, pyramid->file[i].fd);
             pyramid->file[i].fd = -1;
         }
@@ -658,14 +662,14 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
 
 int pyramid_pin_next(struct pyramid *pyramid) {
     if (!pyramid->finished) {
-        int retval = fdset_create(pyramid->fds, pyramid->tmp_type, 
+        int retval = fdset_create(pyramid->fds, pyramid->tmp_type,
           pyramid->nextfile);
         if (retval < 0) {
-            ERROR2("error pinning next file (number %u, type %u)", 
+            ERROR2("error pinning next file (number %u, type %u)",
               pyramid->nextfile, pyramid->tmp_type);
             assert(!CRASH);
         }
-        return retval; 
+        return retval;
 
     } else {
         assert(!CRASH);
@@ -675,7 +679,7 @@ int pyramid_pin_next(struct pyramid *pyramid) {
 
 int pyramid_unpin_next(struct pyramid *pyramid, int fd) {
     if (!pyramid->finished) {
-        return fdset_unpin(pyramid->fds, pyramid->tmp_type, pyramid->nextfile, 
+        return fdset_unpin(pyramid->fds, pyramid->tmp_type, pyramid->nextfile,
           fd);
     } else {
         assert(!CRASH);
@@ -688,7 +692,7 @@ int pyramid_unpin_next(struct pyramid *pyramid, int fd) {
 struct pyramid_state {
     struct pyramid *p;      /* merging pyramid */
     int fd;                 /* fd we're merging into */
-    unsigned int pos;       /* position in files array in pyramid we're 
+    unsigned int pos;       /* position in files array in pyramid we're
                              * inserting to */
     int err;                /* last error code or 0 */
     unsigned int level;     /* level that highest level fd we're merging is */
@@ -701,8 +705,8 @@ void pyramid_change_file(void *opaque) {
 
     /* XXX: have a bit of a problem in that error reporting isn't really
      * possible from here.  Workaround is to have err and check it at
-     * the end of the merge.  As a result, ensure that fd is rewound and 
-     * working whenever we leave, even though that could produce funny 
+     * the end of the merge.  As a result, ensure that fd is rewound and
+     * working whenever we leave, even though that could produce funny
      * results. */
 
     /* add this file into the merging pyramid */
@@ -712,18 +716,18 @@ void pyramid_change_file(void *opaque) {
     if ((pyramid->capacity <= pyramid->files) && !pyramid_expand(pyramid)) {
         assert(!CRASH);
         state->err = ENOMEM;
-        lseek(state->fd, 0, SEEK_SET);      
+        lseek(state->fd, 0, SEEK_SET);
         return;
     }
     memcpy(&pyramid->file[state->pos + 1], &pyramid->file[state->pos],
       sizeof(*pyramid->file) * (pyramid->files - state->pos));
 
     /* pin new fd */
-    if (((newfd = fdset_create_seek(pyramid->fds, pyramid->tmp_type, 
+    if (((newfd = fdset_create_seek(pyramid->fds, pyramid->tmp_type,
         pyramid->nextfile + 1, 0)) >= 0)) {
 
         /* unpin old fd */
-        fdset_unpin(pyramid->fds, pyramid->tmp_type, pyramid->nextfile, 
+        fdset_unpin(pyramid->fds, pyramid->tmp_type, pyramid->nextfile,
           state->fd);
         state->fd = newfd;
         pyramid->file[state->pos].fileno = pyramid->nextfile++;
@@ -736,20 +740,20 @@ void pyramid_change_file(void *opaque) {
     } else {
         assert(!CRASH);
         state->err = -newfd;
-        lseek(state->fd, 0, SEEK_SET);      
+        lseek(state->fd, 0, SEEK_SET);
     }
 }
 
 /* hint: the most common error i've made in this function is to address entries
  * in the pyramid->file array without using [entry + ...] */
-int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry, 
+int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
   unsigned int count, void *buf, unsigned int bufsize) {
     struct merge_inter merge;            /* merge object */
     struct merge_input *inputs = buf;    /* inputs array for merge */
     char *inbuf,                         /* input buffers */
          *outbuf,                        /* output buffer */
          *bigbuf,                        /* buffer for big reads */
-         *tmp;                           /* writing location, so we don't 
+         *tmp;                           /* writing location, so we don't
                                           * move buf_out */
     unsigned int inbufsz,                /* size of each input buffer */
                  outbufsz,               /* size of output buffer */
@@ -757,7 +761,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
                  i,
                  input,                  /* index of input we need to renew */
                  next_read;              /* how big the next read will be */
-    struct pyramid_state state;          /* some bits and pieces of merge 
+    struct pyramid_state state;          /* some bits and pieces of merge
                                           * state */
     int len;                             /* length of write */
     enum merge_ret ret;                  /* return value from merge_inter */
@@ -774,7 +778,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
 
     /* split up the remaining buffer evenly (one third for regular input,
      * one third for output, one third for large reads)  */
-    inbufsz = outbufsz = bigbufsz 
+    inbufsz = outbufsz = bigbufsz
       = (bufsize - (sizeof(*inputs) * count)) / 3;
 
     inbufsz /= count;
@@ -793,7 +797,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
 
     /* create output fd */
     state.p = pyramid;
-    if ((state.fd = fdset_create(pyramid->fds, pyramid->tmp_type, 
+    if ((state.fd = fdset_create(pyramid->fds, pyramid->tmp_type,
         pyramid->nextfile)) < 0) {
 
         assert(!CRASH);
@@ -805,9 +809,9 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
 
     /* pin all required fds */
     i = 0;
-    while ((i < count) 
-      && ((pyramid->file[entry + i].fd 
-        = fdset_pin(pyramid->fds, pyramid->tmp_type, 
+    while ((i < count)
+      && ((pyramid->file[entry + i].fd
+        = fdset_pin(pyramid->fds, pyramid->tmp_type,
           pyramid->file[entry + i].fileno, 0, SEEK_SET)) >= 0)) {
 
         if (pyramid->file[entry + i].level > state.level) {
@@ -823,8 +827,8 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
     if (i < count) {
         /* check we didn't leak fd if lseek failed above */
         if (pyramid->file[entry + i].fd >= 0) {
-            fdset_unpin(pyramid->fds, pyramid->tmp_type, 
-              pyramid->file[entry + i].fileno, 
+            fdset_unpin(pyramid->fds, pyramid->tmp_type,
+              pyramid->file[entry + i].fileno,
               pyramid->file[entry + i].fd);
             pyramid->file[entry + i].fd = -1;
         }
@@ -832,7 +836,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
         count = i;
     } else if (!i) {
         assert(!CRASH);
-        MERGE_FAIL(pyramid, entry, count, state.fd, -1, pyramid->nextfile, 0, 
+        MERGE_FAIL(pyramid, entry, count, state.fd, -1, pyramid->nextfile, 0,
           NULL, NULL);
         assert(pinned == fdset_pinned(pyramid->fds));
         return errno ? -errno : -EINVAL;
@@ -841,8 +845,8 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
     merge.input = inputs;
     merge.inputs = count;
 
-    if (!(merge_inter_new(&merge, NULL, NULL, NULL, outbuf, outbufsz, 
-        pyramid->storagep->max_termlen, &state, pyramid_change_file, 
+    if (!(merge_inter_new(&merge, NULL, NULL, NULL, outbuf, outbufsz,
+        pyramid->storagep->max_termlen, &state, pyramid_change_file,
         pyramid->storagep->max_filesize))) {
 
         assert(!CRASH);
@@ -859,10 +863,10 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
             if ((bigbufsz > inbufsz) && (next_read > inbufsz)) {
                 /* ensure that the big buffer is not in use */
                 for (i = 0; i < count; i++) {
-                    assert(((merge.input[i].next_in + merge.input[i].avail_in 
-                          <= bigbuf) 
-                        || (merge.input[i].next_in 
-                          > bigbuf + bigbufsz)) 
+                    assert(((merge.input[i].next_in + merge.input[i].avail_in
+                          <= bigbuf)
+                        || (merge.input[i].next_in
+                          > bigbuf + bigbufsz))
                       || (merge.input[i].avail_in == 0));
                 }
 
@@ -885,42 +889,42 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
                 /* ensure that nothing else is using the normal buffer for this
                  * input */
                 for (i = 0; i < count; i++) {
-                    assert(((i == input) 
+                    assert(((i == input)
                       || ((merge.input[i].next_in + merge.input[i].avail_in
                           <= merge.input[input].next_in)
-                        || (merge.input[i].next_in 
+                        || (merge.input[i].next_in
                           >= merge.input[input].next_in + inbufsz))));
-                    assert((outbuf + outbufsz <= merge.input[i].next_in) 
+                    assert((outbuf + outbufsz <= merge.input[i].next_in)
                       || (outbuf >= merge.input[i].next_in + inbufsz));
                 }
             }
 
             errno = 0;
-            if ((len = read(pyramid->file[entry + input].fd, 
+            if ((len = read(pyramid->file[entry + input].fd,
                 merge.input[input].next_in, next_read)) > 0) {
 
                 /* read succeeded (note that we can't assign to avail_in
-                 * directly, because its an unsigned int, which hides 
+                 * directly, because its an unsigned int, which hides
                  * errors returned as negative numbers) */
                 merge.input[input].avail_in = len;
 
-            /* reached EOF, let the merge module know (its an error for the 
+            /* reached EOF, let the merge module know (its an error for the
              * bigbuf, since we only tried to read an expected amount) */
             } else if (!len && !errno && (merge.input[input].next_in != bigbuf)
               && (merge_inter_input_finish(&merge, input) == MERGE_OK)
 
               /* unlink file */
-              && (fdset_unpin(pyramid->fds, pyramid->tmp_type, 
-                  pyramid->file[entry + input].fileno, 
+              && (fdset_unpin(pyramid->fds, pyramid->tmp_type,
+                  pyramid->file[entry + input].fileno,
                   pyramid->file[entry + input].fd) == FDSET_OK)
               && ((pyramid->file[entry + input].fd = -1), 1)
-              && (fdset_unlink(pyramid->fds, pyramid->tmp_type, 
+              && (fdset_unlink(pyramid->fds, pyramid->tmp_type,
                   pyramid->file[entry + input].fileno) == FDSET_OK)) {
 
                 /* succeeded, do nothing */
             } else {
                 assert(!CRASH);
-                MERGE_FAIL(pyramid, entry, count, state.fd, -1, 
+                MERGE_FAIL(pyramid, entry, count, state.fd, -1,
                   pyramid->nextfile, 0, NULL, &merge);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return errno ? -errno : -EINVAL;
@@ -930,7 +934,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
         case MERGE_OUTPUT:
             /* write output to file */
             tmp = merge.buf_out;
-            while (merge.size_out 
+            while (merge.size_out
               && ((len = write(state.fd, tmp, merge.size_out)) >= 0)) {
                 merge.size_out -= len;
                 tmp += len;
@@ -938,7 +942,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
 
             if (merge.size_out) {
                 assert(!CRASH);
-                MERGE_FAIL(pyramid, entry, count, state.fd, -1, 
+                MERGE_FAIL(pyramid, entry, count, state.fd, -1,
                   pyramid->nextfile, 0, NULL, &merge);
                 assert(pinned == fdset_pinned(pyramid->fds));
                 return errno ? -errno : -EINVAL;
@@ -947,7 +951,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
 
         default:
             assert(!CRASH);
-            MERGE_FAIL(pyramid, entry, count, state.fd, -1, 
+            MERGE_FAIL(pyramid, entry, count, state.fd, -1,
               pyramid->nextfile, 0, NULL, &merge);
             assert(pinned == fdset_pinned(pyramid->fds));
             return -EINVAL;
@@ -963,7 +967,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
     assert(pyramid->files >= state.pos);
     if ((pyramid->capacity <= pyramid->files) && !pyramid_expand(pyramid)) {
         assert(!CRASH);
-        MERGE_FAIL(pyramid, entry, count, state.fd, -1, pyramid->nextfile, 0, 
+        MERGE_FAIL(pyramid, entry, count, state.fd, -1, pyramid->nextfile, 0,
           NULL, &merge);
         return errno ? -errno : -EINVAL;
     }
@@ -983,7 +987,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
     }
 
     /* remove old files */
-    memmove(&pyramid->file[entry], &pyramid->file[entry + count], 
+    memmove(&pyramid->file[entry], &pyramid->file[entry + count],
       (pyramid->files - entry - count) * sizeof(*pyramid->file));
     pyramid->files -= count;
 
@@ -1001,7 +1005,7 @@ int pyramid_partial_merge(struct pyramid* pyramid, unsigned int entry,
     }
 }
 
-int pyramid_add_file(struct pyramid* pyramid, int allow, void *buf, 
+int pyramid_add_file(struct pyramid* pyramid, int allow, void *buf,
   unsigned int bufsize) {
     unsigned int entry,
                  count;
@@ -1027,7 +1031,7 @@ int pyramid_add_file(struct pyramid* pyramid, int allow, void *buf,
     pyramid->files++;
 
     while (allow && pyramid_merge_required(pyramid, &entry, &count)) {
-        if ((ret = pyramid_partial_merge(pyramid, entry, count, buf, bufsize)) 
+        if ((ret = pyramid_partial_merge(pyramid, entry, count, buf, bufsize))
           != PYRAMID_OK) {
             assert(!CRASH);
             ERROR("performing pyramid partial merge");

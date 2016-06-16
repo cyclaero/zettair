@@ -594,19 +594,19 @@ if __name__ == "__main__":
       ex='cosine weight of query')
     ins_decl([decode_decl, post_decl], [decode_used, post_used], 
       'const unsigned int D_bytes;', 2, 'docmap_get_bytes_cached(idx->map, acc->acc.docno)', -1, '', 
-      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_BYTES) != DOCMAP_OK) return SEARCH_EINVAL;', '((float) avg_D_bytes)',
+      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_BYTES) != DOCMAP_OK) return SEARCH_EINVAL;', 'avg_D_bytes',
       ex='number of bytes in the current document')
     ins_decl([decode_decl, post_decl], [decode_used, post_used], 
       'const unsigned int D_terms;', 2, 'DOCMAP_GET_WORDS(idx->map, acc->acc.docno)', -1, '',
-      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_WORDS) != DOCMAP_OK) return SEARCH_EINVAL;', '((float) avg_D_terms)',
+      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_WORDS) != DOCMAP_OK) return SEARCH_EINVAL;', 'avg_D_terms',
       ex='number of terms in the current document')
     ins_decl([decode_decl, post_decl], [decode_used, post_used], 
       'const unsigned int D_dterms;', 2, 'DOCMAP_GET_DISTINCT_WORDS(idx->map, acc->acc.docno)', -1, '',
-      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_DISTINCT_WORDS) != DOCMAP_OK) return SEARCH_EINVAL;', '((float) avg_D_dterms)',
+      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_DISTINCT_WORDS) != DOCMAP_OK) return SEARCH_EINVAL;', 'avg_D_dterms',
       ex='number of distinct terms in the current document')
     ins_decl([decode_decl, post_decl], [decode_used, post_used], 
       'const float D_weight;', 2, 'DOCMAP_GET_WEIGHT(idx->map, acc->acc.docno)', -1, '',
-      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_WEIGHT) != DOCMAP_OK) return SEARCH_EINVAL;', '((float) avg_D_weight)',
+      'if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_WEIGHT) != DOCMAP_OK) return SEARCH_EINVAL;', 'avg_D_weight',
       ex='cosine weight of the current document')
     ins_decl([decode_decl, post_decl], [decode_used, post_used], 
       'const unsigned int f_qt;', 1, 'query->term[qterm].f_qt',
@@ -654,7 +654,7 @@ if __name__ == "__main__":
                 ins_decl([params, post_decl, decode_decl], 
                   [decode_used, post_used], line[len('parameter'):], 
                   level=1, lineno=lineno, 
-                  macro='opt->u.' + name + '.' + vname)
+                  macro='param->' + vname)
 
             elif (len(words) == 2 and words[0] == 'post()' 
               and words[1] == '{'):
@@ -767,6 +767,104 @@ if __name__ == "__main__":
 
             print ' */'
             print 
+            print '#include "firstinclude.h"'
+            print 
+            print '#include "search.h"'
+            print '#include "str.h"'
+            print
+            print '#include <stdlib.h>'
+            print
+
+            # print a struct describing the parameters
+            print '/* a structure describing the parameters used */'
+            print 'struct %s_param {' % name
+            tmpp = []
+            for p in params:
+                tmpp.append(params[p])
+            tmpp.sort(lambda x, y: cmp(x.lineno, y.lineno))
+            for p in tmpp:
+                print '   ', p.type, p.name + ';'
+            print '    int dummy;  /* dummy member to ensure non-empty struct */'
+            print '};'
+            print
+
+            print '/* Function for converting string args into the params structure. */'
+            print 'static enum search_ret parse(void *ptr, const char *str) {' 
+
+            if (len(tmpp) == 0):
+                # there are no parameters, just ensure that string is
+                # empty
+                print '    /* metric has no parameters, just ensure that parameters string is empty */'
+                print '    if (str == NULL || *str_ltrim(str) == \'\\0\') {'
+                print '        return SEARCH_OK;'
+                print '    } else {'
+                print '        return SEARCH_EINVAL;'
+                print '    }'
+            else:
+                ctypeconv = {'float': ('(float) strtod', False), 'unsigned int': ('strtoul', True), 'int' : ('strtol', True), 'double': ('strtod', False)}
+                print '    /* weak typing may suck sometimes, but it certainly has its uses */'
+                print '    struct %s_param *param = ptr;' % (name)
+                print '    unsigned int i,'
+                print '                 parts,'
+                print '                 read = 0;'
+                print '    char *dup;'
+                print '    char **split = NULL;'
+                print '    char *endptr = NULL;'
+                print
+                print '    if (str == NULL) {'
+                print '        return SEARCH_EINVAL;'
+                print '    }'
+                print
+                print '    if ((dup = str_dup(str)) && (split = str_split(dup, ",", &parts)) '
+                print '      && parts == %u) {' % len(params)
+                print '        for (i = 0; i < parts; i++) {'
+                i = 0
+                for p in tmpp:
+                    if (i > 0):
+                        print '            else'
+                    print '            if (!str_ncmp(split[i], "%s=", %u)) {' \
+                      % (p.name, len(p.name) + 1)
+                    print '                if ((param->%s = %s(split[i] + %u, &endptr%s)), !*endptr) {' \
+                      % (p.name, ctypeconv[p.type][0], len(p.name) + 1, ctypeconv[p.type][1] and ', 0' or '')
+    
+                    print '                    read |= (1 << %u);' % i
+                    print '                } else {'
+                    print '                    free(split);'
+                    print '                    free(dup);'
+                    print '                    return SEARCH_EINVAL;'
+                    print '                }'
+                    print '            }'
+                    i += 1
+
+                print '        }'
+                print '        free(split);'
+                print '        free(dup);'
+                str = '('
+                for i in range(len(tmpp)):
+                    str += '(1 << %u) | ' % i
+                str = str[0:-3] + ')'
+                
+                print '        if (read == %s) {' % str
+                print '            return SEARCH_OK;'
+                print '        } else {'
+                print '            return SEARCH_EINVAL;'
+                print '        }'
+                print '    } else {'
+                print '        if (dup) {'
+                print '            free(dup);'
+                print '        }'
+                print '        if (split) {'
+                print '            free(split);'
+                print '        }'
+                print '        return SEARCH_EINVAL;'
+                print '    }'
+
+            print '}'
+            print
+            print
+            print '/* processed contents from %s and %s follows... */' \
+              % (args[0], args[1])
+            print
 
             # process the file, tokenising so we can process comments
             # that aren't the only thing on a line
@@ -790,6 +888,15 @@ if __name__ == "__main__":
                         if (toks[0] == '/*' and len(nnt) and nnt[0] == '*/' 
                           and nt[0] == 'METRIC_NAME'):
                             print '/* METRIC_NAME */', name,
+                            toks = nnt[1:]
+                        elif (toks[0] == '/*' and len(nnt) and nnt[0] == '*/' 
+                          and nt[0] == 'METRIC_STRUCT'):
+                            print '/* METRIC_STRUCT */', \
+                              'struct %s_param' % name,
+                            toks = nnt[1:]
+                        elif (toks[0] == '/*' and len(nnt) and nnt[0] == '*/' 
+                          and nt[0] == 'METRIC_QUOTED_NAME'):
+                            print '/* METRIC_QUOTED_NAME */', '"' + name + '"',
                             toks = nnt[1:]
                         elif (toks[0] == '/*' and len(nnt) and nnt[0] == '*/' 
                           and nt[0] == 'METRIC_DEPENDS_POST'):
