@@ -501,10 +501,10 @@ struct index *index_new(const char *name, const char *config,
           && (idx->stem
             = stem_cache_new(stem_porters, NULL, 200))) {
             idx->flags |= INDEX_STEMMED_PORTERS;
-        } else if ((opt->stemmer == INDEX_STEM_EDS)) {
+        } else if (opt->stemmer == INDEX_STEM_EDS) {
             idx->flags |= INDEX_STEMMED_EDS;
             idx->stem = NULL;
-        } else if ((opt->stemmer == INDEX_STEM_LIGHT)) {
+        } else if (opt->stemmer == INDEX_STEM_LIGHT) {
             idx->flags |= INDEX_STEMMED_LIGHT;
             idx->stem = NULL;
         } else {

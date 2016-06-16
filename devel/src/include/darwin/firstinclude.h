@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <math.h>
 
-#include "config.h"
+// #include "config.h"
 
 /* declare "don't break me" flag for win32 compatibility */
 #define O_BINARY 0

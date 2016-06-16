@@ -651,17 +651,15 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
                  decoded = 0,         /* number of postings decoded */
                  thresh,              /* current discrete threshold */
-                 rethresh,            /* distance to recalculation of the 
-                                       * threshold */
+                 rethresh,            /* distance to recalculation of the threshold */
                  rethresh_dist,
                  bytes,
                  step,
-                 missed = 0,        /* number of list entries that didn't match 
-                                     * an accumulator */
-                 hit = 0;           /* number of entries in both accs and list*/
+                 missed = 0,          /* number of list entries that didn't match an accumulator */
+                 hit = 0;             /* number of entries in both accs and list*/
  
     struct vec v = {NULL, NULL};
-    enum search_ret ret;
+    enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
     float cooc_rate;
     /* METRIC_DECL */
@@ -678,15 +676,13 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
 
     /* METRIC_PER_CALL */
+
     w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
         w_t = FLT_EPSILON;
     }
-    
-    
-
 
     rethresh_dist = rethresh = (postings + results->acc_limit - 1) 
       / results->acc_limit;
@@ -694,8 +690,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
     if (results->v_t == FLT_MIN) {
         unsigned long int docno_copy = docno;
 
-        /* this should be the first thresholded list, need to estimate 
-         * threshold */
+        /* this should be the first thresholded list, need to estimate threshold */
         assert(rethresh && rethresh < postings);
         thresh = 0;
 
@@ -964,17 +959,15 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
 
                  decoded = 0,         /* number of postings decoded */
                  thresh,              /* current discrete threshold */
-                 rethresh,            /* distance to recalculation of the 
-                                       * threshold */
+                 rethresh,            /* distance to recalculation of the threshold */
                  rethresh_dist,
                  bytes,
                  step,
-                 missed = 0,        /* number of list entries that didn't match 
-                                     * an accumulator */
-                 hit = 0;           /* number of entries in both accs and list*/
+                 missed = 0,          /* number of list entries that didn't match an accumulator */
+                 hit = 0;             /* number of entries in both accs and list*/
  
     struct vec v = {NULL, NULL};
-    enum search_ret ret;
+    enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
     float cooc_rate;
     /* METRIC_DECL */
@@ -997,9 +990,6 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
         /* use a very small increment instead */
         w_t = FLT_EPSILON;
     }
-    
-    
-
 
     rethresh_dist = rethresh = (postings + results->acc_limit - 1) 
       / results->acc_limit;
@@ -1007,8 +997,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
     if (results->v_t == FLT_MIN) {
         unsigned long int docno_copy = docno;
 
-        /* this should be the first thresholded list, need to estimate 
-         * threshold */
+        /* this should be the first thresholded list, need to estimate threshold */
         assert(rethresh && rethresh < postings);
         thresh = 0;
 

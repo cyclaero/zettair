@@ -67,18 +67,15 @@ int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
 
             if (knownlimit < 2147483647) {
                 *limit = knownlimit;
-                return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-                  && (ftruncate(fd, fsize) != -1);
+                return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
             }
 
             for (size = 2147483647 / 2; size > fsize; size /= 2) {
                 if (lseek(fd, size - 1, SEEK_SET) != (off_t) -1) {
                     if (write(fd, &buf, 1) != -1) {
-                        if ((ftruncate(fd, fsize) != -1) 
-                          && (lseek(fd, pos, SEEK_SET) != (off_t) -1)) {
+                        if ((ftruncate(fd, fsize) != -1) && (lseek(fd, pos, SEEK_SET) != (off_t) -1)) {
                             *limit = size;
-                            return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-                              && (ftruncate(fd, fsize) != -1);
+                            return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
                         } else {
                             assert(!CRASH);
                             lseek(fd, pos, SEEK_SET);
@@ -105,8 +102,7 @@ int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
         } else if (errno == EBADF) {
             /* fd probably isn't open for writing */
             *limit = fsize;
-            return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-              && (ftruncate(fd, fsize) != -1);
+            return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
         }
     } else if ((fsize < 2147483647)) {
         assert(!CRASH);
@@ -118,37 +114,32 @@ int getmaxfsize(int fd, unsigned int knownlimit, unsigned int *limit) {
     if (knownlimit < 4294967295U) {
         /* if knownlimit is less than 4GB then its probably correct */
         *limit = knownlimit;
-        return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-          && (ftruncate(fd, fsize) != -1);
+        return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
     }
 
     /* test 4GB limit */
-    if ((fsize < 4294967295U) && (((off_t) (4294967295U - 1)) > 0) 
-      && (lseek(fd, 4294967295U - 1, SEEK_SET) != (off_t) -1)) {
+    if ((fsize < 4294967295U) && (((off_t) (4294967295U - 1)) > 0) && (lseek(fd, 4294967295U - 1, SEEK_SET) != (off_t) -1)) {
         if ((write(fd, &buf, 1) == -1) && (errno == EFBIG)) {
             /* limited to less than 4GB, but more than 2GB, just use 2GB */
             *limit = 2147483647;
-            return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-              && (ftruncate(fd, fsize) != -1);
+            return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
         } 
     } else if ((fsize < 4294967295U)) {
-        /* check if off_t values higher than 2GB go negative */
-        if (((off_t) (4294967295U - 1)) < 0) {
-            *limit = 2147483647;
-            return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-              && (ftruncate(fd, fsize) != -1);
-        } else {
+     // check if off_t values higher than 2GB go negative
+     // if (((off_t) (4294967295U - 1)) < 0) {
+     //     *limit = 2147483647;
+     //     return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
+     // } else {
             assert(!CRASH);
             lseek(fd, pos, SEEK_SET);
             ftruncate(fd, fsize);
             return 0;
-        }
+     // }
     }
 
     /* otherwise, limited by 32-bit offset size, return 4GB */
     *limit = 4294967295U;
-    return (lseek(fd, pos, SEEK_SET) != (off_t) -1)
-      && (ftruncate(fd, fsize) != -1);
+    return (lseek(fd, pos, SEEK_SET) != (off_t) -1) && (ftruncate(fd, fsize) != -1);
 }
 
 #ifdef GETMAXFSIZE_TEST
@@ -201,8 +192,7 @@ int main(int argc, char **argv) {
     }
 
     if ((fd = open(argv[2], flags | O_CREAT | O_BINARY, 0xffffffff))) {
-        if ((getrlimit(RLIMIT_FSIZE, &limits) == 0) 
-          && (getmaxfsize(fd, limits.rlim_cur, &limit))) { 
+        if ((getrlimit(RLIMIT_FSIZE, &limits) == 0) && (getmaxfsize(fd, limits.rlim_cur, &limit))) {
             printf("limit for file '%s' is %u\n", argv[1], limit);
         } else {
             close(fd);
