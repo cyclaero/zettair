@@ -1,0 +1,18 @@
+# @VERBOSE
+@SEED 2
+@MAXFILE 3000
+@THRESHOLD 300
+A ADD=3000 CHECK
+B GET_EACH_ADD ADD=3000 CHECK
+C ADD=3000 CHECK DUMP_LOAD CHECK
+D ADD=3000 CHECK DUMP_LOAD CHECK ADD=10 CHECK
+E DUMP_LOAD
+F ADD=1 CHECK DUMP_LOAD CHECK
+
+# Adding lots of empty buffers will cause a failure with a small maxfile
+# size, because the threshold doesn't take into account the vbyte-encoded
+# element length values, which will overflow the maxfile size.  So
+# we reduce the number added here.
+#
+G MAXLEN=0 ADD=300 CHECK DUMP_LOAD CHECK MAXLEN=40 ADD=3000 MAXLEN=0 ADD=5 DUMP_LOAD CHECK
+H ADD=300 ADD_NULL=20 ADD=300 CHECK DUMP_LOAD CHECK
