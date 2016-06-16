@@ -37,38 +37,29 @@ static int getvec(struct index *idx, struct vec *v, void **buf,
     if ((ret = vocab_decode(&vv, v)) == VOCAB_OK) {
         readsize = vv.size;
 
-        switch (vv.location) {
-        case VOCAB_LOCATION_VOCAB:
-            ptr->pos = vv.loc.vocab.vec;
+        /* ensure we have enough space */
+        if (*bufsize < readsize) {
+            void *ptr;
+
+            if ((ptr = realloc(*buf, readsize))) {
+                *buf = ptr;
+                *bufsize = readsize;
+            } else {
+                fprintf(stderr, "getvocab: failed to get memory\n");
+                return 0;
+            }
+        }
+
+        if (((fd = fdset_pin(idx->fd, idx->index_type, vv.loc.fileno, 
+            vv.loc.offset, SEEK_SET)) >= 0) 
+          && (read(fd, *buf, readsize) == (ssize_t) readsize)
+          && fdset_unpin(idx->fd, idx->index_type, vv.loc.fileno, fd) 
+            == FDSET_OK) {
+
+            /* succeeded */
+            ptr->pos = *buf;
             ptr->end = ptr->pos + vv.size;
             return 1;
-
-        case VOCAB_LOCATION_FILE:
-            /* ensure we have enough space */
-            if (*bufsize < readsize) {
-                void *ptr;
-
-                if ((ptr = realloc(*buf, readsize))) {
-                    *buf = ptr;
-                    *bufsize = readsize;
-                } else {
-                    fprintf(stderr, "getvocab: failed to get memory\n");
-                    return 0;
-                }
-            }
-
-            if (((fd = fdset_pin(idx->fd, idx->index_type, vv.loc.file.fileno, 
-                vv.loc.file.offset, SEEK_SET)) >= 0) 
-              && (read(fd, *buf, readsize) == (ssize_t) readsize)
-              && fdset_unpin(idx->fd, idx->index_type, vv.loc.file.fileno, fd) 
-                == FDSET_OK) {
-
-                /* succeeded */
-                ptr->pos = *buf;
-                ptr->end = ptr->pos + vv.size;
-                return 1;
-            }
-            break;
         }
     } else if (ret == VOCAB_END) {
         return -1;

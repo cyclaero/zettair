@@ -143,7 +143,7 @@ struct btbulk *btbulk_new(unsigned int pagesize, unsigned long int maxfilesize,
         space->state->outbuf_size = space->state->outbuf_start = 0;
         space->state->lastleaf = NO_LAST_LEAF;
         space->state->levels = 1;
-        space->state->overhead = 0.2F; /* initial estimate, will recalculate 
+        space->state->overhead = 0.2;  /* initial estimate, will recalculate 
                                         * when we have information */
         space->state->used = space->state->total = 0;
 
@@ -279,8 +279,8 @@ static enum btbulk_ret output(struct btbulk *bulk) {
         return BTBULK_WRITE;
     } else {
         /* should be at the end of the file */
-        assert(bulk->offset + bulk->state->pagesize > bulk->state->maxfilesize 
-          - bulk->output.write.avail_out);
+        assert(bulk->offset > bulk->state->maxfilesize 
+          - bulk->output.write.avail_out - bulk->state->pagesize );
         return BTBULK_FLUSH;
     }
 }
@@ -474,8 +474,7 @@ new_label:
           BTBUCKET_SIZE(curr->mem, bulk->state->pagesize), 
           bulk->state->node_strategy);
     }
-    bulk->state->overhead 
-      = (float) (1 - bulk->state->used / bulk->state->total);
+    bulk->state->overhead = 1 - bulk->state->used / bulk->state->total;
     assert(bulk->state->overhead >= 0.0 && bulk->state->overhead < 1.0);
 
     /* propagate split up the tree and allocation back down it (look

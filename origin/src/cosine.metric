@@ -14,10 +14,10 @@
 # written nml 2005-07-18
 
 decode() {
-	accumulator += (1 + (float) logf(f_qt)) * (1 + (float) logf(f_dt));
+	accumulator += (1 + log(f_qt)) * (1 + log(f_dt));
 }
 
 post() {
-    accumulator /= (float) (D_weight * Q_weight);
+    accumulator /= (D_weight * Q_weight);
 }
 

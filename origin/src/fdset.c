@@ -15,7 +15,6 @@
 #include "def.h"
 #include "chash.h"
 #include "str.h"
-#include "zstdint.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -28,9 +27,9 @@
 
 /* Make multi-thread safe.  Note: only the fdset_pin and fdset_unpin
    functions obey this. */
-#ifdef MT_ZET
+#ifdef ZET_MT
 #include <pthread.h>
-#endif /* MT_ZET */
+#endif /* ZET_MT */
 
 /* struct to represent a specific filename for a given type, fileno pair */
 struct specific {
@@ -40,7 +39,7 @@ struct specific {
 
 /* struct to hold specific and general information about a type */
 struct type {
-    const char *template;                 /* filename template (containing one 
+    const char *template;                 /* filename template (containing one
                                            * %u printf conversion) */
     int write;                            /* whether to enable writing */
     struct chash *specific;               /* hashtable of specific entries */
@@ -49,7 +48,7 @@ struct type {
 /* struct to represent an open file descriptor */
 struct fd {
     int fd;                               /* file descriptor */
-    unsigned int lru_count;               /* count to approximate LRU, 
+    unsigned int lru_count;               /* count to approximate LRU,
                                            * UINT_MAX if fd is pinned */
     unsigned int type;                    /* type of fd */
     unsigned int fileno;                  /* fd file number */
@@ -67,7 +66,7 @@ static unsigned int fd_hash(const void *vfd) {
 
 /* internal function to compare fds */
 static int fd_cmp(const void *vone, const void *vtwo) {
-    const struct fd *one = vone, 
+    const struct fd *one = vone,
                     *two = vtwo;
 
     if (one->type == two->type) {
@@ -93,21 +92,21 @@ struct fdset {
     struct fd **key;                      /* keys in hash table */
     unsigned int keys;                    /* number of keys in hash table */
     unsigned int keysize;                 /* size of key array */
-    struct chash *fdhash;                 /* hashtable for fast lookup of 
+    struct chash *fdhash;                 /* hashtable for fast lookup of
                                            * fds */
-    int umask;                            /* permission mask for opening new 
+    int umask;                            /* permission mask for opening new
                                            * files */
-    unsigned int clock_pos;               /* last position in clock 
+    unsigned int clock_pos;               /* last position in clock
                                            * algorithm */
-    unsigned int lru_default;             /* number of second chances in clock 
+    unsigned int lru_default;             /* number of second chances in clock
                                            * algorithm */
     unsigned int limit;                   /* maximum number of fds to open */
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_t mutex;
-#endif /* MT_ZET */
+#endif /* ZET_MT */
 };
 
-static struct fd * new_fd() {
+static struct fd * new_fd(void) {
     struct fd * fd = NULL;
 
     if (!(fd = malloc(sizeof(*fd))))
@@ -139,7 +138,7 @@ static int expand_fd_array(struct fd *** array_p, unsigned int * size_p) {
     unsigned int new_size = *size_p * 2 + 1;
     struct fd ** new_array = realloc(*array_p, sizeof(*new_array) * new_size);
     unsigned int i;
-    
+
     if (new_array == NULL) {
         return -ENOMEM;
     }
@@ -162,7 +161,7 @@ static int expand_fd_array(struct fd *** array_p, unsigned int * size_p) {
 struct fdset *fdset_new(int umask, unsigned int sizehint) {
     struct fdset *set;
 
-    if ((set = malloc(sizeof(*set))) 
+    if ((set = malloc(sizeof(*set)))
       && (set->fdhash = chash_ptr_new(1, 1.0, fd_hash, fd_cmp))
       && (set->typehash = chash_luint_new(1, 1.0))) {
         set->umask = umask;
@@ -171,7 +170,7 @@ struct fdset *fdset_new(int umask, unsigned int sizehint) {
         set->lru_default = 3;  /* FIXME: get as param */
         set->limit = UINT_MAX;   /* no limit */
         set->clock_pos = 0;
- 
+
         if (sizehint) {
             if (!(set->fd = make_fd_array(sizehint))
               || !(set->key = make_fd_array(sizehint))) {
@@ -186,15 +185,15 @@ struct fdset *fdset_new(int umask, unsigned int sizehint) {
             set->keysize = 0;
             set->key = NULL;
         }
-#ifdef MT_ZET
+#ifdef ZET_MT
         pthread_mutex_init(&set->mutex, NULL);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
     }
 
     return set;
 }
 
-static void specific_delete(void *userdata, unsigned long int key, 
+static void specific_delete(void *userdata, unsigned long int key,
   void **data) {
     struct specific *sp = *data;
 
@@ -235,9 +234,9 @@ void fdset_delete(struct fdset *set) {
         }
     }
 
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_destroy(&set->mutex);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
 
     free(set->fd);
     free(set->key);
@@ -246,7 +245,7 @@ void fdset_delete(struct fdset *set) {
 
 /* convert a string into a printf specifying by escaping potential format
  * specifiers and adding our own */
-static int maketemplate(char *dst, unsigned int dstlen, const char *src, 
+static int maketemplate(char *dst, unsigned int dstlen, const char *src,
   unsigned int srclen) {
     char *dstend = dst + dstlen;
     const char *srcend = src + srclen;
@@ -287,7 +286,7 @@ static int maketemplate(char *dst, unsigned int dstlen, const char *src,
 }
 
 /* undo maketemplate conversion, returning length of created string */
-static unsigned int untemplate(char *dst, unsigned int dstlen, 
+static unsigned int untemplate(char *dst, unsigned int dstlen,
   const char *src, unsigned int srclen) {
     char *dstend = dst + dstlen,
          *dstcpy = dst;
@@ -328,7 +327,7 @@ static unsigned int untemplate(char *dst, unsigned int dstlen,
     return 0;
 }
 
-int fdset_set_type_name(struct fdset *set, unsigned int typeno, 
+int fdset_set_type_name(struct fdset *set, unsigned int typeno,
   const char *name, unsigned int namelen, int write) {
     char buf[FILENAME_MAX * 2 + 1];
     void **find;
@@ -341,7 +340,7 @@ int fdset_set_type_name(struct fdset *set, unsigned int typeno,
              * open. */
           || !((type = malloc(sizeof(*type)))
             && (type->specific = chash_luint_new(1, 1.0))
-            && (chash_luint_ptr_insert(set->typehash, typeno, type) 
+            && (chash_luint_ptr_insert(set->typehash, typeno, type)
               == CHASH_OK))) {
             /* couldn't insert new entry */
 
@@ -385,8 +384,8 @@ int fdset_create_new_type(struct fdset *set, const char *basename,
     return fdset_set_type_name(set, *typeno, name_buf, ret, write);
 }
 
-int fdset_set_fd_name(struct fdset *set, unsigned int typeno, 
-  unsigned int fileno, const char *name, unsigned int namelen, 
+int fdset_set_fd_name(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, const char *name, unsigned int namelen,
   int write) {
     struct type *type;
     void **find;
@@ -397,7 +396,7 @@ int fdset_set_fd_name(struct fdset *set, unsigned int typeno,
         if (chash_luint_ptr_find(type->specific, fileno, &find) == CHASH_OK) {
             /* trying to set name thats already been set */
             sp = *find;
-            if ((namelen == str_len(sp->filename)) 
+            if ((namelen == str_len(sp->filename))
               && !str_ncmp(name, sp->filename, namelen)) {
                 /* setting it to the same thing it was, allow it (rebuild
                  * depends on this behaviour) */
@@ -409,9 +408,9 @@ int fdset_set_fd_name(struct fdset *set, unsigned int typeno,
         }
 
         if (!((sp = malloc(sizeof(*sp)))
-            && (sp->filename 
+            && (sp->filename
               = str_ndup(name, namelen))
-            && (chash_luint_ptr_insert(type->specific, fileno, sp) 
+            && (chash_luint_ptr_insert(type->specific, fileno, sp)
               == CHASH_OK))) {
             /* couldn't insert new entry */
 
@@ -428,6 +427,43 @@ int fdset_set_fd_name(struct fdset *set, unsigned int typeno,
         return FDSET_OK;
     }
 
+    return -ENOENT;
+}
+
+int fdset_set_fd_delete_name(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, const char *name, unsigned int namelen) {
+
+	struct type *type;
+    void **find;
+    struct specific *sp = NULL;
+    struct fd key,
+              *found;
+
+    /* find target fd */
+    if ((chash_luint_ptr_find(set->typehash, typeno, &find) == CHASH_OK)
+      && (type = *find)) {
+        if (chash_luint_ptr_find(type->specific, fileno, &find) == CHASH_OK) {
+            sp = *find;
+
+            if ((namelen != str_len(sp->filename))
+                          || str_ncmp(name, sp->filename, namelen)) {
+            	/* the user specified filename, and our recorded one don't match */
+            	return -ENOENT;
+            }
+
+            /* remove from hash */
+            if (chash_luint_ptr_remove(type->specific, fileno, find) == CHASH_OK) {
+                /* delete item */
+                if (sp) {
+                    if (sp->filename) {
+                        free((void *) sp->filename);
+                    }
+                    free(sp);
+                }
+            	return FDSET_OK;
+            }
+        }
+    }
     return -ENOENT;
 }
 
@@ -488,15 +524,15 @@ int fdset_create(struct fdset *set, unsigned int typeno, unsigned int fileno) {
     int fd;
     int flags;
 
-    if ((retval = fdset_name(set, typeno, fileno, filename, FILENAME_MAX, 
+    if ((retval = fdset_name(set, typeno, fileno, filename, FILENAME_MAX,
         &namelen, &write)) != FDSET_OK) {
 
         return retval;
     }
-    flags = (write * O_RDWR) | (!write * O_RDONLY) | O_CREAT | O_EXCL 
-      | O_BINARY; 
+    flags = (write * O_RDWR) | (!write * O_RDONLY) | O_CREAT | O_EXCL
+      | O_BINARY;
 
-    /* make sure we're not over the limit */ 
+    /* make sure we're not over the limit */
     if (set->fds >= set->limit) {
         if ((retval = fdset_close(set)) != FDSET_OK) {
             return retval;
@@ -530,18 +566,18 @@ int fdset_create(struct fdset *set, unsigned int typeno, unsigned int fileno) {
     return fd;
 }
 
-int fdset_debug_create(struct fdset *set, unsigned int typeno, 
+int fdset_debug_create(struct fdset *set, unsigned int typeno,
   unsigned int fileno, const char * src_file, int src_line) {
     int retval;
     static int count = 0;
     retval = fdset_create(set, typeno, fileno);
-    fprintf(stderr, "<create %d: fd %d, type %d, fileno %d (%s: %d)>\n", 
+    fprintf(stderr, "<create %d: fd %d, type %d, fileno %d (%s: %d)>\n",
       count++, retval, typeno, fileno, src_file, src_line);
     return retval;
 }
 
-int fdset_create_seek(struct fdset *set, unsigned int typeno, 
-  unsigned int fileno, off_t offset) {
+int fdset_create_seek(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, unsigned long int offset) {
     int fd;
     if ((fd = fdset_create(set, typeno, fileno)) < 0) {
         return fd;
@@ -554,20 +590,20 @@ int fdset_create_seek(struct fdset *set, unsigned int typeno,
     return fd;
 }
 
-int fdset_debug_create_seek(struct fdset *set, unsigned int typeno, 
-  unsigned int fileno, off_t offset, const char * src_file,
+int fdset_debug_create_seek(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, unsigned long int offset, const char * src_file,
   int src_line) {
     int retval;
     static int count = 0;
     retval = fdset_create_seek(set, typeno, fileno, offset);
-    fprintf(stderr, "<create %d: fd %d, type %d, fileno %d, "
-      "truncated offset %lu (%s: %d)>\n", count++, retval, typeno, fileno, 
-      (unsigned long int) offset, src_file, src_line);
+    fprintf(stderr, "<create %d: fd %d, type %d, fileno %d, offset %lu "
+      "(%s: %d)>\n", count++, retval, typeno, fileno, offset,
+      src_file, src_line);
     return retval;
 }
 
-static int fdset_pin_locked(struct fdset *set, unsigned int typeno, 
-  unsigned int fileno, off_t offset, int whence) {
+static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, unsigned long int offset, int whence) {
     const char *filename;
     char buf[FILENAME_MAX + 1];
     struct fd key,
@@ -591,7 +627,7 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
             found->lru_count = UINT_MAX;
             assert(found->fd > 0);
 
-            if (((whence == SEEK_CUR) && (offset == 0)) 
+            if (((whence == SEEK_CUR) && (offset == 0))
               || (lseek(found->fd, offset, whence) != (off_t) -1)) {
                 return found->fd;
             } else {
@@ -611,24 +647,24 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
         find = NULL;
         if (((chash_luint_ptr_find(type->specific, fileno, &find) == CHASH_OK)
             && ((sp = *find), (write = sp->write), (filename = sp->filename)))
-          || ((snprintf((char *) buf, FILENAME_MAX, 
-            (const char *) type->template, fileno) 
-              <= FILENAME_MAX) 
+          || ((snprintf((char *) buf, FILENAME_MAX,
+            (const char *) type->template, fileno)
+              <= FILENAME_MAX)
             && ((write = type->write), (filename = buf)))) {
             void **find = NULL;
             int flags = (write * O_RDWR) | (!write * O_RDONLY) | O_BINARY;
 
-            if ((set->fds < set->limit) 
-              && ((set->fd[set->fds]->fd 
+            if ((set->fds < set->limit)
+              && ((set->fd[set->fds]->fd
                 = open((const char *) filename, flags, set->umask)) != -1)
-              && ((set->fd[set->fds]->type = typeno), 
-                (set->fd[set->fds]->fileno = fileno), 
+              && ((set->fd[set->fds]->type = typeno),
+                (set->fd[set->fds]->fileno = fileno),
                 (set->fd[set->fds]->lru_count = UINT_MAX))
-              && ((set->key[set->keys]->type = typeno), 
-                (set->key[set->keys]->fileno = fileno), 
+              && ((set->key[set->keys]->type = typeno),
+                (set->key[set->keys]->fileno = fileno),
                 (set->key[set->keys]->lru_count = UINT_MAX))
               /* insert into fds hashtable */
-              && (chash_ptr_ptr_find_insert(set->fdhash, set->key[set->keys], 
+              && (chash_ptr_ptr_find_insert(set->fdhash, set->key[set->keys],
                   &find, set->fd[set->fds], &fnd) == CHASH_OK)) {
 
                 if (fnd) {
@@ -642,14 +678,14 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
                    to SEEK_SET.  We make this distinction to allow
                    indexing of non-seekable file descriptors, e.g.
                    <(gunzip foo.txt.gz); this is a bit of a hack. */
-                if (((whence == SEEK_CUR || whence == SEEK_SET) 
-                      && (offset == 0)) 
-                  || (lseek(set->fd[set->fds]->fd, offset, whence) 
+                if (((whence == SEEK_CUR || whence == SEEK_SET)
+                      && (offset == 0))
+                  || (lseek(set->fd[set->fds]->fd, offset, whence)
                     != (off_t) -1)) {
 
                     return set->fd[set->fds++]->fd;
                 } else {
-                    /* failed to seek, leave fd open but mark it as 
+                    /* failed to seek, leave fd open but mark it as
                      * replaceable */
                     set->fd[set->fds++]->lru_count = 0;
                     return -errno;
@@ -658,20 +694,20 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
                 close(set->fd[set->fds]->fd);
                 set->fd[set->fds]->fd = -1;
                 return -ENOMEM;
-            } else if (((set->fds >= set->limit) 
+            } else if (((set->fds >= set->limit)
                 || (errno == EMFILE) || (errno == ENFILE))
               && (fdset_close(set) == FDSET_OK)) {
                 /* having closed a file, try again */
                 void **find = NULL;
 
                 errno = 0;
-                if (((set->fd[set->fds]->fd 
+                if (((set->fd[set->fds]->fd
                     = open((const char *) filename, flags, set->umask)) != -1)
-                  && ((set->fd[set->fds]->type = typeno), 
-                    (set->fd[set->fds]->fileno = fileno), 
+                  && ((set->fd[set->fds]->type = typeno),
+                    (set->fd[set->fds]->fileno = fileno),
                     (set->fd[set->fds]->lru_count = UINT_MAX))
-                  && ((set->key[set->keys]->type = typeno), 
-                      (set->key[set->keys]->fileno = fileno), 
+                  && ((set->key[set->keys]->type = typeno),
+                      (set->key[set->keys]->fileno = fileno),
                       (set->key[set->keys]->lru_count = UINT_MAX))
                   /* insert into fds hashtable */
                   && (chash_ptr_ptr_find_insert(set->fdhash, set->fd[set->fds],
@@ -684,13 +720,13 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
                     } else {
                         set->keys++;
                     }
-                    if (((whence == SEEK_CUR) && (offset == 0)) 
-                      || (lseek(set->fd[set->fds]->fd, offset, whence) 
+                    if (((whence == SEEK_CUR) && (offset == 0))
+                      || (lseek(set->fd[set->fds]->fd, offset, whence)
                           != (off_t) -1)) {
 
                         return set->fd[set->fds++]->fd;
                     } else {
-                        /* failed to seek, leave fd open but mark it as 
+                        /* failed to seek, leave fd open but mark it as
                          * replaceable */
                         set->fd[set->fds++]->lru_count = 0;
                         return -errno;
@@ -714,20 +750,20 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
 }
 
 int fdset_pin(struct fdset *set, unsigned int typeno, unsigned int fileno,
-  off_t offset, int whence) {
+  unsigned long int offset, int whence) {
     int retval = 0;
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_lock(&set->mutex);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
     retval = fdset_pin_locked(set, typeno, fileno, offset, whence);
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_unlock(&set->mutex);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
     return retval;
 }
 
-int fdset_debug_pin(struct fdset *set, unsigned int typeno, 
-  unsigned int fileno, off_t offset, int whence, 
+int fdset_debug_pin(struct fdset *set, unsigned int typeno,
+  unsigned int fileno, unsigned long int offset, int whence,
   const char * src_file, int src_line) {
     static int count = 0;
     int retval = 0;
@@ -737,7 +773,7 @@ int fdset_debug_pin(struct fdset *set, unsigned int typeno,
     return retval;
 }
 
-int fdset_name(struct fdset *set, unsigned int typeno, unsigned int fileno, 
+int fdset_name(struct fdset *set, unsigned int typeno, unsigned int fileno,
   char *buf, unsigned int buflen, unsigned int *len, int *write) {
     void **find;
     struct type *type;
@@ -751,7 +787,7 @@ int fdset_name(struct fdset *set, unsigned int typeno, unsigned int fileno,
             *len = str_lcpy(buf, sp->filename, buflen);
             *write = sp->write;
         } else {
-            *len = snprintf((char *) buf, buflen, 
+            *len = snprintf((char *) buf, buflen,
                 (const char *) type->template, fileno);
             *write = type->write;
         }
@@ -761,7 +797,7 @@ int fdset_name(struct fdset *set, unsigned int typeno, unsigned int fileno,
     }
 }
 
-int fdset_type_name(struct fdset *set, unsigned int typeno, 
+int fdset_type_name(struct fdset *set, unsigned int typeno,
   char *buf, unsigned int buflen, unsigned int *len, int *write) {
     void **find;
     struct type *type;
@@ -770,7 +806,7 @@ int fdset_type_name(struct fdset *set, unsigned int typeno,
     if (chash_luint_ptr_find(set->typehash, typeno, &find) == CHASH_OK) {
         type = *find;
         *write = type->write;
-        *len 
+        *len
           = untemplate(buf, buflen, type->template, str_len(type->template));
         return FDSET_OK;
     } else {
@@ -778,7 +814,7 @@ int fdset_type_name(struct fdset *set, unsigned int typeno,
     }
 }
 
-static int fdset_unpin_locked(struct fdset *set, unsigned int typeno, 
+static int fdset_unpin_locked(struct fdset *set, unsigned int typeno,
   unsigned int fileno, int fd) {
     struct fd key,
               *found;
@@ -802,23 +838,23 @@ static int fdset_unpin_locked(struct fdset *set, unsigned int typeno,
     }
 }
 
-int fdset_unpin(struct fdset *set, unsigned int typeno, unsigned int fileno, 
+int fdset_unpin(struct fdset *set, unsigned int typeno, unsigned int fileno,
   int fd) {
     int retval = 0;
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_lock(&set->mutex);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
     retval = fdset_unpin_locked(set, typeno, fileno, fd);
-#ifdef MT_ZET
+#ifdef ZET_MT
     pthread_mutex_unlock(&set->mutex);
-#endif /* MT_ZET */
+#endif /* ZET_MT */
     return retval;
 }
 
-int fdset_debug_unpin(struct fdset *set, unsigned int typeno, 
+int fdset_debug_unpin(struct fdset *set, unsigned int typeno,
   unsigned int fileno, int fd, const char * src_file, int src_line) {
     static int count = 0;
-    fprintf(stderr, "<unpin %d: fd %d, type %d, fileno %d (%s: %d)>\n", 
+    fprintf(stderr, "<unpin %d: fd %d, type %d, fileno %d (%s: %d)>\n",
       count++, fd, typeno, fileno, src_file, src_line);
     return fdset_unpin(set, typeno, fileno, fd);
 }
@@ -849,7 +885,7 @@ static int fdset_fd_close(struct fdset *set, int index) {
     }
     if (prev == NULL) {
         if (found->next) {
-            *find = found->next; 
+            *find = found->next;
         } else {
             void *val;
 
@@ -865,7 +901,7 @@ static int fdset_fd_close(struct fdset *set, int index) {
     /* move it to the end of the array of fds */
     found = set->fd[index];
     set->fds--;
-    memmove(&set->fd[index], &set->fd[index + 1], 
+    memmove(&set->fd[index], &set->fd[index + 1],
       sizeof(found) * (set->fds - index));
     set->fd[set->fds] = found;
     return FDSET_OK;
@@ -890,7 +926,7 @@ int fdset_close(struct fdset *set) {
                 return fdset_fd_close(set, i);
             } else {
                 /* decrements count by one if count is not set to UINT_MAX
-                 * (UINT_MAX indicates that it is pinned and can't be 
+                 * (UINT_MAX indicates that it is pinned and can't be
                  * closed) */
                 if (set->fd[i]->lru_count != UINT_MAX) {
                     set->fd[i]->lru_count--;
@@ -905,7 +941,7 @@ int fdset_close(struct fdset *set) {
                 return fdset_fd_close(set, i);
             } else {
                 /* decrements count by one if count is not set to UINT_MAX
-                 * (UINT_MAX indicates that it is pinned and can't be 
+                 * (UINT_MAX indicates that it is pinned and can't be
                  * closed) */
                 if (set->fd[i]->lru_count != UINT_MAX) {
                     set->fd[i]->lru_count--;
@@ -937,7 +973,7 @@ unsigned int fdset_pinned(struct fdset *set) {
     return count;
 }
 
-int fdset_isset(struct fdset *set, unsigned int typeno, unsigned int fileno, 
+int fdset_isset(struct fdset *set, unsigned int typeno, unsigned int fileno,
   int *isset) {
     void **find;
     struct type *type;
@@ -962,7 +998,7 @@ unsigned int fdset_types(struct fdset *set) {
     return chash_size(set->typehash);
 }
 
-int fdset_close_file(struct fdset *set, unsigned int typeno, 
+int fdset_close_file(struct fdset *set, unsigned int typeno,
   unsigned int fileno) {
     struct fd key,
               *found;
@@ -1023,7 +1059,7 @@ int fdset_unlink(struct fdset *set, unsigned int typeno, unsigned int fileno) {
                 return -EBADF;
             }
         } else if (type->write) {
-            len = snprintf((char *) buf, FILENAME_MAX, 
+            len = snprintf((char *) buf, FILENAME_MAX,
                 (const char *) type->template, fileno);
             assert(len <= FILENAME_MAX);
 
@@ -1042,7 +1078,7 @@ int fdset_unlink(struct fdset *set, unsigned int typeno, unsigned int fileno) {
 
 /* debugging function to return the name of a repository.  DONT USE THIS FOR
  * ANYTHING SERIOUS (uses static buffer) */
-const char *fdset_debug_name(struct fdset *set, int typeno, 
+const char *fdset_debug_name(struct fdset *set, int typeno,
   unsigned int fileno) {
     void **find;
     struct type *type;
@@ -1056,7 +1092,7 @@ const char *fdset_debug_name(struct fdset *set, int typeno,
             && (sp = *find)) {
             str_lcpy(buf, sp->filename, FILENAME_MAX);
         } else {
-            snprintf((char *) buf, FILENAME_MAX, 
+            snprintf((char *) buf, FILENAME_MAX,
                 (const char *) type->template, fileno);
         }
         return buf;

@@ -45,7 +45,7 @@ unsigned int staticalloc_allocated(struct staticalloc *alloc);
  * otherwise. */
 int staticalloc_is_managed(struct staticalloc *alloc, void *ptr);
 
-unsigned int staticalloc_overhead();
+unsigned int staticalloc_overhead(void);
 
 /* STATICALLOC_DECL is a macro to make it convenient to allocate space 
  * on the stack.  Provide the variable name and a constant number of bytes 

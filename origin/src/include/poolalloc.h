@@ -70,8 +70,8 @@ unsigned int poolalloc_allocated(struct poolalloc *pool);
 int poolalloc_is_managed(struct poolalloc *pool, void *ptr);
 
 /* memory overhead of the first and subsequent chunks allocated */
-unsigned int poolalloc_overhead_first();
-unsigned int poolalloc_overhead();
+unsigned int poolalloc_overhead_first(void);
+unsigned int poolalloc_overhead(void);
 
 #ifdef __cplusplus
 }

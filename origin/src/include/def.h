@@ -91,5 +91,13 @@
  * smaller than 0.5 */
 #define SEARCH_SAMPLES_MIN 0.05  /* 5% */
 
+/* the default number of simultaneous query threads allowed for each index */
+#define DEFAULT_QUERY_THREADS 8
+
+/* maximum length of a docno.  The system cannot handle docnos that are
+ * longer than the page size, which is typically 8192 bytes.  Here, we
+ * make sure that docnos are well short of that. */
+#define DOCNO_LEN_MAX 2048
+
 #endif
 

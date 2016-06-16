@@ -20,7 +20,6 @@
 #include "chash.h"
 #include "str.h"
 
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -151,15 +150,6 @@ typedef struct {
                                        increasing did */
 } TR_VEC;
 
-static int init_tr_trec_eval(),
-    tr_trec_eval(),
-    close_tr_trec_eval();
-static int trvec_trec_eval();
-static int comp_tr_tup_did(const void *, const void *),
-    comp_sim_docno(const void *, const void *);
-static int get_trec_top();
-static int form_and_eval_trvec();
-
 typedef struct {
     char *docno;
     float sim;
@@ -244,6 +234,18 @@ struct treceval {
     unsigned int cache_size;        /* Cache size in tuples */
 };
 
+static int init_tr_trec_eval(TREC_EVAL * eval);
+static int tr_trec_eval(TR_VEC * tr_vec, TREC_EVAL * eval, long int num_rel);
+static int close_tr_trec_eval(TREC_EVAL * eval);
+static int trvec_trec_eval(TR_VEC * tr_vec, TREC_EVAL * eval, long int num_rel);
+static int comp_tr_tup_did(const void *, const void *);
+static int comp_sim_docno(const void *, const void *);
+static int get_trec_top(TREC_TOP * trec_top, 
+  const struct treceval *result_cache,
+  unsigned int *up_to, unsigned int to_position);
+static int form_and_eval_trvec(TREC_EVAL * eval_accum, TREC_TOP * trec_top,
+  const struct treceval_qrels * qrels);
+
 static void evaluate_trec_results(unsigned int from_position,
   unsigned int to_position, const struct treceval *result_cache,
   const struct treceval_qrels *qrels,
@@ -319,7 +321,7 @@ static void evaluate_trec_results(unsigned int from_position,
 }
 
 static int form_and_eval_trvec(TREC_EVAL * eval_accum, TREC_TOP * trec_top,
-  struct treceval_qrels *qrels) {
+  const struct treceval_qrels *qrels) {
     TR_TUP *tr_tup;
     long i;
     TR_TUP *start_tr_tup = NULL; /* Space reserved for output TR_TUP
@@ -409,7 +411,8 @@ static int comp_tr_tup_did(const void *vptr1, const void *vptr2) {
 }
 
 /* Get entire trec_top vector for next query */
-static int get_trec_top(TREC_TOP * trec_top, struct treceval *result_cache,
+static int get_trec_top(TREC_TOP * trec_top, 
+  const struct treceval *result_cache,
   unsigned int *up_to, unsigned int to_position) {
     int qid;
 
@@ -1419,78 +1422,78 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
         measurements[1][i] = evaluations[1][i].average_precision;
     }
     if (calculate_statistics(0, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[0];
         measurements[1][i] = evaluations[1][i].precision_at[0];
     }
     if (calculate_statistics(1, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[1];
         measurements[1][i] = evaluations[1][i].precision_at[1];
     }
     if (calculate_statistics(2, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[2];
         measurements[1][i] = evaluations[1][i].precision_at[2];
     }
     if (calculate_statistics(3, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[3];
         measurements[1][i] = evaluations[1][i].precision_at[3];
     }
     if (calculate_statistics(4, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[4];
         measurements[1][i] = evaluations[1][i].precision_at[4];
     }
     if (calculate_statistics(5, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[5];
         measurements[1][i] = evaluations[1][i].precision_at[5];
     }
     if (calculate_statistics(6, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[6];
         measurements[1][i] = evaluations[1][i].precision_at[6];
     }
     if (calculate_statistics(7, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[7];
         measurements[1][i] = evaluations[1][i].precision_at[7];
     }
     if (calculate_statistics(8, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[8];
         measurements[1][i] = evaluations[1][i].precision_at[8];
     }
     if (calculate_statistics(9, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].rprecision;
         measurements[1][i] = evaluations[1][i].rprecision;
     }
     if (calculate_statistics(10, stats, max_query_count, measurements) < 0) {
-        return (0);
-    }
+		return (0);
+	}
 
     free(measurements[0]);
     free(measurements[1]);

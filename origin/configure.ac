@@ -1,5 +1,7 @@
 # This file gets processed with autoconf to produce a configure script
-AC_INIT(zettair, 0.9.3, zettair@cs.rmit.edu.au)
+AC_INIT(zettair, trunk, zettair@cs.rmit.edu.au)
+# don't forget to update the version number in src/include/win32/config.h 
+# as well
 
 # calculate variables for target system
 AC_CANONICAL_TARGET()
@@ -119,8 +121,8 @@ fi
 # note that we've switch from config.h.in to config_h.in for
 # compatibility with various crappy win32 zip programs :o(
 AM_CONFIG_HEADER([src/include/config.h:src/include/config_h.in])
-#AM_INIT_AUTOMAKE(subdir-objects)
-AM_INIT_AUTOMAKE(dist-bzip2 dist-zip subdir-objects)
+AM_INIT_AUTOMAKE(subdir-objects)
+#AM_INIT_AUTOMAKE(dist-bzip2 dist-zip subdir-objects)
 
 AC_CONFIG_SRCDIR(src/commandline.c)
 
@@ -150,16 +152,18 @@ esac
 AC_SUBST(OSINCLUDE, [$osinclude]) 
 
 # checks for programs
-AM_PROG_CC_C_O()    # support subdir objects for automake
 AC_PROG_CC
-AC_PROG_RANLIB
+AM_PROG_CC_C_O()    # support subdir objects for automake
+# Zettair now (reluctantly) uses libtool, so the ranlib check
+# is redundant, and libtoolize complains if it is here.
+#AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 AM_PATH_PYTHON(2.2,,:)  # need python2.2+ for build
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h float.h limits.h memory.h stdlib.h string.h strings.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([pthread.h fcntl.h float.h limits.h memory.h stdlib.h string.h strings.h sys/time.h unistd.h])
 
 # determine endian-ness of target compiler (sets WORDS_BIGENDIAN if true)
 AC_C_BIGENDIAN()
@@ -182,8 +186,10 @@ AC_FUNC_STAT
 AC_CHECK_FUNCS([getcwd gettimeofday memmove memset strcasecmp strchr strerror strncasecmp strrchr strtol])
 
 # check for libraries that we use
+AC_CHECK_LIB(pthread, pthread_create)
 AC_CHECK_LIB(z, deflate)
 AC_CHECK_LIB(m, sqrt)
+AC_CHECK_LIB(rt, nanosleep)
 AC_CHECK_LIB(mx, sqrtf, [], # mx contains the floating point functions on darwin
 
   # failed, look for sqrtf in libm

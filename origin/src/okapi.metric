@@ -1,4 +1,4 @@
-# okapi_k3.metric is a functional description in our funny zettair metric
+# okapi.metric is a functional description in our funny zettair metric
 # language (see metric.py) of how the okapi metric should operate.  
 #
 # The okapi metric is probably best described in 
@@ -19,15 +19,15 @@ decode() {
     float r_dt;  /* weight of term in document */
 	float r_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
 
-    w_t = (float) logf((N - f_t + 0.5F) / (f_t + 0.5F));
+    w_t = (float) log((N - f_t + 0.5) / (f_t + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
-    if (w_t <= 0.0F) {
+    if (w_t <= 0.0) {
         /* use a very small increment instead */
         w_t = FLT_EPSILON;  
     }
 
     r_dt = (((k1 + 1) * f_dt) 
-      / (k1 * ((1 - b) + ((b * D_terms) / (float) avg_D_terms)) + f_dt));
+      / (k1 * ((1 - b) + ((b * D_terms) / avg_D_terms)) + f_dt));
 
     accumulator += r_dt * w_t * r_qt;
 }

@@ -22,8 +22,6 @@
  *
  */
 
-#include "firstinclude.h"
-
 #include "chash.h"
 #include "_chash.h"
 
@@ -1177,7 +1175,7 @@ void luint_ptr_free(void *opaque, unsigned long int key, void **data) {
     free(*data);
 }
 
-int test_str() {
+int test_str(void) {
     struct chash *hash;
     const char *and = "and";
     const char *or = "or";
@@ -1363,7 +1361,7 @@ int test_str() {
     }
 }
 
-int main() {
+int main(void) {
     struct chash *hash;
     unsigned int i,
                  size = 10000;

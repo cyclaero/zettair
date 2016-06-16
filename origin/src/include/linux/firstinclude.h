@@ -9,9 +9,7 @@
 #ifndef FIRSTINCLUDE_H
 #define FIRSTINCLUDE_H
 
-#ifndef _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 64           /* large file support */
-#endif
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE                    /* for snprintf */
 #endif
@@ -27,11 +25,8 @@
 #define OS_SEPARATOR '/'
 
 #include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <math.h>
 
 #include "config.h"
 

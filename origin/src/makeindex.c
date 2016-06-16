@@ -26,7 +26,6 @@ enum makeindex_states {
     STATE_ERR = -1,                        /* an unexpected error occurred */
     STATE_START = 0,                       /* start state */
     STATE_ON = 1,                          /* indexing terms */
-    STATE_CONT = 2,                        /* ignoring the end of long terms */
     STATE_OFF = 3,                         /* not indexing terms */
     STATE_BINARY_CHECK = 4,                /* checking for binary content */
     STATE_IGNORE = 5,                      /* ignoring content */
@@ -42,8 +41,10 @@ struct makeindex_state {
     enum makeindex_states state;          /* current state */
     struct mlparse mlparser;              /* parser for HTML, TREC, INEX */
     struct psettings *settings;           /* parser settings */
-    unsigned int termno;                  /* number of terms in doc thus far */
-    char *term;                           /* current term */
+    char *termbuf;                        /* current set of terms */
+    char *termpos;                        /* position in termbuf */
+    char *termbuf_mark;                   /* position in termbuf, beyond which 
+                                           * termbuf needs to be flushed */
     char *endtag;                         /* endtag we're looking for in 
                                            * OFFEND mode */
     char *docno;                          /* current document number */
@@ -61,18 +62,31 @@ struct makeindex_state {
                                            * type */
 };
 
+#define TERMBUF_SIZE 1024
+
 enum makeindex_ret makeindex_new(struct makeindex *mi, 
   struct psettings *settings, unsigned int termlen, enum mime_types type) {
     enum makeindex_ret ret;
 
+    assert(TERMBUF_SIZE > 2 * termlen);
+
     if (settings && (mi->state = malloc(sizeof(*mi->state))) 
-      && (mi->state->term = malloc(termlen + 1))
+      && (mi->state->termbuf = malloc(TERMBUF_SIZE + 1))
       && (mi->state->endtag = malloc(termlen + 1))
       && (mi->state->docno = malloc(termlen + 1))
       && mlparse_new(&mi->state->mlparser, termlen, LOOKAHEAD)) {
         mi->state->settings = settings;
         mi->state->maxtermlen = termlen;
         mi->state->docno_size = termlen;
+
+        /* mark is a point in the termbuf buffer, beyond which we have to flush
+         * the buffer.  The mark is set so that the largest possible term, + 1
+         * for '\0' termination, + 2 characters, in case we place a '.' in the
+         * buffer as well, (due to sentence termination) can all fit into the
+         * buffer */
+        mi->state->termbuf_mark = mi->state->termbuf + TERMBUF_SIZE - termlen 
+          - 1 - 2;
+
         if ((ret = makeindex_renew(mi, type)) == MAKEINDEX_OK) {
             return MAKEINDEX_OK;
         } else {
@@ -81,14 +95,14 @@ enum makeindex_ret makeindex_new(struct makeindex *mi,
         }
     } else {
         if (mi->state) {
-            if (mi->state->term) {
+            if (mi->state->termbuf) {
                 if (mi->state->endtag) {
                     if (mi->state->docno) {
                         free(mi->state->docno);
                     }
                     free(mi->state->endtag);
                 }
-                free(mi->state->term);
+                free(mi->state->termbuf);
             }
             free(mi->state);
         }
@@ -111,9 +125,9 @@ enum makeindex_ret makeindex_renew(struct makeindex *mi, enum mime_types type) {
         }
     }
 
+    mi->state->termpos = mi->state->termbuf;
     mi->state->type = type;
     mi->state->state = STATE_START;
-    mi->state->termno = 0;
     mi->state->eof = 0;
     mi->state->stack = 0;
     mi->state->docno_pos = 0;
@@ -123,7 +137,7 @@ enum makeindex_ret makeindex_renew(struct makeindex *mi, enum mime_types type) {
 
 void makeindex_delete(struct makeindex *mi) {
     mlparse_delete(&mi->state->mlparser);
-    free(mi->state->term);
+    free(mi->state->termbuf);
     free(mi->state->endtag);
     free(mi->state->docno);
     free(mi->state);
@@ -151,6 +165,14 @@ const char *makeindex_docno(const struct makeindex *mi) {
 int makeindex_append_docno(struct makeindex *mi, const char *docno) {
     unsigned int len = str_len(docno);
 
+    // Zettair can't handle very large docnos (> pagesize).  This
+    // is a hack to get around the fact.
+    if (mi->state->docno_pos + len > DOCNO_LEN_MAX) {
+        if (mi->state->docno_pos > DOCNO_LEN_MAX)
+            len = 0;
+        else
+            len = DOCNO_LEN_MAX - mi->state->docno_pos;
+    }
     while (mi->state->docno_pos + len + 1 > mi->state->docno_size) {
         void *ptr = realloc(mi->state->docno, mi->state->docno_size * 2);
 
@@ -163,6 +185,7 @@ int makeindex_append_docno(struct makeindex *mi, const char *docno) {
     }
 
     memcpy(mi->state->docno + mi->state->docno_pos, docno, len + 1);
+    *(mi->state->docno + mi->state->docno_pos + len + 1) = '\0';
     mi->state->docno_pos += len;
     return MAKEINDEX_OK;
 }
@@ -296,12 +319,12 @@ assert(val != MAKEINDEX_ERR);\
             /* end of a comment, treat as special tag */                      \
             termlen = str_len("/sgmlcomment");                                \
             assert(mi->state->maxtermlen > termlen);                          \
-            str_cpy(mi->state->term, "/sgmlcomment");                         \
+            str_cpy(mi->state->termpos, "/sgmlcomment");                         \
         } else if (1) {                                                       \
             /* start of a comment, treat as special tag */                    \
             termlen = str_len("sgmlcomment");                                 \
             assert(mi->state->maxtermlen > termlen);                          \
-            str_cpy(mi->state->term, "sgmlcomment");                          \
+            str_cpy(mi->state->termpos, "sgmlcomment");                          \
         } else
  
 /* macro to handle reception of tags and pseudo-tags, since it is all very 
@@ -309,15 +332,15 @@ assert(val != MAKEINDEX_ERR);\
 #define PROCESS_TAG(state_)                                                   \
     if (1) {                                                                  \
         int currstate = (state_ == STATE_ON || state_ == STATE_START          \
-            || state_ == STATE_CONT || (state_ == STATE_BINARY_CHECK)         \
+            || (state_ == STATE_BINARY_CHECK)                                 \
             || (state_ == STATE_ID)) ? 1 : 0;                                 \
                                                                               \
         /* lookup tag to see whether it changes our state (ignoring flow      \
          * attribute) */                                                      \
         assert(termlen <= mi->state->maxtermlen);                             \
-        mi->state->term[termlen] = '\0';                                      \
+        mi->state->termpos[termlen] = '\0';                                      \
         attr = psettings_type_find(mi->state->settings, mi->state->ptype,     \
-            mi->state->term);                                                 \
+            mi->state->termpos);                                                 \
         if (attr & PSETTINGS_ATTR_INDEX || attr & PSETTINGS_ATTR_TITLE) {     \
             /* continue in on state */                                        \
             mi->state->stack <<= 1;                                           \
@@ -329,6 +352,17 @@ assert(val != MAKEINDEX_ERR);\
             mi->state->stack |= !currstate;                                   \
             goto off_label;                                                   \
         } else if (attr & PSETTINGS_ATTR_DOCEND) {                            \
+            /* ensure that the term buffer is empty prior to update */        \
+            if (mi->state->termpos > mi->state->termbuf) {                    \
+                if (postings_addwords(mi->post, mi->state->termbuf,           \
+                  mi->state->termpos - mi->state->termbuf)) {                 \
+                    /* preserve tag in buffer */                              \
+                    memmove(mi->state->termbuf, mi->state->termpos, termlen); \
+                    mi->state->termpos = mi->state->termbuf;                  \
+                } else {                                                      \
+                    RETURN(MAKEINDEX_ERR, STATE_ERR);                         \
+                }                                                             \
+            }                                                                 \
             mi->state->stack = 0;                                             \
             if (postings_update(mi->post, &mi->stats)) {                      \
                 RETURN(MAKEINDEX_ENDDOC, STATE_ENDDOC);                       \
@@ -353,13 +387,13 @@ assert(val != MAKEINDEX_ERR);\
             }                                                                 \
         } else if (attr & PSETTINGS_ATTR_OFF_END) {                           \
             /* ignore everything until we hit the end tag we're after */      \
-            if (mi->state->term[0] != '/') {                                  \
+            if (mi->state->termpos[0] != '/') {                                  \
                 mi->state->endtag[0] = '/';                                   \
                 mi->state->endtag[1] = '\0';                                  \
             } else {                                                          \
                 mi->state->endtag[0] = '\0';                                  \
             }                                                                 \
-            str_lcat(mi->state->endtag, mi->state->term,                      \
+            str_lcat(mi->state->endtag, mi->state->termpos,                   \
               mi->state->maxtermlen);                                         \
             str_tolower(mi->state->endtag);                                   \
             goto ignore_label;                                                \
@@ -392,6 +426,15 @@ assert(val != MAKEINDEX_ERR);\
         if (first) {                                                          \
             RETURN(MAKEINDEX_EOF, STATE_START);                               \
         } else {                                                              \
+            /* ensure that the term buffer is empty prior to update */        \
+            if (mi->state->termpos > mi->state->termbuf) {                    \
+                if (postings_addwords(mi->post, mi->state->termbuf,           \
+                  mi->state->termpos - mi->state->termbuf)) {                 \
+                    mi->state->termpos = mi->state->termbuf;                  \
+                } else {                                                      \
+                    RETURN(MAKEINDEX_ERR, STATE_ERR);                         \
+                }                                                             \
+            }                                                                 \
             if (postings_update(mi->post, &mi->stats)) {                      \
                 RETURN(MAKEINDEX_ENDDOC, STATE_EOF);                          \
             } else {                                                          \
@@ -422,7 +465,6 @@ enum makeindex_ret makeindex(struct makeindex *mi) {
     case STATE_START: goto start_label;
     case STATE_ID: goto id_label;
     case STATE_ON: goto on_label;
-    case STATE_CONT: goto cont_label;
     case STATE_OFF: goto off_label;
     case STATE_EOF: goto eof_label;
     case STATE_BINARY_CHECK: goto binary_check_label;
@@ -435,10 +477,10 @@ enum makeindex_ret makeindex(struct makeindex *mi) {
  * this document yet, and so we to call postings_adddoc if we get anything */
 start_label:
     /* reset termno, as we're about to start a new document */
-    mi->state->termno = 0;
     mi->state->doctype = mi->state->type;
     while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 1);
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
+            &termlen, 1);
         switch (ret) {
         default:
             /* indicate to the postings that the document has started */
@@ -456,7 +498,8 @@ start_label:
  * alter our state */
 on_label:
     while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 1);
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
+            &termlen, 1);
         assert(ret != MLPARSE_WHITESPACE);
 
 /* complete hack, but we'd like to jump to this point from binary_check_label
@@ -464,28 +507,29 @@ on_label:
 on_middle:
 
         switch (ret) {
+        case MLPARSE_CONT | MLPARSE_WORD:
         case MLPARSE_WORD:
         case MLPARSE_END | MLPARSE_WORD:
             /* got a regular word, add it to the postings */
             assert(termlen <= mi->state->maxtermlen);
-            mi->state->term[termlen] = '\0';
-            if (postings_addword(mi->post, mi->state->term, 
-              mi->state->termno++)) {
-                if (ret & MLPARSE_END) {
-                    /* increment termno so phrases don't match */
-                    mi->state->termno++;
+            mi->state->termpos += termlen;
+            *mi->state->termpos++ = '\0';
+            if (ret & MLPARSE_END) {
+                /* encoding '.' into buffer */
+                *mi->state->termpos++ = '.';
+                *mi->state->termpos++ = '\0';
+            }
+            if (mi->state->termpos > mi->state->termbuf_mark) {
+                /* have to make room for the next term, by clearing the term
+                 * buffer */
+                if (postings_addwords(mi->post, mi->state->termbuf, 
+                  mi->state->termpos - mi->state->termbuf)) {
+                    mi->state->termpos = mi->state->termbuf;
+                } else {
+                    RETURN(MAKEINDEX_ERR, STATE_ERR);
                 }
-            } else {
-                RETURN(MAKEINDEX_ERR, STATE_ERR);
             }
             break;
-
-        case MLPARSE_CONT | MLPARSE_WORD:
-            /* got a long word, don't add it to the postings */
-            assert(termlen <= mi->state->maxtermlen);
-            /* increment termno so phrases don't match over long word */
-            mi->state->termno++;
-            goto cont_label;
 
         /* things we ignore */
         case MLPARSE_PARAM:
@@ -510,37 +554,12 @@ on_middle:
         }
     }
 
-/* cont state, in the middle of a long word, ignore everything until it ends */
-cont_label:
-    while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 1);
-
-        /* ignore everything except tags, errors and end comments */
-        switch (ret) {
-        case MLPARSE_CONT | MLPARSE_WORD:
-            /* ignore */
-            break;
-
-        case MLPARSE_END | MLPARSE_WORD:
-        case MLPARSE_WORD:
-            /* got a sensible sized word, ignoring ends */
-            goto on_label;
-            break;
-
-        case CASE_INPUT(STATE_CONT);
-        case CASE_EOF(0);
-
-        default:
-            /* error, shouldn't get anything but a word here fallthrough */
-        case CASE_ERR();
-        }
-    }
-
 /* off state, ignoring all words, just waiting for a tag/end comment that may
  * alter our state */
 off_label:
     while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 1);
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
+            &termlen, 1);
 
         /* ignore everything except tags, errors and end comments */
         switch (ret) {
@@ -567,23 +586,27 @@ off_label:
 id_label:
     while (1) {
         /* note NO STRIPPING so that we get the full, unaltered docno */
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 0);
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
+            &termlen, 0);
 
         switch (ret) {
         case MLPARSE_END | MLPARSE_WORD:
         case MLPARSE_WORD:
         case MLPARSE_CONT | MLPARSE_WORD:
-            mi->state->term[termlen] = '\0';
-            if (makeindex_append_docno(mi, mi->state->term) != MAKEINDEX_OK) {
+            mi->state->termpos[termlen] = '\0';
+            if (makeindex_append_docno(mi, mi->state->termpos) 
+              != MAKEINDEX_OK) {
                 RETURN(MAKEINDEX_ERR, STATE_ERR);
             }
             break;
 
         case MLPARSE_CONT | MLPARSE_WHITESPACE:
         case MLPARSE_WHITESPACE:
-            mi->state->term[termlen] = '\0';
+            mi->state->termpos[termlen] = '\0';
             if (mi->state->docno_pos 
-              && makeindex_append_docno(mi, mi->state->term) != MAKEINDEX_OK) {
+              && makeindex_append_docno(mi, mi->state->termpos) 
+                != MAKEINDEX_OK) {
+
                 RETURN(MAKEINDEX_ERR, STATE_ERR);
             }
             break;
@@ -601,8 +624,8 @@ id_label:
 
         case CASE_COMMENT();  /* fallthrough to tag processing */
         case MLPARSE_CONT | MLPARSE_TAG: case MLPARSE_TAG: 
-            mi->state->term[termlen] = '\0';
-            str_tolower(mi->state->term);
+            mi->state->termpos[termlen] = '\0';
+            str_tolower(mi->state->termpos);
             /* strip whitespace from the end of the docno */
             while (mi->state->docno_pos 
               && isspace(mi->state->docno[mi->state->docno_pos - 1])) {
@@ -627,17 +650,17 @@ enddoc_label:
 
 binary_check_label:
     while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, 
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
           &termlen, 0);
 
         switch (ret) {
         case MLPARSE_WORD:
         case MLPARSE_WORD | MLPARSE_END:
-            mi->state->term[termlen] = '\0';
+            mi->state->termpos[termlen] = '\0';
             if (((tmp = mlparse_buffered(&mi->state->mlparser))
-                && badword(mi->state->term, termlen, 
+                && badword(mi->state->termpos, termlen, 
                   mlparse_buffer(&mi->state->mlparser), tmp, &mime)) 
-              || (!tmp && badword(mi->state->term, termlen, 
+              || (!tmp && badword(mi->state->termpos, termlen, 
                 mi->state->mlparser.next_in, mi->state->mlparser.avail_in, 
                   &mime))) {
 
@@ -647,9 +670,9 @@ binary_check_label:
                 mi->state->endtag[0] = '\0';
                 goto ignore_label;
             } else {
-                termlen -= str_strip(mi->state->term);
-                mi->state->term[termlen] = '\0';
-                str_tolower(mi->state->term);
+                termlen -= str_strip(mi->state->termpos);
+                mi->state->termpos[termlen] = '\0';
+                str_tolower(mi->state->termpos);
                 if (termlen) {
                     /* total hack: resume normal processing */
                     goto on_middle;
@@ -665,8 +688,8 @@ binary_check_label:
 
         default:
             /* total hack: resume normal processing */
-            mi->state->term[termlen] = '\0';
-            str_tolower(mi->state->term);
+            mi->state->termpos[termlen] = '\0';
+            str_tolower(mi->state->termpos);
             goto on_middle;
 
         case CASE_INPUT(STATE_BINARY_CHECK);
@@ -676,20 +699,21 @@ binary_check_label:
 /* we're ignoring the rest of this document */
 ignore_label:
     while (1) {
-        ret = mlparse_parse(&mi->state->mlparser, mi->state->term, &termlen, 1);
+        ret = mlparse_parse(&mi->state->mlparser, mi->state->termpos, 
+            &termlen, 1);
         switch (ret) {
         /* ignore pretty much everything */
         default: /* ignore */ break;
         case CASE_COMMENT();  /* fallthrough to tag processing */
         case MLPARSE_CONT | MLPARSE_TAG: case MLPARSE_TAG: 
-            mi->state->term[termlen] = '\0';
-            str_tolower(mi->state->term);
+            mi->state->termpos[termlen] = '\0';
+            str_tolower(mi->state->termpos);
             attr = psettings_type_find(mi->state->settings, mi->state->ptype,
-                mi->state->term);
+                mi->state->termpos);
             /* only perform normal actions if it matches the end tag we've been
              * looking for, or if its an end of document tag */
             if ((mi->state->endtag[0] 
-                && !str_cmp(mi->state->endtag, mi->state->term))
+                && !str_cmp(mi->state->endtag, mi->state->termpos))
               || (attr & PSETTINGS_ATTR_DOCEND)) {
                 PROCESS_TAG(STATE_IGNORE);
             }

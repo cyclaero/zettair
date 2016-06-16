@@ -51,7 +51,6 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -59,7 +58,8 @@
 #define MEMPOOL_SIZE 1000000
 
 struct postings* postings_new(unsigned int tablesize, 
-  void (*stem)(void *opaque, char *term), void *opaque, struct stop *list) {
+  void (*stem)(void *opaque, char *term), void *opaque, struct stop *list, 
+  int offsets) {
     struct postings *p = malloc(sizeof(*p));
     unsigned int bits = bit_log2(tablesize);
 
@@ -72,6 +72,7 @@ struct postings* postings_new(unsigned int tablesize,
           !!DEAR_DEBUG, MEMPOOL_SIZE, NULL))) {
         p->stop = list;
         p->stem = stem; 
+        p->offsets = offsets; 
         p->stem_opaque = opaque;
         p->tblbits = bits;
         p->tblsize = tablesize;
@@ -79,6 +80,7 @@ struct postings* postings_new(unsigned int tablesize,
         p->size = p->dterms = p->terms = 0;
         p->err = 0;
         p->docno = 0;
+        p->termno = 0;
         p->docs = 0;
         p->update = NULL;
         p->update_required = 0;
@@ -162,7 +164,7 @@ int postings_update(struct postings* post, struct postings_docstats* stats) {
 
     while (node) {
         /* calculate document weight */
-        fdt_log = (float) logf((float) node->offsets);
+        fdt_log = logf((float) node->offsets);
         weight += (1 + fdt_log) * (1 + fdt_log);
 
         assert(node->offsets);
@@ -219,7 +221,8 @@ int postings_update(struct postings* post, struct postings_docstats* stats) {
 
     post->update = NULL;                /* reset update list */
     post->update_required = 0;
-    stats->weight = (float) sqrtf(weight);
+    post->termno = 0;
+    stats->weight = sqrtf(weight);
     stats->terms = terms;
     stats->distinct = dterms;
     return 1;
@@ -230,121 +233,132 @@ void postings_adddoc(struct postings* post, unsigned long int docno) {
     assert(post->update == NULL);
     assert((post->docno < docno) || ((post->docno == 0) && (docno == 0)));
     post->docno = docno;
+    post->termno = 0;
     post->docs++;
     /* this ensures that updates happen even for empty documents! */
     post->update_required = 1;
 }
 
-int postings_addword(struct postings *post, char *term, 
-  unsigned long int wordno) {
+int postings_addwords(struct postings *post, char *text, unsigned int textlen) {
+    char *term = text,
+         *next,
+         *end = text + textlen;
     unsigned int hash,
                  len,
                  bytes;
     struct postings_node** prev,
                         * node;
-
-    if (post->stem) {
-        post->stem(post->stem_opaque, term);
-        /* do nothing for 0 length terms (occur sometimes because stemming 
-         * removes entire word :o( ) */
-        if (!term[0]) {
-            return 1;
-        }
-    }
-
-    assert(!iscntrl(term[0]));
-    hash = str_hash(term) & bit_lmask(post->tblbits);
-    prev = &post->hash[hash]; 
-    node = *prev;
-
-    while (node) {
-        if (!str_cmp(term, node->term)) {
-            /* found previous entry, perform move to front on hash chain */
-            *prev = node->next;
-            node->next = post->hash[hash];
-            post->hash[hash] = node;
-            break;
-        }
-        prev = &node->next;
-        node = *prev;
-    }
-
-    if (!node) {
-        /* couldn't find a previous entry, need to add a new one */
-        len = str_len(term);
+    
+    while (term < end) {
+        /* find the start of the next term */
+        for (len = 0, next = term; *next; next++, len++) ;
+        next++;
         assert(len);
-        if ((node = objalloc_malloc(post->node_mem, sizeof(*node)))
-          && (node->term = poolalloc_memalign(post->string_mem, len + 1, 1))
-          && (node->vec.pos = node->vecmem = malloc(INITVECLEN))) {
+        assert(next >= end || *next);
 
-            node->vec.end = node->vec.pos + INITVECLEN;
-
-            str_cpy(node->term, term);
-
-            node->last_docno = -1;
-            node->last_offset = -1;
-            node->last_count = node->vecmem;
-            node->next = post->hash[hash];
-            node->docs = node->offsets = node->occurs = 0;
-            /* insert into table */
-            post->hash[hash] = node;
-            post->dterms++;
-            post->size += len + 1;
-        } else if (node->vecmem) {
-            free(node->vecmem);
-            post->err = ENOMEM;
-            return 0;
-        /* don't need to check others because they come from mem pools */
-        } else {
-            post->err = ENOMEM;
-            return 0;
+        if (post->stem) {
+            post->stem(post->stem_opaque, term);
+            /* do nothing for 0 length terms (occur sometimes because stemming 
+             * removes entire word :o( ) */
+            if (!term[0]) {
+                return 1;
+            }
         }
-    }
 
-    assert(node);
+        assert(!iscntrl(term[0]));
+        hash = str_nhash(term, len) & bit_lmask(post->tblbits);
+        prev = &post->hash[hash]; 
+        node = *prev;
 
-    /* mark document as changed */
-    if (!node->offsets) {
-        node->update = post->update;
-        post->update = node;
+        while (node) {
+            if (!str_cmp(term, node->term)) {
+                /* found previous entry, perform move to front on hash chain */
+                *prev = node->next;
+                node->next = post->hash[hash];
+                post->hash[hash] = node;
+                break;
+            }
+            prev = &node->next;
+            node = *prev;
+        }
 
-        /* write d-gap */
+        if (!node) {
+            /* couldn't find a previous entry, need to add a new one */
+            if ((node = objalloc_malloc(post->node_mem, sizeof(*node)))
+              && (node->term = poolalloc_memalign(post->string_mem, len + 1, 1))
+              && (node->vec.pos = node->vecmem = malloc(INITVECLEN))) {
+
+                node->vec.end = node->vec.pos + INITVECLEN;
+
+                str_cpy(node->term, term);
+
+                node->last_docno = -1;
+                node->last_offset = -1;
+                node->last_count = node->vecmem;
+                node->next = post->hash[hash];
+                node->docs = node->offsets = node->occurs = 0;
+                /* insert into table */
+                post->hash[hash] = node;
+                post->dterms++;
+                post->size += len + 1;
+            } else if (node->vecmem) {
+                free(node->vecmem);
+                post->err = ENOMEM;
+                return 0;
+            /* don't need to check others because they come from mem pools */
+            } else {
+                post->err = ENOMEM;
+                return 0;
+            }
+        }
+
+        assert(node);
+
+        /* mark document as changed */
+        if (!node->offsets) {
+            node->update = post->update;
+            post->update = node;
+
+            /* write d-gap */
+            while (!(bytes 
+              = vec_vbyte_write(&node->vec, 
+                post->docno - (node->last_docno + 1)))) {
+
+                /* need to expand the node */
+                if (!postings_node_expand(node)) {
+                    return 0;
+                }
+            }
+            post->size += bytes + 1;
+
+            /* save current position in case we need to overwrite it later, and
+             * write in a count of 1 */
+            node->last_count = node->vec.pos;
+            assert(node->last_count > node->vecmem);
+            while (!(bytes = vec_vbyte_write(&node->vec, 1))) {
+                /* need to expand the node */
+                if (!postings_node_expand(node)) {
+                    return 0;
+                }
+            }
+        }
+
+        /* encode new offset */
+        assert((post->termno > node->last_offset) || (node->last_offset == -1));
         while (!(bytes 
           = vec_vbyte_write(&node->vec, 
-            post->docno - (node->last_docno + 1)))) {
-
-            /* need to expand the node */
-            if (!postings_node_expand(node)) {
-                return 0;
-            }
+            post->termno - (node->last_offset + 1)))) {
+             /* need to expand the node */
+             if (!postings_node_expand(node)) {
+                 return 0;
+             }
         }
-        post->size += bytes + 1;
-
-        /* save current position in case we need to overwrite it later, and
-         * write in a count of 1 */
-        node->last_count = node->vec.pos;
-        assert(node->last_count > node->vecmem);
-        while (!(bytes = vec_vbyte_write(&node->vec, 1))) {
-            /* need to expand the node */
-            if (!postings_node_expand(node)) {
-                return 0;
-            }
-        }
+        post->size += bytes;
+        node->last_offset = post->termno++;
+        node->offsets++;
+        post->terms++;
+        term = next;
     }
-
-    /* encode new offset */
-    assert((wordno > node->last_offset) || (node->last_offset == -1));
-    while (!(bytes 
-      = vec_vbyte_write(&node->vec, wordno - (node->last_offset + 1)))) {
-         /* need to expand the node */
-         if (!postings_node_expand(node)) {
-             return 0;
-         }
-    }
-    post->size += bytes;
-    node->last_offset = wordno;
-    node->offsets++;
-    post->terms++;
     return 1;
 }
 
@@ -355,7 +369,7 @@ int post_cmp(const void *vone, const void *vtwo) {
     return str_cmp((*one)->term, (*two)->term);
 }
 
-int postings_remove_offsets(struct postings *post) {
+void postings_remove_offsets(struct postings *post) {
     unsigned int i,
                  dgap_bytes,
                  f_dt_bytes,
@@ -395,7 +409,7 @@ int postings_remove_offsets(struct postings *post) {
             }
 
             assert(dgap_bytes == 0 && VEC_LEN(&src) == 0);
-            node->vec.pos = src.pos;
+            node->vec.pos = dst.pos;
             node = node->next;
         }
     }
@@ -403,8 +417,6 @@ int postings_remove_offsets(struct postings *post) {
     /* note that after this operation the postings are so completely broken 
      * that they're only good for dumping or clearing, although this is not
      * currently enforced. */
-
-    return 1;
 }
 
 int postings_dump(struct postings* post, void *buf, unsigned int bufsize, 
@@ -427,6 +439,10 @@ int postings_dump(struct postings* post, void *buf, unsigned int bufsize,
      * another one is always coming) we end up with an empty document at the 
      * end */
     assert(!post->update);
+
+    if (!post->offsets) {
+        postings_remove_offsets(post);
+    }
 
     /* XXX: hack, allocate a big array of postings and then sort them by term.
      * This is so that postings go out sorted by term instead of hash value. */
@@ -455,7 +471,7 @@ int postings_dump(struct postings* post, void *buf, unsigned int bufsize,
             if (!post->stop || stop_stop(post->stop, node->term) == STOP_OK) {
                 arr[j++] = node;
             } else {
-                assert(++stopped);  /* count stopped terms while debugging */
+                stopped++;
             }
             node = node->next;
         }
@@ -465,14 +481,13 @@ int postings_dump(struct postings* post, void *buf, unsigned int bufsize,
     }
 
     assert(j + stopped == post->dterms);
-    stopped = 0;
 
-    qsort(arr, post->dterms, sizeof(*arr), post_cmp);
+    qsort(arr, post->dterms - stopped, sizeof(*arr), post_cmp);
 
     v.pos = dbuf;
     v.end = dbuf + dbufsz;
     for (i = 0; i < j;) {
-        while ((i < post->dterms) 
+        while ((i < j)
           && ((len = str_len(arr[i]->term)), 1)
           && (((unsigned int) VEC_LEN(&v)) >= vec_vbyte_len(len) + len 
             + vec_vbyte_len(arr[i]->docs) + vec_vbyte_len(arr[i]->occurs) 
