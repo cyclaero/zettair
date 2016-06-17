@@ -18,9 +18,7 @@
 
 #include <limits.h>
 
-void btbucket_new(void *btbucket, unsigned int bucketsize, 
-  unsigned int sib_fileno, unsigned int sib_offset, int leaf, void *prefix, 
-  unsigned int *prefix_size) {
+void btbucket_new(void *btbucket, unsigned int bucketsize, unsigned int sib_fileno, unsigned long int sib_offset, int leaf, void *prefix, unsigned int *prefix_size) {
     struct btbucket *b = btbucket;
 
     leaf = !!leaf;                           /* set leaf to 1 or 0 */

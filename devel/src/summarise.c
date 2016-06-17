@@ -45,9 +45,8 @@ struct summarise {
     struct psettings *pset;
     struct docmap *map;
     unsigned int max_termlen;
-    void (*stem)                   /* stemming function for terms */
-      (void *opaque, char *term);
-    void *stemmer;                 /* stemming object */
+    void (*stem)(void *opaque, char *term); /* stemming function for terms */
+    void *stemmer;                          /* stemming object */
     char *buf;
     unsigned int bufsize;
 
@@ -75,10 +74,8 @@ struct persum {
 struct summarise *summarise_new(struct index *idx) {
     struct summarise *sum = malloc(sizeof(*sum));
 
-    if (sum 
-      && (sum->buf = malloc(BUFSIZ))
-      && (mlparse_new(&sum->parser, idx->storage.max_termlen, LOOKAHEAD))) {
-
+    if (sum && (sum->buf = malloc(BUFSIZ))
+     && (mlparse_new(&sum->parser, idx->storage.max_termlen, LOOKAHEAD))) {
         sum->stem = index_stemmer(idx);
         sum->stemmer = idx->stem;
         sum->idx = idx;
@@ -162,23 +159,23 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
               && (space < str_len("</b>"))) {
                 sent->buflen--;
             }
-
-            /* end highlighting */
-            str_cpy(sent->buf + sent->buflen, "</b>");
-            sent->buflen += str_len("</b>");
         }
+
+        /* end highlighting */
+        str_cpy(sent->buf + sent->buflen, "</b>");
+        sent->buflen += str_len("</b>");
     }
 
     /* trim overly-long sentence term-by-term */
     while (sent->buflen > ps->summary_len) {
         sent->buflen--;
-        while (sent->buf[sent->buflen - 1] != ' ') {
+        while (sent->buflen && sent->buf[sent->buflen - 1] != ' ') {
             sent->buflen--;
         }
     }
 
     /* remove superfluous whitespace from the end of the sentence */
-    while (sent->buf[sent->buflen - 1] == ' ') {
+    while (sent->buflen && sent->buf[sent->buflen - 1] == ' ') {
         sent->buflen--;
     }
 
@@ -297,15 +294,17 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             }
             /* fallthrough to tag parsing */
         case MLPARSE_TAG:
-            /* lookup tag, see if text can flow through this tag (otherwise
-             * sentence ends) */
+            /* lookup tag, see if text can flow through this tag (otherwise sentence ends) */
             ps->termbuf[len] = '\0';
             str_strip(ps->termbuf + (ps->termbuf[0] == '/'));
             attr = psettings_type_find(sum->pset, ps->ptype, ps->termbuf);
+            if (title && ps->title_len > 0) {
+                ps->title[ps->title_len-1] = '\0';
+            }
             title = 0;
 
             /* change state based on tag index attribute */
-            if (attr & PSETTINGS_ATTR_INDEX || attr & PSETTINGS_ATTR_CHECKBIN) {
+            if (attr & (PSETTINGS_ATTR_INDEX | PSETTINGS_ATTR_CHECKBIN)) {
                 /* note that we assume that the binary check succeeded */
                 ps->stack <<= 1;
                 ps->stack |= !ps->index;
@@ -323,14 +322,12 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                     str_cpy(sent->buf + sent->buflen, ps->termbuf);
 
                     do {
-                        ret = mlparse_parse(&sum->parser, ps->termbuf, 
-                            &len, 0);
+                        ret = mlparse_parse(&sum->parser, ps->termbuf, &len, 0);
                         switch (ret) {
                         case MLPARSE_ERR:
                         case MLPARSE_EOF:
                             if (sent->buflen) {
-                                return extract_finish(sent, ps, type, 
-                                    highlight);
+                                return extract_finish(sent, ps, type, highlight);
                             } else {
                                 /* can return NULL because we can't have 
                                  * realloc'd the buffer */
@@ -342,12 +339,10 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                             ps->termbuf[len] = '\0';
                             str_strip(ps->termbuf + (ps->termbuf[0] == '/'));
                             if ((sent->buf[sent->buflen] == '/' 
-                                && !str_cmp(sent->buf + sent->buflen + 1, 
-                                    ps->termbuf))
+                                && !str_cmp(sent->buf + sent->buflen + 1, ps->termbuf))
                               || (sent->buf[sent->buflen] != '/'
                                 && ps->termbuf[0] == '/'
-                                && !str_cmp(sent->buf + sent->buflen,
-                                    ps->termbuf + 1))) {
+                                && !str_cmp(sent->buf + sent->buflen, ps->termbuf + 1))) {
                                 /* found the end tag */
                                 ps->index = 1;
                             }
@@ -363,17 +358,13 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                                   = sum->last_stream->curr_out;
                                 if (ps->bytes_left 
                                   >= sum->last_stream->avail_out) {
-                                    sum->parser.avail_in 
-                                      = sum->last_stream->avail_out;
-                                    ps->bytes_left 
-                                      -= sum->last_stream->avail_out;
+                                    sum->parser.avail_in = sum->last_stream->avail_out;
+                                    ps->bytes_left -= sum->last_stream->avail_out;
                                     sum->last_stream->avail_out = 0;
                                 } else {
                                     sum->parser.avail_in = ps->bytes_left;
-                                    sum->last_stream->avail_out 
-                                      -= ps->bytes_left;
-                                    sum->last_stream->curr_out 
-                                      += ps->bytes_left;
+                                    sum->last_stream->avail_out -= ps->bytes_left;
+                                    sum->last_stream->curr_out += ps->bytes_left;
                                     ps->bytes_left = 0;
                                 }
                             } else {
@@ -453,13 +444,17 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                 memcpy(sent->buf + sent->buflen, ps->termbuf, len);
             }
 
+            if (len > sum->max_termlen) {
+                len = 0;
+            }
+
             /* strip and stem the term */
             ps->termbuf[len] = '\0';
             str_strip(ps->termbuf);
-            sum->stem(sum->stemmer, ps->termbuf);
+            if (sum->stem)
+               sum->stem(sum->stemmer, ps->termbuf);
 
-            if (chash_str_ptr_find(ps->terms, ps->termbuf, &found) 
-              == CHASH_OK) {
+            if (chash_str_ptr_find(ps->terms, ps->termbuf, &found) == CHASH_OK) {
                 unsigned int taglen;
 
                 /* it's a query term, retroactively highlight it in the 
@@ -562,7 +557,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             /* ignore */
             break;
         }
-    } while ((ret != MLPARSE_WORD|MLPARSE_END || title) && sent->buflen < ps->summary_len);
+    } while ((ret != (MLPARSE_WORD | MLPARSE_END) || title) && sent->buflen < ps->summary_len);
 
     return extract_finish(sent, ps, type, highlight);
 }
@@ -794,22 +789,21 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
 
         /* extract sentence */
         if (next = extract(sum, &ps, type, query, space, occs)) {
+            if (next->buflen <= 0 && next->terms <= 0)
+                break;
             /* got a sentence, score it and figure out whether to heap it */
             score(next, query);
 
-            if (!heap_len 
-              || ((min = *((struct sentence **) 
-                  heap_peek(heap, heap_len, sizeof(*heap))))
-                && (min->score < next->score))
-              || (heap_bytes < result->summary_len)) {
+            if (!heap_len
+             || (min = *((struct sentence **)heap_peek(heap, heap_len, sizeof(*heap)))) && min->score < next->score
+             || heap_bytes < result->summary_len) {
 
                 /* insert next into heap */
                 prev = next;
 
                 /* try to make space in the array for it */
                 if (heap_len + 1 >= heap_size) {
-                    void *ptr = realloc(heap, 
-                        sizeof(*heap) * (heap_size * 2 + 1));
+                    void *ptr = realloc(heap, sizeof(*heap) * (heap_size * 2 + 1));
 
                     if (ptr) {
                         heap = ptr;
@@ -819,27 +813,22 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
                 }
 
                 if (heap_len < heap_size) {
-                    heap_insert(heap, &heap_len, sizeof(*heap), sum_score_cmp,
-                      &next);
+                    heap_insert(heap, &heap_len, sizeof(*heap), sum_score_cmp, &next);
                     heap_bytes += next->buflen;
 
-                    min = *((struct sentence **) 
-                      heap_peek(heap, heap_len, sizeof(*heap)));
+                    min = *((struct sentence **)heap_peek(heap, heap_len, sizeof(*heap)));
                     while (heap_bytes - min->buflen > result->summary_len) {
-                        /* minimum element can't make it into the summary,
-                         * remove it */
+                        /* minimum element can't make it into the summary, remove it */
                         heap_pop(heap, &heap_len, sizeof(*heap), sum_score_cmp);
                         heap_bytes -= min->buflen;
                         min->next = unused;
                         min->prev = NULL;
                         unused = min;
-                        min = *((struct sentence **) 
-                          heap_peek(heap, heap_len, sizeof(*heap)));
+                        min = *((struct sentence **)heap_peek(heap, heap_len, sizeof(*heap)));
                     }
                 } else {
                     heap_bytes += next->buflen;
-                    heap_replace(heap, heap_len, sizeof(*heap), sum_score_cmp, 
-                      &next);
+                    heap_replace(heap, heap_len, sizeof(*heap), sum_score_cmp, &next);
                     heap_bytes -= next->buflen;
                     next->next = unused;
                     next->prev = NULL;
@@ -868,13 +857,11 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
 
     /* now figure out how many sentences to stuff into the buffer */
     if (!heap_len) {
-        /* it's an empty document, don't know why we're summarising 
-         * it, but... */
+        /* it's an empty document, don't know why we're summarising it, but... */
         result->summary[0] = '\0';
     } else {
         assert(heap_len);
-        /* sort by score.  Note use of rev_sum_score_cmp to order with highest
-         * scoring first */
+        /* sort by score.  Note use of rev_sum_score_cmp to order with highest scoring first */
         qsort(heap, heap_len, sizeof(*heap), rev_sum_score_cmp);
         heap_bytes = heap[0]->buflen;
         selected = 1;
@@ -889,10 +876,8 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
         qsort(heap, selected, sizeof(*heap), sum_pos_cmp);
         for (heap_bytes = i = 0; i < selected; i++) {
             if (i) {
-                if (heap[i - 1]->start_term + heap[i - 1]->terms 
-                  != heap[i]->start_term) { 
-                    if (result->summary[heap_bytes - 1] != '.'
-                      || !isupper(heap[i]->buf[0])) {
+                if (heap[i - 1]->start_term + heap[i - 1]->terms != heap[i]->start_term) {
+                    if (heap_bytes && (result->summary[heap_bytes - 1] != '.' || !isupper(heap[i]->buf[0]))) {
                         result->summary[heap_bytes++] = ' ';
                         result->summary[heap_bytes++] = '.';
                     }
@@ -904,11 +889,14 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
                     result->summary[heap_bytes++] = ' ';
                 }
             }
+            if ((heap_bytes + heap[i]->buflen) >= result->summary_len) {
+                if (heap_bytes > result->summary_len)
+                    heap_bytes = result->summary_len;
+                break;
+            }
             memcpy(result->summary + heap_bytes, heap[i]->buf, heap[i]->buflen);
             heap_bytes += heap[i]->buflen;
-            assert(heap_bytes < result->summary_len);
         }
-        assert(heap_bytes < result->summary_len);
         result->summary[heap_bytes] = '\0';
     }
 
@@ -924,4 +912,3 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
     persum_delete(sum, &ps);
     return SUMMARISE_OK;
 }
-

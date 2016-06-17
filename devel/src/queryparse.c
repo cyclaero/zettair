@@ -200,8 +200,7 @@ toplevel_label:
     /* if we end in toplevel we just EOF */
     goto endfile_label;
 
-/* in a normal word, we may or may not have actually pushed any characters onto
- * the return word */
+/* in a normal word, we may or may not have actually pushed any characters onto the return word */
 inword_label:
     while (parser->buf < parser->end) {
         c = *parser->buf++;
@@ -595,10 +594,11 @@ inor_label:
         }
     }
     /* if we end in an unfinished OR, return it as word */
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = ENDFILE;
-    return QUERYPARSE_WORD;
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = ENDFILE;
+        return QUERYPARSE_WORD;
+    } else goto inword_label;
 
 /* in what may be an AND operator */
 inand_label:
@@ -667,10 +667,11 @@ inand_label:
         }
     }
     /* if we end in an unfinished AND, return it as word */
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = ENDFILE;
-    return QUERYPARSE_WORD;
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = ENDFILE;
+        return QUERYPARSE_WORD;
+    } else goto inword_label;
 
 /* inside a phrase */
 inphrase_label:
@@ -792,11 +793,12 @@ inphrase_word_label:
     }
     /* if we end in a word in an unfinished phrase, warn them and return word */
     parser->warn |= QUERYPARSE_WARN_QUOTES_UNMATCHED;
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = ENDFILE;
-    return QUERYPARSE_WORD;
- 
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = ENDFILE;
+        return QUERYPARSE_WORD;
+    } else goto inphrase_end_label;
+
 inphrase_word_punc_label:
     while (parser->buf < parser->end) {
         c = *parser->buf++;
@@ -860,10 +862,11 @@ inphrase_word_punc_label:
     }
     /* if we end in a word in an unfinished phrase, warn them and return word */
     parser->warn |= QUERYPARSE_WARN_QUOTES_UNMATCHED;
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = ENDFILE;
-    return QUERYPARSE_WORD;
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = ENDFILE;
+        return QUERYPARSE_WORD;
+    } else goto inphrase_end_label;
 
 /* need to return phrase end and then continue */
 inphrase_end_label:
@@ -897,10 +900,11 @@ endsentence_label:
         }
     }
     /* finishing in endsentence means we need to return the phrase word */
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = INPHRASE;
-    return QUERYPARSE_WORD;
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = INPHRASE;
+        return QUERYPARSE_WORD;
+    } else goto inphrase_word_label;
 
 /* parsing the modifier of a modifier */
 inmod_mod_label:
@@ -945,10 +949,11 @@ inmod_mod_label:
     }
     /* if we end in a mod, return as word */
     parser->warn |= QUERYPARSE_WARN_PARENS_UNMATCHED;
-    assert(*len);
-    word[*len] = '\0';
-    parser->state = ENDFILE;
-    return QUERYPARSE_WORD;
+    if (*len) {
+        word[*len] = '\0';
+        parser->state = ENDFILE;
+        return QUERYPARSE_WORD;
+    } else goto inmod_end_label;
 
 /* in the parameters of a modifier */
 inmod_label:

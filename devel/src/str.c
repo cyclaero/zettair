@@ -43,7 +43,13 @@ int str_cmp(const char *s1, const char *s2) {
         s2++;
     }
 
-    return (unsigned char) *s1 - (unsigned char) *s2;
+    /* UTF8 prefix match */
+    if (*s1 == 0 && *s2 < 0)
+        return (char)*s2;
+    else if (*s1 < 0 && *s2 == 0)
+        return -(char)*s1;
+
+    return (unsigned char)*s1 - (unsigned char)*s2;
 }
 
 int str_ncmp(const char *s1, const char *s2, size_t size) {
