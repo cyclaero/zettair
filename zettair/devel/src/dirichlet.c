@@ -202,9 +202,11 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct dirichlet_param *param = (void *) &opt->u;
+    /* METRIC_STRUCT */ struct dirichlet_param *param = (void *)&opt->u;
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
+    struct search_acc_cons *acc_save = NULL,
+                           *acc_prev = results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
@@ -227,16 +229,12 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
             /* merge into accumulator list */
             while (acc && (docno > acc->acc.docno)) {
                 prevptr = &acc->next;
+                acc_prev = acc;
                 acc = acc->next;
             }
 
-            if (acc && (docno == acc->acc.docno)) {
-                /* METRIC_PER_DOC */
-                (acc->acc.weight) += log(1 + f_dt * w_t);
-
-            } else {
+            if (!acc || docno < acc->acc.docno) {
                 struct search_acc_cons *newacc;
-                assert(!acc || docno < acc->acc.docno); 
 
                 /* allocate a new accumulator (we have reserved allocators
                  * earlier, so this should never fail) */
@@ -246,13 +244,28 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
                 acc = newacc;
                 acc->acc.docno = docno;
                 acc->acc.weight = 0.0;
-                /* METRIC_PER_DOC */
-                (acc->acc.weight) += log(1 + f_dt * w_t);
-
                 *prevptr = newacc;
                 accs_added++;
             }
+
             assert(acc);
+
+            if (docno == acc->acc.docno) {
+                if (query->term[qterm].type != CONJUNCT_TYPE_EXCLUDE) {
+                    /* METRIC_PER_DOC */
+                    acc->acc.weight += log(1 + f_dt * w_t);
+                } else {
+                    acc_save = acc->next;
+                    if (*prevptr == acc) {
+                        *prevptr = acc_save;
+                    } else {
+                        acc_prev->next = acc_save;
+                    }
+                    objalloc_free(results->alloc, acc);
+                    results->accs--;
+                    acc = acc_save;
+                }
+            }
 
             /* go to next accumulator */
             prevptr = &acc->next;
@@ -428,31 +441,34 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
-            assert(cooc_rate >= 0.0);
-            if (cooc_rate > 1.0) {
-                cooc_rate = 1.0;
-            }
-
-            /* add number of things we think would have been added from the
-             * things that were missed */
-            results->total_results += (1 - cooc_rate) * missed;
-
-            if (missed) {
-                results->estimated |= 1;
-            }
-
-            if (!VEC_LEN(&v)) {
-                return SEARCH_OK;
+            /*
+             * If we were excluding, subtract the results.
+             */
+            if (query->term[qterm].type == CONJUNCT_TYPE_EXCLUDE) {
+                results->total_results -= hit;
             } else {
-                return SEARCH_EINVAL;
+                cooc_rate *= results->total_results/(double)results->accs;
+                assert(cooc_rate >= 0.0);
+                if (cooc_rate > 1.0) {
+                    cooc_rate = 1.0;
+                }
+
+                /* add number of things we think would have been added from the
+                 * things that were missed */
+                results->total_results += (1 - cooc_rate) * missed;
+
+                if (missed) {
+                    results->estimated |= 1;
+                }
             }
+
+            return (!VEC_LEN(&v)) ? SEARCH_OK : SEARCH_EINVAL;
         } else {
             param = NULL;   /* avoid 'param not used' warning */
             return ret;

@@ -1051,13 +1051,8 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
     /* process terms after accumulator limit has been reached in AND mode */
     for (; i < query->terms; i++) {
         assert(srcarr[i].term == &query->term[i] || !srcarr[i].term);
-        if (((src = srcarr[i].src) 
-            || (src 
-              = search_conjunct_src(idx, &query->term[i], &alloc, 
-                  list_mem_limit)))
-          && (ret = sm.and_decode(idx, query, i, SEARCH_DOCNO_START, results,
-            src, opts, opt)) 
-          == SEARCH_OK) {
+        if (((src = srcarr[i].src) || (src = search_conjunct_src(idx, &query->term[i], &alloc, list_mem_limit)))
+          && (ret = sm.and_decode(idx, query, i, SEARCH_DOCNO_START, results, src, opts, opt)) == SEARCH_OK) {
             src->delet(src);
             if (list_alloc) {
                 poolalloc_clear(list_alloc);
@@ -1208,8 +1203,12 @@ int index_search(struct index *idx, const char *querystr,
                 mem = tmpmem;
             }
             break;
-            
+
         case CONJUNCT_TYPE_WORD:
+            mem = query.term[i].term.vocab.size;
+            break;
+
+        case CONJUNCT_TYPE_EXCLUDE:
             mem = query.term[i].term.vocab.size;
             break;
 

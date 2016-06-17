@@ -293,48 +293,29 @@ unsigned int reposset_entries(struct reposset *rset) {
 }
 
 struct reposset_record *reposset_record_last(struct reposset *rset) {
-    if (rset->rec_len) {
-        return &rset->rec[rset->rec_len - 1];
-    } else {
-        return NULL;
-    }
+    return (rset->rec_len) ? &rset->rec[rset->rec_len - 1] : NULL;
 }
 
-struct reposset_record *reposset_record(struct reposset *rset, 
-  unsigned int docno) {
-    struct reposset_record *find,
-                           target;
-
+struct reposset_record *reposset_record(struct reposset *rset, unsigned int docno) {
+    struct reposset_record *find, target;
     target.docno = docno;
     target.quantity = 1;
 
     /* find the correct page in the map */
-    find = binsearch(&target, rset->rec, rset->rec_len, sizeof(target), 
-        rec_docno_cmp);
-
-    if (find < rset->rec + rset->rec_len && find->docno <= docno 
-      && find->docno + find->quantity > docno) {
-        return find;
-    } else {
-        return NULL;
-    }
+    find = binsearch(&target, rset->rec, rset->rec_len, sizeof(target), rec_docno_cmp);
+    return (find < rset->rec + rset->rec_len && find->docno <= docno && find->docno + find->quantity > docno) ? find : NULL;
 }
 
-enum reposset_ret reposset_set_record(struct reposset *rset, 
-  struct reposset_record *rec) {
+enum reposset_ret reposset_set_record(struct reposset *rset, struct reposset_record *rec) {
     unsigned int max = rec->reposno + 1;
 
-    /* XXX: again, can't be bothered actively sorting entries here,
-     * ensure that they come sorted */
-    assert(!rset->entries 
-      || rec_docno_cmp(&rset->rec[rset->rec_len - 1], rec) < 0);
-    assert(!rset->entries 
-      || rset->rec[rset->rec_len - 1].reposno < rec->reposno);
+    /* XXX: again, can't be bothered actively sorting entries here, ensure that they come sorted */
+    assert(!rset->entries || rec_docno_cmp(&rset->rec[rset->rec_len - 1], rec) < 0);
+    assert(!rset->entries || rset->rec[rset->rec_len - 1].reposno < rec->reposno);
 
     /* have to add a new record */
     if (rset->rec_len >= rset->rec_size) {
-        void *ptr 
-          = realloc(rset->rec, sizeof(*rset->rec) * rset->rec_size * 2);
+        void *ptr = realloc(rset->rec, sizeof(*rset->rec) * rset->rec_size * 2);
 
         if (ptr) {
             rset->rec = ptr;
@@ -361,23 +342,14 @@ void reposset_clear(struct reposset *rset) {
     rset->entries = rset->rec_len = rset->check_len = 0;
 }
 
-struct reposset_check *reposset_check(struct reposset *rset, 
-  unsigned int reposno) {
-    struct reposset_check *find,
-                          target;
-
+struct reposset_check *reposset_check(struct reposset *rset, unsigned int reposno) {
+    struct reposset_check *find, target;
     target.reposno = reposno;
     target.offset = 0;
 
     /* find the correct page in the map */
-    find = binsearch(&target, rset->check, rset->check_len, sizeof(target), 
-        check_cmp);
-
-    if (find < rset->check + rset->check_len && find->reposno == reposno) {
-        return find;
-    } else {
-        return NULL;
-    }
+    find = binsearch(&target, rset->check, rset->check_len, sizeof(target), check_cmp);
+    return (find < rset->check + rset->check_len && find->reposno == reposno) ? find : NULL;
 }
 
 struct reposset_check *reposset_check_first(struct reposset *rset) {

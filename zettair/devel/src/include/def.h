@@ -28,7 +28,7 @@
 #endif
 
 /* how far to look ahead to verify SGML tags and comments */
-#define LOOKAHEAD 999
+#define LOOKAHEAD 9999
 
 /* whether to case fold or not */
 #define CASE_FOLDING 

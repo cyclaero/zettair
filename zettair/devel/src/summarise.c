@@ -445,6 +445,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             }
 
             if (len > sum->max_termlen) {
+                /* Term was too long to fit into the termbuf, empty it. */
                 len = 0;
             }
 
