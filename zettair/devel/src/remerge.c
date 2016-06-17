@@ -36,8 +36,7 @@ struct filep {
     unsigned int buflen;
 };
 
-static ssize_t outbuf(struct filep *out, char *buf, unsigned int len, 
-  struct fdset *fd) {
+static ssize_t outbuf(struct filep *out, char *buf, unsigned int len, struct fdset *fd) {
     unsigned int bufspace = out->bufsize - out->buflen;
     ssize_t ret;
 
@@ -47,8 +46,7 @@ static ssize_t outbuf(struct filep *out, char *buf, unsigned int len,
             /* too big for the buffer, write current contents of buffer then 
              * out buffer to file */
             if (out->buflen) {
-                if ((ret = ioutil_atomic_write(out->fd, out->buf, out->buflen)) 
-                  == out->buflen) {
+                if ((ret = ioutil_atomic_write(out->fd, out->buf, out->buflen)) == out->buflen) {
                     out->offset += out->buflen;
                 } else {
                     assert(ret < 0);
@@ -68,8 +66,7 @@ static ssize_t outbuf(struct filep *out, char *buf, unsigned int len,
             assert(bufspace <= len);
             assert(out->buflen == out->bufpos);
             memcpy(out->buf + out->bufpos, buf, bufspace);
-            if ((ret = ioutil_atomic_write(out->fd, out->buf, out->bufsize)) 
-              == out->bufsize) {
+            if ((ret = ioutil_atomic_write(out->fd, out->buf, out->bufsize)) == out->bufsize) {
                 out->offset += out->bufsize;
             } else {
                 assert(ret < 0);
@@ -91,8 +88,7 @@ static ssize_t outbuf(struct filep *out, char *buf, unsigned int len,
 }
 
 /* internal function to load next vocab entry */
-static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp, 
-  struct fdset *fdset, unsigned int pagesize) {
+static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp, struct fdset *fdset, unsigned int pagesize) {
     enum btbulk_ret ret;
     int fdret;
 
@@ -105,9 +101,7 @@ static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp,
 
                 /* unpin old fd, if necessary */
                 if (fp->fd >= 0) {
-                    if ((fdret 
-                      = fdset_unpin(fdset, fp->type, fp->fileno, fp->fd)) 
-                        != FDSET_OK) {
+                    if ((fdret = fdset_unpin(fdset, fp->type, fp->fileno, fp->fd)) != FDSET_OK) {
 
                         assert(!CRASH);
                         return BTBULK_ERR;
@@ -116,8 +110,7 @@ static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp,
 
                 /* pin new fd */
                 fp->fileno = vocab->output.read.fileno;
-                if ((fp->fd = fdset_pin(fdset, fp->type, fp->fileno, 
-                    vocab->output.read.offset, SEEK_SET)) >= 0) {
+                if ((fp->fd = fdset_pin(fdset, fp->type, fp->fileno, vocab->output.read.offset, SEEK_SET)) >= 0) {
 
                     fp->offset = vocab->output.read.offset;
                     vocab->fileno_in = fp->fileno;
@@ -129,8 +122,7 @@ static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp,
 
             /* seek to appropriate offset */
             if (vocab->output.read.offset != fp->offset) {
-                if (lseek(fp->fd, vocab->output.read.offset, SEEK_SET) 
-                  == vocab->output.read.offset) {
+                if (lseek(fp->fd, vocab->output.read.offset, SEEK_SET) == vocab->output.read.offset) {
                     fp->offset = vocab->output.read.offset;
                 } else {
                     assert(!CRASH);
@@ -139,8 +131,7 @@ static enum btbulk_ret vocab_load(struct btbulk_read *vocab, struct filep *fp,
             }
 
             /* read from fd */
-            if ((vocab->avail_in = read(fp->fd, fp->buf, fp->bufsize)) 
-              >= pagesize) {
+            if ((vocab->avail_in = read(fp->fd, fp->buf, fp->bufsize)) >= pagesize) {
                 fp->bufpos = 0;
                 fp->buflen = vocab->avail_in;
                 vocab->next_in = fp->buf;
@@ -251,9 +242,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                         /* unpin old fd */
                         if (out->fd >= 0) {
                             /* flush buffer */
-                            if (out->buflen && ioutil_atomic_write(out->fd, 
-                                out->buf, out->buflen) == out->buflen) {
-
+                            if (out->buflen && ioutil_atomic_write(out->fd, out->buf, out->buflen) == out->buflen) {
                                 out->buflen = out->bufpos = 0;
                             } else {
                                 assert(!CRASH);
@@ -263,10 +252,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                         }
 
                         /* pin new fd */
-                        if ((out->fd 
-                          = fdset_create(fd, out->type, out->fileno + 1)) 
-                            >= 0) {
-
+                        if ((out->fd = fdset_create(fd, out->type, out->fileno + 1)) >= 0) {
                             out->fileno++;
                             out->offset = 0;
                         } else {
@@ -287,9 +273,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                             fdset_unpin(fd, in->type, in->fileno, in->fd);
                             in->fd = -1;
                         }
-                        if ((in->fd = fdset_pin(fd, in->type, in->fileno + 1, 
-                            ve.loc.offset, SEEK_SET)) >= 0) {
-
+                        if ((in->fd = fdset_pin(fd, in->type, in->fileno + 1, ve.loc.offset, SEEK_SET)) >= 0) {
                             in->fileno++;
                             in->offset = ve.loc.offset;
                         } else {
@@ -329,10 +313,11 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                     while (ve.size > in->bufsize) {
                         assert(in->buflen == 0);
                         assert(in->bufpos == 0);
-                        if (((in->buflen = read(in->fd, in->buf, in->bufsize)) > 0) && (outbuf(out, in->buf, in->buflen, fd)) == in->buflen) {
+                        if ((in->buflen = read(in->fd, in->buf, in->bufsize)) > 0
+                          && outbuf(out, in->buf, in->buflen, fd) == in->buflen) {
                             ve.size -= in->buflen;
                             in->offset += in->buflen;
-                            in->buflen = 0;
+                            in->buflen = in->bufpos = 0;
                             assert(lseek(in->fd, 0, SEEK_CUR) == in->offset);
                         } else {
                             assert(!CRASH);
@@ -362,8 +347,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                     break;
 
                 case VOCAB_VTYPE_IMPACT:
-                    /* impacts are now out-of-date, remove them from the 
-                     * index */
+                    /* impacts are now out-of-date, remove them from the index */
                     break;
                 }
             }
