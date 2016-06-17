@@ -38,20 +38,14 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     }
     fprintf(output, "usage to query: '%s'\n", name);
     fprintf(output, "  query options:\n");
-    fprintf(output, "    -f,--filename: specify index to load (default "
-      "'index')\n");
-    fprintf(output, "    -n,--number-results: provide this many results per "
-      "query (default: 20)\n");
-    fprintf(output, "    -b,--begin-results: provide results after this "
-      "offset (default 0)\n");
-    fprintf(output, "    --summary=[value]: create textual summary of this "
-      "type\n"
+    fprintf(output, "    -f,--filename: specify index to load (default 'index')\n");
+    fprintf(output, "    -n,--number-results: provide this many results per query (default: 20)\n");
+    fprintf(output, "    -b,--begin-results: provide results after this offset (default 0)\n");
+    fprintf(output, "    --summary=[value]: create textual summary of this type\n"
       "                       (where value is capitalise, plain, or tag)\n");
     fprintf(output, "    --query-list=[file]: read queries from this file\n");
-    fprintf(output, "    --query-stop=[file]: stop queries according to the "
-      "contents of this file\n");
-    fprintf(output, 
-      "                         (or use default if no file give)\n");
+    fprintf(output, "    --query-stop=[file]: stop queries according to the contents of this file\n");
+    fprintf(output, "                         (or use default if no file give)\n");
     fprintf(output, "    --big-and-fast: use more memory\n");
     fprintf(output, "    -s,--stats: get index statistics\n");
     fprintf(output, "    -v,--version: print version number\n");
@@ -65,27 +59,19 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "    --k1=[float]: set Okapi BM25 k1 value\n");
     fprintf(output, "    --k3=[float]: set Okapi BM25 k3 value\n");
     fprintf(output, "    --b=[float]: set Okapi BM25 b value\n");
-    fprintf(output, "    --pivoted-cosine=[float]: use pivoted cosine "
-      "metric, with given pivot\n");
+    fprintf(output, "    --pivoted-cosine=[float]: use pivoted cosine metric, with given pivot\n");
     fprintf(output, "    --cosine: use cosine metric\n");
-    fprintf(output, "    --hawkapi=[float]: use Dave Hawking's metric, "
-      "with alpha given\n");
-    fprintf(output, "    --dirichlet=[uint]: use Dirichlet-smoothed LM "
-      "metric, with mu given\n");
-    fprintf(output, "    --metric=[string]: use named metric, with given "
-      "parameters\n");
-    fprintf(output, "    --metric-parameters=[string]: parameters for metric, "
-      "in the form [name]=[value], separated by commas\n");
+    fprintf(output, "    --hawkapi=[float]: use Dave Hawking's metric, with alpha given\n");
+    fprintf(output, "    --dirichlet=[uint]: use Dirichlet-smoothed LM metric, with mu given\n");
+    fprintf(output, "    --metric=[string]: use named metric, with given parameters\n");
+    fprintf(output, "    --metric-parameters=[string]: parameters for metric, in the form [name]=[value], separated by commas\n");
 
     fprintf(output, "\n");
-    fprintf(output, "usage to index: '%s -i file1 ... fileN'\n", 
-      name);
+    fprintf(output, "usage to index: '%s -i file1 ... fileN'\n", name);
     fprintf(output, "  indexing options:\n");
-    fprintf(output, "    -f,--filename: name the created index "
-      "(default 'index')\n");
+    fprintf(output, "    -f,--filename: name the created index (default 'index')\n");
     fprintf(output, "    --big-and-fast: use more memory\n");
-    fprintf(output, "    --file-list=[file]: read files to index from this "
-      "file\n");
+    fprintf(output, "    --file-list=[file]: read files to index from this file\n");
     fprintf(output, "    --stem=[value]: change stemming algorithm\n"
       "                    (value is one of none, eds, light, porters)\n"
       "                    (default is light)\n");
@@ -1181,27 +1167,22 @@ static struct args *parse_args(unsigned int argc, char **argv,
 }
 
 /* internal function that indicates whether the given query is a request to
- * return a document from the cache.  Returns true if it is, else false on error
- * or if it isn't.  If true, then docno will contain requested document 
- * number */
-static int is_cache_request(const char *querystr, unsigned int maxwordlen, 
-  unsigned long int *docno) {
+ * return a document from the cache. Returns true if it is, else false on error
+ * or if it isn't. If true, then docno will contain requested document number */
+static int is_cache_request(const char *querystr, unsigned int maxwordlen, unsigned long int *docno) {
     struct queryparse *qp;           /* structure to parse the query */
     char word[TERMLEN_MAX + 1];      /* buffer to hold words */
     unsigned int wordlen;            /* length of word */
     int parse_ret;                   /* parsing result */
     char *end;
     
-    if (!(qp 
-      = queryparse_new(maxwordlen, querystr, str_len(querystr)))) {
-
+    if (!(qp = queryparse_new(maxwordlen, querystr, str_len(querystr)))) {
         return 0;
     }
 
     /* first element must be a cache: modifier */
     parse_ret = queryparse_parse(qp, word, &wordlen);
-    if ((parse_ret != QUERYPARSE_START_MODIFIER) 
-      || (wordlen != str_len("cache")) || str_ncmp(word, "cache", wordlen)) {
+    if ((parse_ret != QUERYPARSE_START_MODIFIER) || (wordlen != str_len("cache")) || str_ncmp(word, "cache", wordlen)) {
         /* didn't match */
         queryparse_delete(qp);
         return 0;
@@ -1210,9 +1191,8 @@ static int is_cache_request(const char *querystr, unsigned int maxwordlen,
     /* second element must the docno (XXX: or URL) of document */
     parse_ret = queryparse_parse(qp, word, &wordlen);
     word[wordlen] = '\0';
-    if ((parse_ret != QUERYPARSE_WORD) 
-      || ((*docno = strtol(word, &end, 10)) < 0) 
-      || (*end != '\0')) {
+    if (parse_ret != QUERYPARSE_WORD
+      || ((*docno = strtol(word, &end, 10)) == 0 && (end == word || *end != '\0'))) {
         /* didn't match */
         queryparse_delete(qp);
         return 0;
@@ -1488,6 +1468,10 @@ int build(struct args *args, FILE *output) {
 }
 
 int main(int argc, char **argv) {
+//    for (int k = 0; k < argc; k++)
+//        printf("%s\n", argv[k]);
+//    return 0;
+
     struct args argspace, *args;
     FILE *output;
     struct index *idx;

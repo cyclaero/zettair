@@ -1354,11 +1354,8 @@ int index_search(struct index *idx, const char *querystr,
                     res.title = result[i].title;
                     res.title_len = INDEX_TITLELEN;
 
-                    if (summarise(pq->sum, result[i].docno, &query, 
-                        summary_type, &res) != SUMMARISE_OK) {
-
-                        ERROR1("creating summary for document %ul", 
-                          result[i].docno);
+                    if (summarise(pq->sum, result[i].docno, &query, summary_type, &res) != SUMMARISE_OK) {
+                        ERROR1("creating summary for document %ul", result[i].docno);
                     }
                 }
 

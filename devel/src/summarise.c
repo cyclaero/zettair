@@ -569,8 +569,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps,
             /* ignore */
             break;
         }
-    } while ((ret != (MLPARSE_WORD | MLPARSE_END)) 
-      && (sent->buflen < ps->summary_len));
+    } while ((ret != (MLPARSE_WORD | MLPARSE_END)) && (sent->buflen < ps->summary_len));
 
     return extract_finish(sent, ps, type, highlight);
 }
@@ -714,10 +713,8 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
     /* initialise ps */
     if ((ps.termbuf = malloc(sum->max_termlen + 1)) 
       && (ps.terms = chash_str_new(3, 0.5, str_nhash))
-      && (ps.fd = fdset_pin(sum->fd, sum->idx->repos_type, fileno, physoffset, 
-            SEEK_SET))
+      && (ps.fd = fdset_pin(sum->fd, sum->idx->repos_type, fileno, physoffset, SEEK_SET))
       && (psettings_type_tags(sum->pset, mtype, &ps.ptype) == PSETTINGS_OK)) {
-
         if (DEAR_DEBUG) {
             memset(ps.termbuf, 0, sum->max_termlen + 1);
         }
@@ -749,8 +746,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
     assert(curroffset <= offset);
     while (curroffset + (off_t) sum->last_stream->avail_out < offset) {
         curroffset += sum->last_stream->avail_out;
-        if (index_stream_read(sum->last_stream, ps.fd, sum->buf, sum->bufsize) 
-          != STREAM_OK) {
+        if (index_stream_read(sum->last_stream, ps.fd, sum->buf, sum->bufsize) != STREAM_OK) {
             persum_delete(sum, &ps);
             return SUMMARISE_EIO;
         }
