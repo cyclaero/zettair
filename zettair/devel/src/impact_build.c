@@ -106,7 +106,7 @@ enum impact_ret impact_order_index(struct index *idx) {
     int new_vector_fd_out;
     unsigned int new_vector_fd_type;
 
-    char * vec_mem = NULL;
+    char *vec_mem = NULL;
     unsigned vec_mem_len = 0;
 
     ssize_t nwritten;
@@ -124,8 +124,6 @@ enum impact_ret impact_order_index(struct index *idx) {
     struct addfile_data addfile_data;
     unsigned int fileno;
     unsigned long int terms = 0;
-    unsigned long int dummy_offset = 0;
-    unsigned int dummy_size = 0;
     int vector_file_is_new = 1;
     double f_t_avg;
     double w_qt_max = W_QT_UNSET;
@@ -134,15 +132,13 @@ enum impact_ret impact_order_index(struct index *idx) {
     double slope = IMPACT_DEFAULT_SLOPE;
     unsigned int quant_bits = IMPACT_DEFAULT_QUANT_BITS;
     
-    if ( (our_ret = calculate_impact_limits(idx, pivot,
-              &max_impact, &min_impact, &f_t_avg)) != IMPACT_OK) {
+    if ((our_ret = calculate_impact_limits(idx, pivot,  &max_impact, &min_impact, &f_t_avg)) != IMPACT_OK) {
         ERROR("calculating impact limits");
         goto ERROR;
     }
     assert(min_impact <= max_impact);
 
-    norm_B = pow(max_impact / min_impact, 
-      min_impact / (max_impact - min_impact));
+    norm_B = pow(max_impact/min_impact, min_impact/(max_impact - min_impact));
 
     decomp_list.postings = NULL;
     decomp_list.postings_size = 0;
@@ -168,12 +164,10 @@ enum impact_ret impact_order_index(struct index *idx) {
     vector_file_offset = 0;
 
     new_vocab_fileno = 0;
-    new_vocab_file_offset = 0;
     /* not first_file_header, as that is only for vectors files */
     new_vocab_file_offset = 0;
 
-    while ( (term = iobtree_next_term(idx->vocab, term_iterator_state,
-              &termlen, &data, &datalen)) != NULL) {
+    while ((term = iobtree_next_term(idx->vocab, term_iterator_state, &termlen, &data, &datalen)) != NULL) {
         struct vocab_vector vocab_in;
         unsigned int vec_size;
         struct vocab_vector vocab_entry_out;
@@ -182,20 +176,15 @@ enum impact_ret impact_order_index(struct index *idx) {
         enum vocab_ret vocab_ret;
         struct vec vec;
 
-        if ( (our_ret = get_doc_vec(idx, term, data, datalen, 
-                  &vec_mem, &vec_mem_len, &vocab_in)) != IMPACT_OK) {
+        if ((our_ret = get_doc_vec(idx, term, data, datalen, &vec_mem, &vec_mem_len, &vocab_in)) != IMPACT_OK || !vec_mem) {
             ERROR1("loading document vector for term '%s'", term);
             goto ERROR;
         }
-        if ( (our_ret = decompress_list(&vocab_in, vec_mem, &decomp_list))
-          != IMPACT_OK) {
+        if ((our_ret = decompress_list(&vocab_in, vec_mem, &decomp_list)) != IMPACT_OK) {
             goto ERROR;
         }
-        impact_transform_list(&decomp_list, idx->map, idx->stats.avg_weight, 
-          pivot, max_impact, min_impact, slope, quant_bits, norm_B, 
-          &w_qt_min, &w_qt_max, f_t_avg);
-        if ( (our_ret = compress_impact_ordered_list(&decomp_list,
-                  &vec_mem, &vec_mem_len, &vec_size)) != IMPACT_OK) {
+        impact_transform_list(&decomp_list, idx->map, idx->stats.avg_weight, pivot, max_impact, min_impact, slope, quant_bits, norm_B, &w_qt_min, &w_qt_max, f_t_avg);
+        if ((our_ret = compress_impact_ordered_list(&decomp_list, &vec_mem, &vec_mem_len, &vec_size)) != IMPACT_OK) {
             goto ERROR;
         }
 
@@ -206,45 +195,32 @@ enum impact_ret impact_order_index(struct index *idx) {
            is a real issue, as the max filesize is quite likely to be 
            UINT_MAX.  Be VERY CAREFUL about modifying this expression! */
         if (idx->storage.max_filesize - vec_size < vector_file_offset) {
-            dummy_offset = 0;
-            dummy_size = vector_file_offset;
             new_vector_fileno++;
             vector_file_offset = 0;
             vector_file_is_new = 1;
         }
 
         if (vector_file_is_new) {
-            if ( (new_vector_fd_out = fdset_create_seek(idx->fd, 
-                      new_vector_fd_type, new_vector_fileno, 
-                      vector_file_offset)) < 0) {
-                ERROR2("unable to create output temporary vector file number "
-                  "%lu and seek to offset %lu", new_vector_fileno, 
-                  vector_file_offset);
+            if ( (new_vector_fd_out = fdset_create_seek(idx->fd, new_vector_fd_type, new_vector_fileno, vector_file_offset)) < 0) {
+                ERROR2("unable to create output temporary vector file number %lu and seek to offset %lu", new_vector_fileno, vector_file_offset);
                 goto ERROR;
             }
             vector_file_is_new = 0;
         } else {
-            if ( (new_vector_fd_out = fdset_pin(idx->fd, new_vector_fd_type,
-                      new_vector_fileno, vector_file_offset, SEEK_SET)) < 0) {
-                ERROR2("unable to open output temporary vector file number "
-                       "%lu to offset %lu", new_vector_fileno, 
-                       vector_file_offset);
+            if ( (new_vector_fd_out = fdset_pin(idx->fd, new_vector_fd_type, new_vector_fileno, vector_file_offset, SEEK_SET)) < 0) {
+                ERROR2("unable to open output temporary vector file number %lu to offset %lu", new_vector_fileno, vector_file_offset);
                 goto ERROR;
             }
         }
 
         nwritten = ioutil_atomic_write(new_vector_fd_out, vec_mem, vec_size);
-        fdset_unpin(idx->fd, new_vector_fd_type, new_vector_fileno,
-          new_vector_fd_out);
+        fdset_unpin(idx->fd, new_vector_fd_type, new_vector_fileno, new_vector_fd_out);
         if (nwritten != vec_size) {
-            ERROR3("writing vector of size %lu to temporary vector file "
-              "number %lu, offset %lu", vec_size, new_vector_fileno,
-              vector_file_offset);
+            ERROR3("writing vector of size %lu to temporary vector file number %lu, offset %lu", vec_size, new_vector_fileno, vector_file_offset);
             goto ERROR;
         }
 
-        /* XXX we should really remove any old impact-ordered vector
-           entries; but the policy for this is still unclear. */
+        /* XXX we should really remove any old impact-ordered vector entries; but the policy for this is still unclear. */
 
         /* Add vocab entry for impact vector to existing vocab entries. */
         vocab_entry_out.type = VOCAB_VTYPE_IMPACT;
@@ -270,7 +246,7 @@ enum impact_ret impact_order_index(struct index *idx) {
         vocab_vector_out_len = datalen + vocab_entry_out_len;
 
         if (vocab_vector_out_len > vec_mem_len) {
-            char * new_vec_mem;
+            char *new_vec_mem;
             new_vec_mem = realloc(vec_mem, vocab_vector_out_len); 
             if (new_vec_mem == NULL) {
                 our_ret = IMPACT_MEM_ERROR;
@@ -315,7 +291,6 @@ enum impact_ret impact_order_index(struct index *idx) {
                 idx->vectors++;
                 assert(new_vocab_fileno == idx->vectors - 1);
                 new_vocab_file_offset = 0;
-                new_vocab_file_offset = 0;
                 break;
             case BTBULK_ERR:
                 ERROR2("error on btbulk_insert call for term '%s', "
@@ -341,9 +316,6 @@ enum impact_ret impact_order_index(struct index *idx) {
     idx->impact_stats.w_qt_min = w_qt_min;
     idx->impact_stats.w_qt_max = w_qt_max;
     idx->vector_types |= VOCAB_VTYPE_IMPACT;
-    
-    dummy_offset = 0;
-    dummy_size = vector_file_offset;
 
     do {
         new_vocab_bulk_inserter.fileno = new_vocab_fileno;
@@ -371,7 +343,6 @@ enum impact_ret impact_order_index(struct index *idx) {
             new_vocab_fileno++;
             idx->vectors++;
             assert(new_vocab_fileno == idx->vectors - 1);
-            new_vocab_file_offset = 0;
             new_vocab_file_offset = 0;
             break;
         case BTBULK_ERR:
@@ -459,7 +430,6 @@ END:
 static enum impact_ret decompress_list(struct vocab_vector *vocab, 
   char *vec_buf, struct list_decomp *decomp_list) {
     unsigned long int docs;
-    unsigned long int occurs;
     unsigned long int last;
     unsigned long int docno;
     struct vec vec;
@@ -469,12 +439,10 @@ static enum impact_ret decompress_list(struct vocab_vector *vocab,
     switch (vocab->type) {
     case VOCAB_VTYPE_DOC:
         docs = vocab->header.doc.docs;
-        occurs = vocab->header.doc.occurs;
         last = vocab->header.doc.last;
         break;
     case VOCAB_VTYPE_DOCWP:
         docs = vocab->header.docwp.docs;
-        occurs = vocab->header.docwp.occurs;
         last = vocab->header.docwp.last;
         break;
     default:
@@ -611,7 +579,7 @@ static enum impact_ret calculate_impact_limits(struct index * idx,
                 *min_impact = list_min_impact;
         }
     }
-    *ft_avg = ft_sum/ft_count;
+    *ft_avg = (ft_count) ? ft_sum/ft_count : 0;
     goto END;
 
 ERROR:

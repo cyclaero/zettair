@@ -289,26 +289,22 @@ struct phrase_pos {
     struct vec vec;                  /* currently available vector */
     struct search_list_src *src;     /* list source */
     unsigned int bytes;              /* total size of vector */
-    unsigned int slop;               /* how exact the phrase matching has to 
-                                      * be */
-    struct term *src_term;            /* term that this pos refers to */
+    unsigned int slop;               /* how exact the phrase matching has to be */
+    struct term *src_term;           /* term that this pos refers to */
 };
 
-/* internal function to increment a phrase position to at least minpos offset
- * within mindoc document */
+/* internal function to increment a phrase position to at least minpos offset within mindoc document */
 static int phrase_inc(struct phrase_pos *pp, unsigned long int mindoc, 
   unsigned long int minpos) {
     unsigned int bytes;
-    unsigned long int tmp,
-                      tmp2;
-    void *startpos = pp->vec.pos;
+    unsigned long int tmp, tmp2;
+    void *startpos;
 
     /* increment past docs we know we're not interested in */
     while ((pp->docno < mindoc) 
       /* read a docno if we haven't got one yet */
       || (pp->docno == -1)) {
-        if (!pp->f_dt 
-          || ((tmp = vec_vbyte_scan(&pp->vec, pp->f_dt, &bytes)) == pp->f_dt)) {
+        if (!pp->f_dt || ((tmp = vec_vbyte_scan(&pp->vec, pp->f_dt, &bytes)) == pp->f_dt)) {
             pp->f_dt = 0;
             startpos = pp->vec.pos;   /* we can start from this point again */
         } else {

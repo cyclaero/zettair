@@ -314,13 +314,9 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                     }
                     assert(lseek(in->fd, 0, SEEK_CUR) == in->offset);
 
-                    /* copy (possibly partially) buffered segment from input to
-                     * output */
-                    bytes = nve.size;
+                    /* copy (possibly partially) buffered segment from input to output */
                     if (ve.size && (ve.size >= (in->buflen - in->bufpos))) {
-                        if (outbuf(out, in->buf + in->bufpos, 
-                            in->buflen - in->bufpos, fd)
-                          == in->buflen - in->bufpos) {
+                        if (outbuf(out, in->buf + in->bufpos, in->buflen - in->bufpos, fd) == in->buflen - in->bufpos) {
                             ve.size -= in->buflen - in->bufpos;
                             in->buflen = in->bufpos = 0;
                         } else {
@@ -333,11 +329,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                     while (ve.size > in->bufsize) {
                         assert(in->buflen == 0);
                         assert(in->bufpos == 0);
-                        if (((in->buflen
-                          = read(in->fd, in->buf, in->bufsize)) > 0)
-                          && (outbuf(out, in->buf, in->buflen, fd)) 
-                            == in->buflen) {
-
+                        if (((in->buflen = read(in->fd, in->buf, in->bufsize)) > 0) && (outbuf(out, in->buf, in->buflen, fd)) == in->buflen) {
                             ve.size -= in->buflen;
                             in->offset += in->buflen;
                             in->buflen = 0;
@@ -347,14 +339,10 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                             return 0;
                         }
                     }
-                    assert((ve.size < (in->buflen - in->bufpos)) 
-                      || !in->buflen);
+                    assert((ve.size < (in->buflen - in->bufpos)) || !in->buflen);
 
                     /* read in last bufferload if necessary */
-                    if (ve.size && !in->buflen 
-                      && (bytes = read(in->fd, in->buf, in->bufsize)) 
-                          != -1) {
-
+                    if (ve.size && !in->buflen && (bytes = read(in->fd, in->buf, in->bufsize))  != -1) {
                         in->buflen = bytes;
                         in->offset += in->buflen;
                         assert(lseek(in->fd, 0, SEEK_CUR) == in->offset);
@@ -365,10 +353,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
 
                     /* copy last buffered segment from input to output */
                     assert(ve.size <= (in->buflen - in->bufpos));
-                    if (ve.size 
-                      && (outbuf(out, in->buf + in->bufpos, ve.size, fd) 
-                        == ve.size)) {
-
+                    if (ve.size  && (outbuf(out, in->buf + in->bufpos, ve.size, fd) == ve.size)) {
                         in->bufpos += ve.size;
                     } else if (ve.size) {
                         assert(!CRASH);
@@ -392,14 +377,11 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
 
             /* check whether we're about to go above file size 
              * limit for output file */
-            if (out->offset + out->buflen > idx->storage.max_filesize 
-                  - ((*posting)->vec.pos - (*posting)->vecmem)) {
+            if (out->offset + out->buflen > idx->storage.max_filesize - ((*posting)->vec.pos - (*posting)->vecmem)) {
                 /* unpin old fd */
                 if (out->fd >= 0) {
                     /* flush buffer */
-                    if (out->buflen && ioutil_atomic_write(out->fd, 
-                        out->buf, out->buflen) == out->buflen) {
-
+                    if (out->buflen && ioutil_atomic_write(out->fd, out->buf, out->buflen) == out->buflen) {
                         out->buflen = out->bufpos = 0;
                     } else {
                         assert(!CRASH);
@@ -409,10 +391,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
                 }
 
                 /* pin new fd */
-                if ((out->fd 
-                  = fdset_create(fd, out->type, out->fileno + 1))
-                    >= 0) {
-
+                if ((out->fd = fdset_create(fd, out->type, out->fileno + 1)) >= 0) {
                     out->fileno++;
                     out->offset = 0;
                 } else {

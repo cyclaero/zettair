@@ -261,17 +261,14 @@ static enum rbtree_ret rbtree_node_check_black(const struct rbtree *rb,
         *black_height = 1;
         return RBTREE_OK;
     } else {
-        unsigned int l, 
-                     r;
+        unsigned int l = 0,
+                     r = 0;
         enum rbtree_ret ret;
 
-        if (((ret = rbtree_node_check_black(rb, node->child[RBTREE_LEFT], &l)) 
-            == RBTREE_OK)
-          && ((ret = rbtree_node_check_black(rb, node->child[RBTREE_RIGHT], &r))
-            == RBTREE_OK)
-
-          /* return value is EINVAL if we get this far but fail final check */
-          && ((ret = RBTREE_EINVAL), (l == r))) {
+        if ((ret = rbtree_node_check_black(rb, node->child[RBTREE_LEFT], &l)) == RBTREE_OK
+         && (ret = rbtree_node_check_black(rb, node->child[RBTREE_RIGHT], &r)) == RBTREE_OK
+         /* return value is EINVAL if we get this far but fail final check */
+         && (/* (ret = RBTREE_EINVAL) */ l == r)) {
             *black_height = r + !node->red;
             return RBTREE_OK;
         } else {
@@ -283,19 +280,16 @@ static enum rbtree_ret rbtree_node_check_black(const struct rbtree *rb,
     }
 }
 
-/* internal function (not static to avoid warnings) to check red-black tree
- * invariants */
+/* internal function (not static to avoid warnings) to check red-black tree invariants */
 enum rbtree_ret rbtree_invariant(const struct rbtree *rb) {
-    unsigned int max,
-                 min,
-                 bh;
+    unsigned int max, min, bh;
     enum rbtree_ret ret;
 
     if (DEAR_DEBUG) {
         /* check that link structure is sane */
         if ((rb->nil.parent != &rb->nil)
-          || (rb->nil.child[RBTREE_LEFT] != &rb->nil)
-          || (rb->nil.child[RBTREE_RIGHT] != &rb->nil)) {
+         || (rb->nil.child[RBTREE_LEFT] != &rb->nil)
+         || (rb->nil.child[RBTREE_RIGHT] != &rb->nil)) {
             assert(!CRASH);
             return RBTREE_EINVAL;
         }
@@ -305,15 +299,13 @@ enum rbtree_ret rbtree_invariant(const struct rbtree *rb) {
             return RBTREE_EINVAL;
         }
 
-        ret = rbtree_node_check_links(rb, rb->root->child[RBTREE_LEFT], 
-            RBTREE_LEFT);
+        ret = rbtree_node_check_links(rb, rb->root->child[RBTREE_LEFT], RBTREE_LEFT);
         if (ret != RBTREE_OK) {
             assert(!CRASH);
             return ret;
         }
 
-        ret = rbtree_node_check_links(rb, rb->root->child[RBTREE_RIGHT], 
-            RBTREE_RIGHT);
+        ret = rbtree_node_check_links(rb, rb->root->child[RBTREE_RIGHT],  RBTREE_RIGHT);
         if (ret != RBTREE_OK) {
             assert(!CRASH);
             return ret;
@@ -360,8 +352,7 @@ static struct rbtree *rbtree_new(void) {
 
         rb->size = 0;
         rb->nil.red = 0;
-        rb->nil.child[RBTREE_LEFT] = rb->nil.child[RBTREE_RIGHT]
-          = rb->nil.parent = &rb->nil;
+        rb->nil.child[RBTREE_LEFT] = rb->nil.child[RBTREE_RIGHT] = rb->nil.parent = &rb->nil;
         rb->root = &rb->nil;
         rb->cmp = NULL;
         rb->data_type = RBTREE_TYPE_UNKNOWN;
@@ -412,8 +403,7 @@ unsigned int rbtree_size(struct rbtree *rb) {
 }
 
 /* forward declaration of node iterator function */
-static enum rbtree_ret rbtree_iter_node_next(struct rbtree_iter *rbi,
-  struct rbtree_node **key);
+static enum rbtree_ret rbtree_iter_node_next(struct rbtree_iter *rbi, struct rbtree_node **key);
 
 enum rbtree_ret rbtree_clear(struct rbtree *rb) {
     assert(rbtree_invariant(rb) == RBTREE_OK);
@@ -428,8 +418,7 @@ enum rbtree_ret rbtree_clear(struct rbtree *rb) {
     return RBTREE_OK;
 }
 
-struct rbtree_iter *rbtree_iter_new(struct rbtree *rb, 
-  enum rbtree_iter_order order, int reversed) {
+struct rbtree_iter *rbtree_iter_new(struct rbtree *rb, enum rbtree_iter_order order, int reversed) {
     struct rbtree_iter *rbi = malloc(sizeof(*rbi));
 
     if (rbi) {
@@ -462,8 +451,7 @@ void rbtree_iter_delete(struct rbtree_iter *rbi) {
 
 /* rotation to rebalance red-black tree.  left indicates logical left, whether 
  * it is a left or right rotation.  With step numbers from Cormen pg 278. */
-void rbtree_rotate(struct rbtree *rb, struct rbtree_node *x, 
-  enum rbtree_child left) {
+void rbtree_rotate(struct rbtree *rb, struct rbtree_node *x, enum rbtree_child left) {
     enum rbtree_child right = !left;
 
     struct rbtree_node *y = x->child[right];      /* 1: Set y */
@@ -488,7 +476,7 @@ void rbtree_rotate(struct rbtree *rb, struct rbtree_node *x,
         }
     }
 
-    y->child[left] = x;                           /* 10: Put x on y's left */
+    y->child[left] = x;                          /* 10: Put x on y's left */
     x->parent = y;
 
     /* ensure we haven't changed child NIL pointers (note that we need to be
@@ -576,28 +564,28 @@ static void rbtree_remove_fixup(struct rbtree *rb, struct rbtree_node *x) {
 
         if (!w->child[left]->red && !w->child[right]->red) {    /* 9 */
             /* case 2 */
-            w->red = 1;                                         /* 10 */
-            x = x->parent;                                      /* 11 */
+            w->red = 1;                                        /* 10 */
+            x = x->parent;                                     /* 11 */
         } else {
-            if (!w->child[right]->red) {                        /* 12 */
+            if (!w->child[right]->red) {                       /* 12 */
                 /* case 3 */
                 xparent = x->parent;
-                w->child[left]->red = 0;                        /* 13 */
-                w->red = 1;                                     /* 14 */
-                rbtree_rotate(rb, w, right);                    /* 15 */
-                x->parent = xparent;  /* rotate can change x's parent */
-                w = x->parent->child[right];                    /* 16 */
+                w->child[left]->red = 0;                       /* 13 */
+                w->red = 1;                                    /* 14 */
+                rbtree_rotate(rb, w, right);                   /* 15 */
+                x->parent = xparent; /* rotate can change x's parent */
+                w = x->parent->child[right];                   /* 16 */
             }
             /* case 4 */
-            w->red = x->parent->red;                            /* 17 */
-            x->parent->red = 0;                                 /* 18 */
-            w->child[right]->red = 0;                           /* 19 */
-            rbtree_rotate(rb, x->parent, left);                 /* 20 */
-            x = rb->root;                                       /* 21 */
+            w->red = x->parent->red;                           /* 17 */
+            x->parent->red = 0;                                /* 18 */
+            w->child[right]->red = 0;                          /* 19 */
+            rbtree_rotate(rb, x->parent, left);                /* 20 */
+            x = rb->root;                                      /* 21 */
         }
     }
 
-    x->red = 0;                                                 /* 23 */
+    x->red = 0;                                                /* 23 */
 }
 
 /* templates */

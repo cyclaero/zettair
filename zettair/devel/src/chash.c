@@ -117,36 +117,39 @@ static int chash_expand(struct chash *hash) {
 
 /* internal function to repack the strings area when it becomes fragmented */
 static enum chash_ret chash_strings_repack(struct chash *hash) {
-    char *copy = malloc(hash->strings.used);
-    unsigned int i,
-                 size = BIT_POW2(hash->bits);
-    struct chash_link *link;
+    if (hash->strings.used) {
+        char *copy = malloc(hash->strings.used);
+        unsigned int i, size = BIT_POW2(hash->bits);
+        struct chash_link *link;
 
-    assert(hash->strings.unpacked);
+        assert(hash->strings.unpacked);
 
-    if (copy) {
-        memcpy(copy, hash->strings.strings, hash->strings.used);
-        hash->strings.used = 0;
+        if (copy) {
+            memcpy(copy, hash->strings.strings, hash->strings.used);
+            hash->strings.used = 0;
 
-        /* iterate through the hash table, copying strings into strings area in
-         * packed, ordered fashion */
+            /* iterate through the hash table, copying strings into strings area in
+             * packed, ordered fashion */
 
-        for (i = 0; i < size; i++) {
-            link = hash->table[i];
-            while (link) {
-                memcpy(&hash->strings.strings[hash->strings.used],
-                  &copy[link->key.k_str.ptr], link->key.k_str.len);
-                link->key.k_str.ptr = hash->strings.used;
-                hash->strings.used += link->key.k_str.len;
-                link = link->next;
+            for (i = 0; i < size; i++) {
+                link = hash->table[i];
+                while (link) {
+                    memcpy(&hash->strings.strings[hash->strings.used],
+                      &copy[link->key.k_str.ptr], link->key.k_str.len);
+                    link->key.k_str.ptr = hash->strings.used;
+                    hash->strings.used += link->key.k_str.len;
+                    link = link->next;
+                }
             }
-        }
 
-        free(copy);
-        hash->strings.unpacked = 0;
-        return CHASH_OK;
+            free(copy);
+            hash->strings.unpacked = 0;
+            return CHASH_OK;
+        } else {
+            return CHASH_ENOMEM;
+        }
     } else {
-        return CHASH_ENOMEM;
+        return CHASH_ENOENT;
     }
 }
 

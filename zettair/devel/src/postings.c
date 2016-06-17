@@ -63,13 +63,11 @@ struct postings* postings_new(unsigned int tablesize,
     struct postings *p = malloc(sizeof(*p));
     unsigned int bits = bit_log2(tablesize);
 
-    tablesize = bit_pow2(bits);  /* tablesize is now guaranteed to be a power 
-                                  * of two */
+    tablesize = bit_pow2(bits);  /* tablesize is now guaranteed to be a power of two */
 
     if (p && (p->hash = malloc(sizeof(struct postings_node *) * tablesize))
-      && (p->string_mem = poolalloc_new(!!DEAR_DEBUG, MEMPOOL_SIZE, NULL))
-      && (p->node_mem = objalloc_new(sizeof(struct postings_node), 0, 
-          !!DEAR_DEBUG, MEMPOOL_SIZE, NULL))) {
+          && (p->string_mem = poolalloc_new(!!DEAR_DEBUG, MEMPOOL_SIZE, NULL))
+          && (p->node_mem = objalloc_new(sizeof(struct postings_node), 0, !!DEAR_DEBUG, MEMPOOL_SIZE, NULL))) {
         p->stop = list;
         p->stem = stem; 
         p->offsets = offsets; 
@@ -95,6 +93,7 @@ struct postings* postings_new(unsigned int tablesize,
                 }
             }
         }
+        free(p);
         p = NULL;
     }
 
@@ -301,7 +300,7 @@ int postings_addwords(struct postings *post, char *text, unsigned int textlen) {
                 post->hash[hash] = node;
                 post->dterms++;
                 post->size += len + 1;
-            } else if (node->vecmem) {
+            } else if (node && node->vecmem) {
                 free(node->vecmem);
                 post->err = ENOMEM;
                 return 0;

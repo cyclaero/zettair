@@ -42,7 +42,7 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "    -n,--number-results: provide this many results per query (default: 20)\n");
     fprintf(output, "    -b,--begin-results: provide results after this offset (default 0)\n");
     fprintf(output, "    --summary=[value]: create textual summary of this type\n"
-      "                       (where value is capitalise, plain, or tag)\n");
+                    "                       (where value is capitalise, plain, or tag)\n");
     fprintf(output, "    --query-list=[file]: read queries from this file\n");
     fprintf(output, "    --query-stop=[file]: stop queries according to the contents of this file\n");
     fprintf(output, "                         (or use default if no file give)\n");
@@ -54,7 +54,7 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "\n");
     fprintf(output, "  query metric options:\n");
     fprintf(output, "    --anh-impact: evaluate using impact-ordered lists\n"
-      "                  (must have specified --anh-impact while indexing)\n");
+                    "                  (must have specified --anh-impact while indexing)\n");
     fprintf(output, "    --okapi: use Okapi BM25 metric\n");
     fprintf(output, "    --k1=[float]: set Okapi BM25 k1 value\n");
     fprintf(output, "    --k3=[float]: set Okapi BM25 k3 value\n");
@@ -73,8 +73,8 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "    --big-and-fast: use more memory\n");
     fprintf(output, "    --file-list=[file]: read files to index from this file\n");
     fprintf(output, "    --stem=[value]: change stemming algorithm\n"
-      "                    (value is one of none, eds, light, porters)\n"
-      "                    (default is light)\n");
+                    "                    (value is one of none, eds, light, porters)\n"
+                    "                    (default is light)\n");
     fprintf(output, "    --add: add indexed files to an existing index\n");
     fprintf(output, "    --anh-impact: generate impact-ordered lists\n");
     fprintf(output, "    --no-offsets: generate lists without offsets\n");
@@ -1234,14 +1234,9 @@ int search(struct index *idx, const char *query, struct index_result *result,
     if (!is_cache_request(query, maxwordlen, &docno)) {
 
         gettimeofday(&then, NULL);
-
-        if (index_search(idx, query, start, requested,
-              result, &results, &total_results, &est, opts, opt)) {
-
+        if (index_search(idx, query, start, requested, result, &results, &total_results, &est, opts, opt)) {
             gettimeofday(&now, NULL);
-
-            seconds = (double) ((now.tv_sec - then.tv_sec) 
-              + (now.tv_usec - (double) then.tv_usec) / 1000000.0);
+            seconds = (double)((now.tv_sec - then.tv_sec) + (now.tv_usec - (double)then.tv_usec)/1000000.0);
 
             for (i = 0; i < results; i++) {
                 fprintf(stdout, "%u. %s (score %f, docid %lu)\n",

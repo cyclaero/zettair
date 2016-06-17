@@ -301,15 +301,10 @@ void *objalloc_malloc(struct objalloc *obj, unsigned int size) {
 
             obj->allocated++;
             return ptr;
-        } else if (obj->reserved 
-          || ((obj->reserved 
-              = obj->alloc.malloc(obj->alloc.opaque, obj->chunksize))
-            && (chunk_init(obj, obj->reserved, obj->reserved + 1, 
-                obj->chunksize, NULL), 1))) {
+        } else if (obj->reserved || ((obj->reserved = obj->alloc.malloc(obj->alloc.opaque, obj->chunksize))
+                && (chunk_init(obj, obj->reserved, obj->reserved + 1, obj->chunksize, NULL), 1))) {
 
-            struct objalloc_chunk *chunk,
-                                  *next;
-
+            struct objalloc_chunk *chunk, *next;
 
             /* note that objalloc_invariant reprotects all chunks */
             assert(objalloc_invariant(obj));
@@ -323,14 +318,13 @@ void *objalloc_malloc(struct objalloc *obj, unsigned int size) {
 
             /* copy new chunk into aggregate header */
             obj->chunk = *obj->reserved;
-            next = obj->reserved->next;
+            next = (obj->reserved) ? obj->reserved->next : NULL;
             obj->chunk.next = chunk;  /* link to exhausted chunks */
             obj->reserved = next;
 
             /* recursively allocate, because it prevents code duplication,
              * happens very rarely, and doesn't ever recurse further */
-            assert(obj->chunk.pos + obj->allocsize + obj->redzone 
-              <= obj->chunk.end);
+            assert(obj->chunk.pos + obj->allocsize + obj->redzone <= obj->chunk.end);
             VALGRIND_MAKE_NOACCESS(CHUNK_ADDR(&obj->chunk), sizeof(obj->chunk));
             VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
             VALGRIND_MAKE_NOACCESS(&obj->chunk, sizeof(obj->chunk));
@@ -343,11 +337,10 @@ void *objalloc_malloc(struct objalloc *obj, unsigned int size) {
 }
 
 void objalloc_free(struct objalloc *obj, void *ptr) {
-    struct objalloc_object *object = ptr;
-
-    if (!ptr) {
+    if (!ptr)
         return;
-    }
+
+    struct objalloc_object *object = ptr;
 
     assert(objalloc_is_managed(obj, ptr));
     assert(obj->allocated);
@@ -398,16 +391,16 @@ void objalloc_clear(struct objalloc *obj) {
     /* free all allocated objects */
     do {
         char *pos;
-        unsigned int frees = 0,
-                     predicted;
+        unsigned int frees = 0, predicted;
    
         VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
 
-        pos = chunk->end - chunk->size;
         next = chunk->next;
-        predicted = (chunk->pos - pos) / (obj->allocsize + obj->redzone);
-   
+
         if (RUNNING_ON_VALGRIND) {
+            pos = chunk->end - chunk->size;
+            predicted = (chunk->pos - pos)/(obj->allocsize + obj->redzone);
+
             assert(pos <= chunk->pos);
             while (pos < chunk->pos) {
                 /* ensure that the address we've calculated is valid */
@@ -424,7 +417,7 @@ void objalloc_clear(struct objalloc *obj) {
         chunk->pos = chunk->end - chunk->size;
         VALGRIND_MAKE_NOACCESS(chunk->pos, chunk->size);
         VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
-    } while ((chunk = next));
+    } while (chunk = next);
 
     /* clear list of free objects, as they are absorbed back into the chunks */
     obj->free = NULL;  

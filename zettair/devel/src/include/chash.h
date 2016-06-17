@@ -20,8 +20,7 @@ enum chash_ret {
     CHASH_ITER_FINISH = 1,     /* no more items to iterate over */
 
     CHASH_ENOMEM = -1,         /* operation failed due to lack of memory */
-    CHASH_ENOENT = -2          /* operation failed as the specified item 
-                                * wasn't found */
+    CHASH_ENOENT = -2          /* operation failed as the specified item wasn't found */
 };
 
 struct chash;
