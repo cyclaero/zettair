@@ -78,8 +78,6 @@ static enum search_ret parse(void *ptr, const char *str) {
 
 static enum search_ret pre(struct index *idx, struct query *query, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
-
     if (zpthread_mutex_lock(&idx->docmap_mutex) == ZPTHREAD_OK) {
         /* METRIC_PRE */
         if (docmap_cache(idx->map, docmap_get_cache(idx->map) | DOCMAP_CACHE_WEIGHT) != DOCMAP_OK) return SEARCH_EINVAL;
@@ -88,16 +86,13 @@ static enum search_ret pre(struct index *idx, struct query *query,
         return SEARCH_OK;
     } else {
         assert(!CRASH);
-        param = NULL;   /* avoid 'param not used' warning */
         return SEARCH_EINVAL;
     }
 }
 
 static enum search_ret post(struct index *idx, struct query *query, 
   struct search_acc_cons *acc, int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
     /* METRIC_POST */
-
     const float Q_weight = search_qweight(query);
 
 
@@ -105,11 +100,9 @@ static enum search_ret post(struct index *idx, struct query *query,
         assert(acc->acc.docno < docmap_entries(idx->map));
         /* METRIC_POST_PER_DOC */
         (acc->acc.weight) /= ((DOCMAP_GET_WEIGHT(idx->map, acc->acc.docno)) * Q_weight);
-
         acc = acc->next;
     }
 
-    param = NULL;   /* avoid 'param not used' warning */
     return SEARCH_OK;
 }
 
@@ -157,7 +150,6 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
@@ -226,7 +218,6 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -236,7 +227,6 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
@@ -249,7 +239,6 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
 
 
     /* METRIC_PER_CALL */
-
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
@@ -306,7 +295,6 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -316,7 +304,6 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src,
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc;
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
@@ -397,7 +384,6 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -408,7 +394,6 @@ static enum search_ret and_decode_offsets(struct index *idx,
   unsigned int qterm, unsigned long int docno, 
   struct search_metric_results *results, struct search_list_src *src,
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
     struct search_acc_cons *acc = results->acc;
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
@@ -490,7 +475,6 @@ static enum search_ret and_decode_offsets(struct index *idx,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -508,10 +492,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
   struct search_metric_results *results, 
   struct search_list_src *src, unsigned int postings, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 
@@ -783,7 +764,6 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -794,10 +774,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
   struct search_metric_results *results, 
   struct search_list_src *src, unsigned int postings, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct cosine_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 
@@ -1071,7 +1048,6 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }

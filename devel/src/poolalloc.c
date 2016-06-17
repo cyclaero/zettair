@@ -162,30 +162,23 @@ void *poolalloc_malloc(struct poolalloc *pool, unsigned int size) {
     return poolalloc_memalign(pool, size, mem_align_max());
 }
 
-void *poolalloc_memalign(struct poolalloc *pool, unsigned int size, 
-  unsigned int align) {
+void *poolalloc_memalign(struct poolalloc *pool, unsigned int size, unsigned int align) {
     unsigned int min;
     char *ptr;
-    struct poolalloc_chunk *chunk = pool->curr,
-                           *next;
+    struct poolalloc_chunk *chunk = pool->curr, *next;
     do {
         assert(chunk);
         do {
             VALGRIND_MAKE_READABLE(chunk, sizeof(*chunk));
             next = chunk->next;
             ptr = MEM_ALIGN(chunk->curr, align);
-            if ((ptr < chunk->end) 
-              && ((unsigned int) MEM_PTRDIFF(chunk->end, ptr)) 
-                >= size + pool->redzone) {
-
+            if ((ptr < chunk->end) && ((unsigned int) MEM_PTRDIFF(chunk->end, ptr)) >= size + pool->redzone) {
                 /* allocate from current chunk */
                 VALGRIND_MAKE_WRITABLE(ptr, size);
                 VALGRIND_MALLOCLIKE_BLOCK(ptr, size, 0, 0);
                 if (RUNNING_ON_VALGRIND) {
-                    /* insert entry into hashtable so we can keep track of
-                     * allocations */
-                    chash_luint_ptr_insert(pool->allocations, 
-                      (unsigned long int) ptr, ptr);
+                    /* insert entry into hashtable so we can keep track of allocations */
+                    chash_luint_ptr_insert(pool->allocations, (unsigned long int)ptr, ptr);
                 }
                 chunk->curr = MEM_PTRADD(ptr, size + pool->redzone);
                 assert(chunk->curr <= chunk->end);
@@ -196,7 +189,7 @@ void *poolalloc_memalign(struct poolalloc *pool, unsigned int size,
             }
 
             VALGRIND_MAKE_NOACCESS(chunk, sizeof(*chunk));
-        } while ((chunk = next));
+        } while (chunk = next);
 
         /* failed to allocate memory from existing chunks */
 
@@ -213,13 +206,10 @@ void *poolalloc_memalign(struct poolalloc *pool, unsigned int size,
             chunk->next = pool->curr;
             chunk->curr = MEM_PTRADD(chunk, sizeof(*chunk));
             chunk->end = MEM_PTRADD(chunk, min);
-            next = pool->curr = chunk;
+            pool->curr = chunk;
 
             /* make sure we'll allocate next time around */
-            assert(((unsigned int) 
-              MEM_PTRDIFF(chunk->end, MEM_ALIGN(chunk->curr, align)))
-                >= size + pool->redzone);
-
+            assert(((unsigned int)MEM_PTRDIFF(chunk->end, MEM_ALIGN(chunk->curr, align))) >= size + pool->redzone);
             VALGRIND_MAKE_NOACCESS(chunk, min);
         } else {
             return NULL;

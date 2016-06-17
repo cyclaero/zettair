@@ -306,8 +306,7 @@ enum search_ret impact_ord_eval(struct index *idx, struct query *query,
                     return SEARCH_EINVAL;
                 }
             } else {
-                heap_insert(term, &terms, sizeof(*term), term_data_cmp, 
-                  largest);
+                heap_insert(term, &terms, sizeof(*term), term_data_cmp, largest);
             }
         }
     } while (largest && (largest->impact > blockfine));
@@ -316,7 +315,7 @@ enum search_ret impact_ord_eval(struct index *idx, struct query *query,
         dsrc = (void *) term[i].src; bytes_read += dsrc->pos;
     }
 
-    if (largest) {
+    if (largest && largest->src) {
         largest->src->delet(largest->src);
         largest->src = NULL;
     }

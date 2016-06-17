@@ -123,8 +123,6 @@ static enum search_ret parse(void *ptr, const char *str) {
 
 static enum search_ret pre(struct index *idx, struct query *query, 
   int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
-
     if (zpthread_mutex_lock(&idx->docmap_mutex) == ZPTHREAD_OK) {
         /* METRIC_PRE */
 
@@ -132,14 +130,12 @@ static enum search_ret pre(struct index *idx, struct query *query,
         return SEARCH_OK;
     } else {
         assert(!CRASH);
-        param = NULL;   /* avoid 'param not used' warning */
         return SEARCH_EINVAL;
     }
 }
 
 static enum search_ret post(struct index *idx, struct query *query, 
   struct search_acc_cons *acc, int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
     /* METRIC_POST */
 
 
@@ -150,7 +146,6 @@ static enum search_ret post(struct index *idx, struct query *query,
         acc = acc->next;
     }
 
-    param = NULL;   /* avoid 'param not used' warning */
     return SEARCH_OK;
 }
 
@@ -574,9 +569,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
   struct search_list_src *src, unsigned int postings, 
   int opts, struct index_search_opt *opt) {
     /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 
@@ -866,9 +859,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
   struct search_list_src *src, unsigned int postings, 
   int opts, struct index_search_opt *opt) {
     /* METRIC_STRUCT */ struct hawkapi_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 

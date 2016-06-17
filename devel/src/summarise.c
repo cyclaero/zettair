@@ -186,8 +186,7 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
     return sent;
 }
 
-unsigned int html_cpy(struct sentence **sent, const char *term, 
-  unsigned int len) {
+unsigned int html_cpy(struct sentence **sent, const char *term, unsigned int len) {
     unsigned int extra = 0,
                  orig_len = len;
     const char *name = NULL;
@@ -257,11 +256,8 @@ unsigned int html_cpy(struct sentence **sent, const char *term,
 }
 
 /* internal function to extract the next sentence */
-static struct sentence *extract(struct summarise *sum, struct persum *ps,
-  enum index_summary_type type, const struct query *q, 
-  struct sentence *sent, unsigned int *occs) {
-    unsigned int i,
-                 len;
+static struct sentence *extract(struct summarise *sum, struct persum *ps, enum index_summary_type type, const struct query *q, struct sentence *sent, unsigned int *occs) {
+    unsigned int i, len;
     int highlight = 0,          /* whether we're currently highlighting */
         title = 0;              /* whether we're currently in a title */
     void **found;
@@ -286,8 +282,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps,
     sent->qterms = 0;
 
     do {
-        ret 
-          = mlparse_parse(&sum->parser, ps->termbuf, &len, 0);
+        ret = mlparse_parse(&sum->parser, ps->termbuf, &len, 0);
         switch (ret) {
         case MLPARSE_COMMENT:
         case MLPARSE_COMMENT | MLPARSE_END:
@@ -310,8 +305,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps,
             title = 0;
 
             /* change state based on tag index attribute */
-            if (attr & PSETTINGS_ATTR_INDEX 
-              || attr & PSETTINGS_ATTR_CHECKBIN) {
+            if (attr & PSETTINGS_ATTR_INDEX || attr & PSETTINGS_ATTR_CHECKBIN) {
                 /* note that we assume that the binary check succeeded */
                 ps->stack <<= 1;
                 ps->stack |= !ps->index;
@@ -537,8 +531,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps,
         case MLPARSE_INPUT:
             if (!ps->bytes_left) {
                 mlparse_eof(&sum->parser);
-            } else if (index_stream_read(sum->last_stream, ps->fd, sum->buf, 
-                sum->bufsize) == STREAM_OK) {
+            } else if (index_stream_read(sum->last_stream, ps->fd, sum->buf, sum->bufsize) == STREAM_OK) {
 
                 sum->parser.next_in = sum->last_stream->curr_out;
                 if (ps->bytes_left > sum->last_stream->avail_out) {
@@ -569,7 +562,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps,
             /* ignore */
             break;
         }
-    } while ((ret != (MLPARSE_WORD | MLPARSE_END)) && (sent->buflen < ps->summary_len));
+    } while ((ret != MLPARSE_WORD|MLPARSE_END || title) && sent->buflen < ps->summary_len);
 
     return extract_finish(sent, ps, type, highlight);
 }
@@ -578,8 +571,7 @@ static void score(struct sentence *sent, const struct query *q) {
     sent->score = (sent->qterms * sent->qterms) / (float) q->terms;
 }
 
-/* internal function (for qsort) to order sentences by position in the 
- * document */
+/* internal function (for qsort) to order sentences by position in the document */
 static int sum_pos_cmp(const void *vone, const void *vtwo) {
     const struct sentence *one = *((const struct sentence **) vone), 
                           *two = *((const struct sentence **) vtwo);
@@ -622,9 +614,7 @@ static void persum_delete(struct summarise *sum, struct persum *ps) {
     chash_delete(ps->terms);
 }
 
-enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
-  const struct query *query, enum index_summary_type type, 
-  struct summary *result) {
+enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, const struct query *query, enum index_summary_type type, struct summary *result) {
     struct persum ps;                     /* per-sum elements */
     struct sentence **heap = NULL,        /* heap of candidate sentences */
                     *unused = NULL,       /* unused sentence buffers */
@@ -647,14 +637,13 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
     enum mime_types mtype = MIME_TYPE_TEXT_HTML;
     struct stream_filter *filter;
 
-    if (!(occs = malloc(sizeof(*occs) * query->terms))) {
+    if (!(occs = malloc(sizeof(*occs)*query->terms))) {
         return SUMMARISE_ENOMEM;
     }
 
     /* find document, and reinitialise parser with fd for it */
     if (zpthread_mutex_lock(&sum->idx->docmap_mutex) == ZPTHREAD_OK
-      && (dmret = docmap_get_location(sum->map, docno, &fileno, &offset, 
-        &bytes, &mtype, &dmflags)), 
+     && (dmret = docmap_get_location(sum->map, docno, &fileno, &offset, &bytes, &mtype, &dmflags)),
 
         /* unconditionally unlock mutex, before we test return value */
         zpthread_mutex_unlock(&sum->idx->docmap_mutex), 
@@ -678,8 +667,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
                 }
 
                 if ((sum->last_stream = stream_new())
-                  && (filter 
-                    = (struct stream_filter *) gunzipfilter_new(BUFSIZ))) {
+                  && (filter = (struct stream_filter *) gunzipfilter_new(BUFSIZ))) {
 
                     stream_filter_push(sum->last_stream, filter);
                     sum->last_fileno = fileno;
@@ -703,10 +691,12 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
                 sum->last_offset = offset + bytes;
                 curroffset = physoffset = offset;
             } else {
+                free(occs);
                 return SUMMARISE_ENOMEM;
             }
         }
     } else {
+        free(occs);
         return SUMMARISE_EIO;
     }
 
@@ -787,27 +777,23 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno,
 
         if (space) {
             unused = unused->next;
-        } else if ((space 
-            = malloc(sizeof(*space) + sum->max_termlen * 2))) {
-            /* point buffer to the end of the struct within the malloc'd 
-             * block */
-            space->buf = (void *) (space + 1);
+        } else if (space = malloc(sizeof(*space) + sum->max_termlen * 2)) {
+            /* point buffer to the end of the struct within the malloc'd block */
+            space->buf = (void *)(space + 1);
             space->bufsize = sum->max_termlen * 2;
 
             if (DEAR_DEBUG) {
                 memset(space->buf, 0, space->bufsize);
             }
         } else {
-            /* can't get memory for more sentences, finish up with what 
-             * we have */
-            finished = 1;
+            /* can't get memory for more sentences, finish up with what we have */
             break;
         }
         space->prev = prev;
         space->next = NULL;
 
         /* extract sentence */
-        if ((next = extract(sum, &ps, type, query, space, occs))) {
+        if (next = extract(sum, &ps, type, query, space, occs)) {
             /* got a sentence, score it and figure out whether to heap it */
             score(next, query);
 

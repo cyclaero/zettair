@@ -626,8 +626,6 @@ int pyramid_merge(struct pyramid *pyramid, unsigned int *files,
         }
         fdset_unpin(pyramid->fds, pyramid->final_type, file, outfd);
         fdset_unpin(pyramid->fds, pyramid->vocab_type, vfile, voutfd);
-        outfd = -1;
-        voutfd = -1;
 
         TIMINGS_END("final merging");
 

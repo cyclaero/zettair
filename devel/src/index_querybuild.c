@@ -82,15 +82,11 @@ static int get_vocab_vector_locked(struct iobtree * vocab,
  *  the vocab (entry_out will hold the vocab entry for the
  *  term); < 0 on error.
  */
-static int get_vocab_vector(struct index *idx, struct iobtree * vocab, 
-  struct vocab_vector * entry_out, const char * term, unsigned int term_len,
-  char * vec_buf, int vec_buf_len, int impact) {
-    int retval = 0,
-        pret;
+static int get_vocab_vector(struct index *idx, struct iobtree * vocab, struct vocab_vector * entry_out, const char * term, unsigned int term_len, char * vec_buf, int vec_buf_len, int impact) {
+    int retval = 0, pret;
 
     if ((pret = zpthread_mutex_lock(&idx->vocab_mutex)) == ZPTHREAD_OK) {
-        retval = get_vocab_vector_locked(vocab, entry_out, term, term_len,
-          vec_buf, vec_buf_len, impact);
+        retval = get_vocab_vector_locked(vocab, entry_out, term, term_len, vec_buf, vec_buf_len, impact);
         pret = zpthread_mutex_unlock(&idx->vocab_mutex);
         assert(pret == ZPTHREAD_OK);
         return retval;
@@ -101,9 +97,7 @@ static int get_vocab_vector(struct index *idx, struct iobtree * vocab,
 }
 
 /* internal function to append a new word to a conjunct */
-static int conjunct_append(struct query *query, 
-  struct conjunct *conj, struct vocab_vector * sve,
-  const char *term, unsigned int termlen, unsigned int *maxterms) {
+static int conjunct_append(struct query *query, struct conjunct *conj, struct vocab_vector *sve, const char *term, unsigned int termlen, unsigned int *maxterms) {
     struct term *currterm;
 
     /* OPTIMISE: search existing AND conjunct for word */
@@ -130,31 +124,23 @@ static int conjunct_append(struct query *query,
     return 1;
 }
 
-static struct conjunct *conjunct_find(struct query *query,
-  struct vocab_vector *sve, const char *term, unsigned int termlen,
-  int type) {
+static struct conjunct *conjunct_find(struct query *query, struct vocab_vector *sve, const char *term, unsigned int termlen, int type) {
     unsigned int i;
-    for (i = 0; i < query->terms; i++) {
-        if ((query->term[i].type == type) 
-          && (sve->size == query->term[i].term.vocab.size)
-          && (sve->loc.fileno 
-            == query->term[i].term.vocab.loc.fileno)
-          && (sve->loc.offset 
-            == query->term[i].term.vocab.loc.offset)) {
-
-            return &query->term[i];
+    if (sve)
+        for (i = 0; i < query->terms; i++) {
+            if (query->term[i].type == type
+             && query->term[i].term.vocab.size == sve->size
+             && query->term[i].term.vocab.loc.fileno == sve->loc.fileno
+             && query->term[i].term.vocab.loc.offset == sve->loc.offset) {
+                return &query->term[i];
+            }
         }
-    }
     return NULL;
 }
 
 /* internal function to copy a word into a new conjunct */
-static struct conjunct *conjunct_add(struct query *query, 
-  struct vocab_vector * sve, const char *term, 
-  unsigned int termlen, int type, unsigned int *maxterms) {
-    struct conjunct *ret = NULL;
-
-    ret = conjunct_find(query, sve, term, termlen, type);
+static struct conjunct *conjunct_add(struct query *query, struct vocab_vector *sve, const char *term, unsigned int termlen, int type, unsigned int *maxterms) {
+    struct conjunct *ret = conjunct_find(query, sve, term, termlen, type);
 
     if (ret != NULL) {
         ret->f_qt++;
@@ -174,7 +160,7 @@ static struct conjunct *conjunct_add(struct query *query,
             query->terms++;
             if (!(ret->term.term = str_ndup(term, termlen))) {
                 query->terms--;
-                ret = NULL;
+                return NULL;
             }
             memcpy(&ret->term.vocab, sve, sizeof(*sve));
         }
@@ -186,9 +172,7 @@ static struct conjunct *conjunct_add(struct query *query,
 
 /* internal function to copy a conjunction and add an new word onto the end of 
  * it (convenience function) */
-static struct conjunct *conjunct_copy(struct query *query, 
-  struct conjunct *conj, unsigned int matches, struct vocab_vector * sve,
-  const char *term, unsigned int termlen, unsigned int *maxterms) {
+static struct conjunct *conjunct_copy(struct query *query, struct conjunct *conj, unsigned int matches, struct vocab_vector *sve, const char *term, unsigned int termlen, unsigned int *maxterms) {
     struct conjunct *ret = NULL,
                     *next;
     struct term *currterm,
@@ -249,34 +233,26 @@ static struct conjunct *conjunct_copy(struct query *query,
     return ret;
 }
 
-/* internal function to construct a query structure from a given string (query)
- * of length len.  At most maxterms will be read from the query. */ 
-unsigned int index_querybuild(struct index *idx, struct query *query, 
-  const char *querystr, unsigned int len, unsigned int maxterms, 
-  unsigned int maxtermlen, int impacts) {
+/* internal function to construct a query structure from a given string (query) of length len.  At most maxterms will be read from the query. */
+unsigned int index_querybuild(struct index *idx, struct query *query, const char *querystr, unsigned int len, unsigned int maxterms, unsigned int maxtermlen, int impacts) {
     struct queryparse *qp;           /* structure to parse the query */
     struct conjunct *current = NULL; /* pointer to a current conjunction */
     char word[TERMLEN_MAX + 1];      /* buffer to hold words */
     unsigned int i,                  /* counter */
                  wordlen,            /* length of word */
                  words = 0,          /* number of words parsed */
-                 currmatch = 0;      /* number of matches against current 
-                                      * entry */
+                 currmatch = 0;      /* number of matches against current entry */
                  /* veclen; */
-    int state = CONJUNCT_TYPE_WORD,  /* state variable, can take on values 
-                                      * from conjunct types enum */
+    int state = CONJUNCT_TYPE_WORD,  /* state variable, can take on values from conjunct types enum */
         stopped = 0;                 /* whether the last word was stopped */
-    /* void *ve;  */                 /* compressed vocabulary entry for a 
-                                      * word */
+    /* void *ve;  */                 /* compressed vocabulary entry for a word */
     enum queryparse_ret parse_ret;   /* value returned by parser */
     /* last modifier seen; also, are we in a modifier */
-    enum { MODIFIER_NONE, MODIFIER_SLOPPY, MODIFIER_CUTOFF } modifier 
-      = MODIFIER_NONE;
+    enum { MODIFIER_NONE, MODIFIER_SLOPPY, MODIFIER_CUTOFF } modifier = MODIFIER_NONE;
     void (*stem)(void *, char *) = index_stemmer(idx);
 
     assert(maxtermlen <= TERMLEN_MAX);
-    if (!(qp 
-      = queryparse_new(maxtermlen, querystr, len))) {
+    if (!(qp = queryparse_new(maxtermlen, querystr, len))) {
         return 0;
     }
 
@@ -288,25 +264,22 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
      * additional words from the end of the array. */
 
     do {
-        struct vocab_vector entry;
+        struct vocab_vector entry = {};
         int retval;
         char vec_buf[MAX_VOCAB_VECTOR_LEN];
         parse_ret = queryparse_parse(qp, word, &wordlen);
         switch (parse_ret) {
         case QUERYPARSE_WORD_EXCLUDE:
-            /* this functionality not included yet, just ignore the word for 
-             * now */
+            /* this functionality not included yet, just ignore the word for now */
 
             /* look up word in vocab */
             /* ve = hFetch(word, idx->vocab, NULL); */
 
-            /* OPTIMIZE: search existing conjunctions for word and remove 
-             * them */
+            /* OPTIMIZE: search existing conjunctions for word and remove them */
 
             /* FIXME: stop word */
             /* if (ve) {
-                conjunct_add(query, ve, CONJUNCT_TYPE_EXCLUDE, 
-                  &maxterms);
+                conjunct_add(query, ve, CONJUNCT_TYPE_EXCLUDE, &maxterms);
             } */
 
             current = NULL;   /* this can't be the start of a conjunction */
@@ -376,17 +349,13 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                 /* processing a phrase */
                 if (!currmatch) {
                     /* first word in phrase, match or add a conjunction */
-                    current = conjunct_add(query, &entry,
-                      /* ve, veclen,  */
-                      word, wordlen, 
-                      CONJUNCT_TYPE_PHRASE, &maxterms);
-                    currmatch = 1;
+                    current = conjunct_add(query, &entry, /* ve, veclen, */ word, wordlen, CONJUNCT_TYPE_PHRASE, &maxterms);
+                    currmatch = (current) ? 1 : 0;
                 } else if (current && (current->f_qt > 1)) {
                     /* we're matching an existing phrase */
  
                     /* iterate to next term we need to match */
-                    for (i = 0, currterm = &current->term; i < currmatch; 
-                      i++, currterm = currterm->next) ;
+                    for (i = 0, currterm = &current->term; i < currmatch; i++, currterm = currterm->next) ;
 
                     if (currterm && !str_cmp(currterm->term, word)) {
                         /* matched */
@@ -420,24 +389,19 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                 /* OPTIMIZE: check word against excluded terms */
 
                 if (current) {
-                    if ((current->type == CONJUNCT_TYPE_AND) 
-                      || (current->f_qt == 1)) {
+                    if ((current->type == CONJUNCT_TYPE_AND) || (current->f_qt == 1)) {
                         /* add to current conjunct */
-                        conjunct_append(query, current, &entry,
-                          word, wordlen, &maxterms);
+                        conjunct_append(query, current, &entry, word, wordlen, &maxterms);
                         current->type = CONJUNCT_TYPE_AND;
                     } else {
                         /* copy matched word to new location for AND conjunct */
                         current->f_qt--;
-                        current = conjunct_copy(query, current, 1, &entry,
-                          word, wordlen, &maxterms);
+                        current = conjunct_copy(query, current, 1, &entry, word, wordlen, &maxterms);
                         current->type = CONJUNCT_TYPE_AND;
                     }
                 } else if (stopped) { 
-                    /* first word(s) in conjunct was stopped, so start a new
-                     * one */
-                    current = conjunct_add(query, &entry, word, wordlen,
-                      CONJUNCT_TYPE_WORD, &maxterms);
+                    /* first word(s) in conjunct was stopped, so start a new one */
+                    current = conjunct_add(query, &entry, word, wordlen, CONJUNCT_TYPE_WORD, &maxterms);
                 }
 
                 state = CONJUNCT_TYPE_WORD;   /* stop AND condition */
@@ -446,8 +410,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                 stopped = 0;
                 if (parse_ret != QUERYPARSE_WORD_NOSTOP) {
                     word[wordlen] = '\0';
-                    if (idx->qstop 
-                      && stop_stop(idx->qstop, word) == STOP_STOPPED) {
+                    if (idx->qstop && stop_stop(idx->qstop, word) == STOP_STOPPED) {
                         /* it is a stopword */
                         stopped = 1;
                         current = NULL;
@@ -455,11 +418,8 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
                 }
 
                 if (!stopped) {
-                    current = conjunct_add(query, &entry,
-                      /* ve, veclen, */
-                      word, wordlen,
-                      CONJUNCT_TYPE_WORD, &maxterms);
-                    currmatch = 1;
+                    current = conjunct_add(query, &entry, /* ve, veclen, */ word, wordlen, CONJUNCT_TYPE_WORD, &maxterms);
+                    currmatch = (current) ? 1 : 0;
                 }
             }
 
@@ -485,23 +445,19 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
             if (current && (current->terms != currmatch)) {
                 /* partial match, need to copy phrase */
                 current->f_qt--;
-                current = conjunct_copy(query, current, currmatch, NULL,
-                  NULL, 0, &maxterms);
+                current = conjunct_copy(query, current, currmatch, NULL, NULL, 0, &maxterms);
             }
 
             /* treat single-word phrases as, well, words */
             if (current && (current->terms == 1)) {
                 struct conjunct *ret;
                 /* see if this single-word occurred previously */
-                ret = conjunct_find(query, &current->term.vocab,
-                  current->term.term, str_len(current->term.term), 
-                  CONJUNCT_TYPE_WORD);
+                ret = conjunct_find(query, &current->term.vocab, current->term.term, str_len(current->term.term), CONJUNCT_TYPE_WORD);
                 if (ret == NULL) {
                     /* ok, this is the first occurence */
                     current->type = CONJUNCT_TYPE_WORD;
                 } else {
-                    /* there was a previous occurence: increment its f_qt,
-                       and free this one */
+                    /* there was a previous occurence: increment its f_qt, and free this one */
                     ret->f_qt++;
                     assert(current == &query->term[query->terms - 1]);
                     free(current->term.term);
@@ -537,8 +493,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query,
             queryparse_delete(qp);
             return 0;
         }
-    } while ((parse_ret != QUERYPARSE_EOF)
-      && (query->terms < maxterms));  /* FIXME: temporary stopping condition */
+    } while ((parse_ret != QUERYPARSE_EOF) && (query->terms < maxterms));  /* FIXME: temporary stopping condition */
 
     queryparse_delete(qp);
     /* returning word count confuses errors with empty queries. */
