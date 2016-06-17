@@ -34,10 +34,8 @@
  *  assume that, in a multi-threaded environment, the caller
  *  has already performed any necessary synchronisation.
  */
-static int get_vocab_vector_locked(struct iobtree * vocab, 
-  struct vocab_vector * entry_out, const char * term, unsigned int term_len,
-  char * vec_buf, int vec_buf_len, int impact) {
-    void * ve_data = NULL;
+static int get_vocab_vector_locked(struct iobtree * vocab, struct vocab_vector * entry_out, const char * term, unsigned int term_len, char * vec_buf, int vec_buf_len, int impact) {
+    void *ve_data = NULL;
     unsigned int veclen = 0;
     struct vec v;
 
@@ -282,8 +280,26 @@ unsigned int index_querybuild(struct index *idx, struct query *query, const char
                 conjunct_add(query, ve, CONJUNCT_TYPE_EXCLUDE, &maxterms);
             } */
 
-            current = NULL;   /* this can't be the start of a conjunction */
-            words++;
+            retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen, vec_buf, sizeof(vec_buf), impacts);
+            if (retval < 0) {
+                return 0;
+            }
+            if (retval == 0 && stem) {
+                /* look up word in vocab */
+                /* FIXME: word needs to be looked up in in-memory postings as well */
+                word[wordlen] = '\0';
+                stem(idx->stem, word);
+                wordlen = str_len(word);
+                retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen, vec_buf, sizeof(vec_buf), impacts);
+                if (retval < 0) {
+                    return 0;
+                }
+            }
+            if (retval > 0) {
+              conjunct_add(query, &entry, word, wordlen, CONJUNCT_TYPE_EXCLUDE, &maxterms);
+              current = NULL;   /* this can't be the start of a conjunction */
+              words++;
+            }
             break;
 
         case QUERYPARSE_WORD_NOSTOP:
@@ -315,8 +331,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query, const char
                 stem(idx->stem, word);
                 wordlen = str_len(word);
             }
-            retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen,
-              vec_buf, sizeof(vec_buf), impacts);
+            retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen, vec_buf, sizeof(vec_buf), impacts);
             if (retval < 0) {
                 return 0;
             } else if (retval == 0) {
