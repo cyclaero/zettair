@@ -279,7 +279,7 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
+    double cooc_rate;               /* co-occurrance rate for list entries and 
                                     * accumulators */
     /* METRIC_DECL */
 
@@ -319,13 +319,13 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -367,7 +367,7 @@ static enum search_ret and_decode_offsets(struct index *idx,
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
+    double cooc_rate;               /* co-occurrance rate for list entries and 
                                     * accumulators */
     /* METRIC_DECL */
 
@@ -408,13 +408,13 @@ static enum search_ret and_decode_offsets(struct index *idx,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -474,7 +474,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
     /* METRIC_DECL */
 
     /* METRIC_PER_CALL */
@@ -621,7 +621,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -677,13 +677,13 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -699,7 +699,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }
@@ -749,7 +749,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
     /* METRIC_DECL */
 
     /* METRIC_PER_CALL */
@@ -898,7 +898,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -954,13 +954,13 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -976,7 +976,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }

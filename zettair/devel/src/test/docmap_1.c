@@ -495,8 +495,8 @@ CHECK_FUNC(weight) {
 
     dm_ret = docmap_get_weight(docmap, d, &weight); 
     CHECK_RET(dm_ret); 
-    /* floats are converted to mantissa, exponent integer pairs for
-       storage, then back to floats on load.  Allow a slight loss of
+    /* doubles are converted to mantissa, exponent integer pairs for
+       storage, then back to doubles on load.  Allow a slight loss of
        precision. */
     if (weight > docinfo->weight * 1.04 || weight < docinfo->weight * 0.96) {
         ERROR3("weight is '%lf', should be '%lf', diff %lf", docinfo->weight, 

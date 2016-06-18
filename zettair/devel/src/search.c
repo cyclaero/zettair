@@ -113,7 +113,7 @@ static void sort_list(struct search_acc *heap, unsigned int heapsize,
   struct search_acc_cons *acc) {
     unsigned int i;
     struct search_acc *lowest;
-    float lowest_weight;
+    double lowest_weight;
 
     /* fill heap with accumulators in the order they occur */
     for (i = 0; i < heapsize; i++, acc = acc->next) {
@@ -158,7 +158,7 @@ static void sort_hash(struct search_acc *heap, unsigned int heapsize,
     struct chash_link *link = NULL;
     struct search_acc *lowest,
                       tmp;
-    float lowest_weight;
+    double lowest_weight;
 
     /* fill heap with accumulators in the order they occur */
     for (i = 0, j = 0; j < heapsize; i++) {
@@ -1014,11 +1014,11 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
     for (; (i < query->terms) && (ret == SEARCH_OK); i++) {
         /* don't perform thresholding for a small number of 
          * accumulators... */
-        if ((((results->acc_limit - results->accs) / (float) results->acc_limit)
+        if ((((results->acc_limit - results->accs)/(double)results->acc_limit)
             < SEARCH_SAMPLES_MIN)
           /* where it's also a small percentage of the list */
           && (((results->acc_limit - results->accs) 
-              / (float) query->term[i].f_t) 
+             /(double)query->term[i].f_t) 
             < SEARCH_SAMPLES_MIN)) {
             break;
         }
@@ -1747,7 +1747,7 @@ unsigned int search_qterms(struct query *q) {
     return sum;
 }
 
-float search_qweight(struct query *q) {
+double search_qweight(struct query *q) {
     double weight = 0.0,
            fqt_log;
     unsigned int i;

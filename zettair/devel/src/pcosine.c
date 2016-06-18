@@ -45,7 +45,7 @@
 
 /* a structure describing the parameters used */
 struct pcosine_param {
-    float pivot;
+    double pivot;
     int dummy;  /* dummy member to ensure non-empty struct */
 };
 
@@ -68,7 +68,7 @@ static enum search_ret parse(void *ptr, const char *str) {
       && parts == 1) {
         for (i = 0; i < parts; i++) {
             if (!str_ncmp(split[i], "pivot=", 6)) {
-                if ((param->pivot = (float) strtod(split[i] + 6, &endptr)), !*endptr) {
+                if ((param->pivot = (double)strtod(split[i] + 6, &endptr)), !*endptr) {
                     read |= (1 << 0);
                 } else {
                     free(split);
@@ -122,9 +122,7 @@ static enum search_ret parse(void *ptr, const char *str) {
 #include <assert.h>
 #include <float.h>
 
-static enum search_ret pre(struct index *idx, struct query *query, 
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
+static enum search_ret pre(struct index *idx, struct query *query, int opts, struct index_search_opt *opt) {
 
     if (zpthread_mutex_lock(&idx->docmap_mutex) == ZPTHREAD_OK) {
         /* METRIC_PRE */
@@ -134,7 +132,6 @@ static enum search_ret pre(struct index *idx, struct query *query,
         return SEARCH_OK;
     } else {
         assert(!CRASH);
-        param = NULL;   /* avoid 'param not used' warning */
         return SEARCH_EINVAL;
     }
 }
@@ -201,11 +198,10 @@ static enum search_ret post(struct index *idx, struct query *query,
         } while (toscan);                                                     \
     } while (0)
  
-static enum search_ret or_decode(struct index *idx, struct query *query, 
-  unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, struct search_list_src *src, 
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
+static enum search_ret or_decode(struct index *idx, struct query *query,
+                                 unsigned int qterm, unsigned long int docno,
+                                 struct search_metric_results *results, struct search_list_src *src,
+                                 int opts, struct index_search_opt *opt) {
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
@@ -214,15 +210,14 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
     unsigned int bytes;
     struct vec v = {NULL, NULL};
     enum search_ret ret;
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
-
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
     /* METRIC_PER_CALL */
-
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
@@ -263,32 +258,23 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
         }
 
         /* need to read more data, preserving bytes that we already have */
-        if ((ret = src->read(src, VEC_LEN(&v),
-            (void **) &v.pos, &bytes)) == SEARCH_OK) {
-
+        if ((ret = src->read(src, VEC_LEN(&v), (void **)&v.pos, &bytes)) == SEARCH_OK) {
             v.end = v.pos + bytes;
         } else if (ret == SEARCH_FINISH) {
             /* finished, update number of accumulators */
             results->accs += accs_added;
             results->total_results += accs_added;
-
-            if (!VEC_LEN(&v)) {
-                return SEARCH_OK;
-            } else {
-                return SEARCH_EINVAL;
-            }
+            return (!VEC_LEN(&v)) ? SEARCH_OK : SEARCH_EINVAL;
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
 }
  
 static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
-  unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, struct search_list_src *src, 
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
+                                         unsigned int qterm, unsigned long int docno,
+                                         struct search_metric_results *results, struct search_list_src *src,
+                                         int opts, struct index_search_opt *opt) {
     struct search_acc_cons *acc = results->acc,
                            **prevptr = &results->acc;
     unsigned int accs_added = 0;   /* number of accumulators added */
@@ -297,15 +283,14 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
     unsigned int bytes;
     struct vec v = {NULL, NULL};
     enum search_ret ret;
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
-
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
     /* METRIC_PER_CALL */
-
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
@@ -347,53 +332,41 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
         }
 
         /* need to read more data, preserving bytes that we already have */
-        if ((ret = src->read(src, VEC_LEN(&v),
-            (void **) &v.pos, &bytes)) == SEARCH_OK) {
-
+        if ((ret = src->read(src, VEC_LEN(&v), (void **) &v.pos, &bytes)) == SEARCH_OK) {
             v.end = v.pos + bytes;
         } else if (ret == SEARCH_FINISH) {
             /* finished, update number of accumulators */
             results->accs += accs_added;
             results->total_results += accs_added;
-
-            if (!VEC_LEN(&v)) {
-                return SEARCH_OK;
-            } else {
-                return SEARCH_EINVAL;
-            }
+            return (!VEC_LEN(&v)) ? SEARCH_OK : SEARCH_EINVAL;
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
 }
 
 static enum search_ret and_decode(struct index *idx, struct query *query, 
-  unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, struct search_list_src *src,
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
+                                  unsigned int qterm, unsigned long int docno,
+                                  struct search_metric_results *results, struct search_list_src *src,
+                                  int opts, struct index_search_opt *opt) {
     struct search_acc_cons *acc = results->acc;
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
     struct vec v = {NULL, NULL};
     unsigned int bytes,
-                 missed = 0,       /* number of list entries that didn't match 
-                                    * an accumulator */
+                 missed = 0,       /* number of list entries that didn't match an accumulator */
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
-                                    * accumulators */
+    double cooc_rate;               /* co-occurrance rate for list entries and accumulators */
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
-
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
     /* METRIC_PER_CALL */
-
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
@@ -431,13 +404,13 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -451,45 +424,35 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
                 results->estimated |= 1;
             }
 
-            if (!VEC_LEN(&v)) {
-                return SEARCH_OK;
-            } else {
-                return SEARCH_EINVAL;
-            }
+            return (!VEC_LEN(&v)) ? SEARCH_OK : SEARCH_EINVAL;
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
 }
 
 static enum search_ret and_decode_offsets(struct index *idx, 
-  struct query *query, 
-  unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, struct search_list_src *src,
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
+                                          struct query *query, unsigned int qterm, unsigned long int docno,
+                                          struct search_metric_results *results, struct search_list_src *src,
+                                          int opts, struct index_search_opt *opt) {
     struct search_acc_cons *acc = results->acc;
     unsigned long int f_dt,        /* number of offsets for this document */
                       docno_d;     /* d-gap */
     struct vec v = {NULL, NULL};
     unsigned int bytes,
-                 missed = 0,       /* number of list entries that didn't match 
-                                    * an accumulator */
+                 missed = 0,       /* number of list entries that didn't match an accumulator */
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
-                                    * accumulators */
+    double cooc_rate;               /* co-occurrance rate for list entries and accumulators */
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
-
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
     /* METRIC_PER_CALL */
-
 
     while (1) {
         while (NEXT_DOC(&v, docno, f_dt)) {
@@ -528,13 +491,13 @@ static enum search_ret and_decode_offsets(struct index *idx,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs;
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -548,13 +511,8 @@ static enum search_ret and_decode_offsets(struct index *idx,
                 results->estimated |= 1;
             }
 
-            if (!VEC_LEN(&v)) {
-                return SEARCH_OK;
-            } else {
-                return SEARCH_EINVAL;
-            }
+            return (!VEC_LEN(&v)) ? SEARCH_OK: SEARCH_EINVAL;
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
@@ -568,14 +526,11 @@ static enum search_ret and_decode_offsets(struct index *idx,
 #define INF 2000
 
 static enum search_ret thresh_decode(struct index *idx, struct query *query,
-  unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, 
-  struct search_list_src *src, unsigned int postings, 
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+                                     unsigned int qterm, unsigned long int docno,
+                                     struct search_metric_results *results,
+                                     struct search_list_src *src, unsigned int postings,
+                                     int opts, struct index_search_opt *opt) {
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 
@@ -594,12 +549,13 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
 
     /* METRIC_PER_CALL */
@@ -754,7 +710,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -812,13 +768,13 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -834,7 +790,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }
@@ -851,21 +807,17 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }
 }
 
 static enum search_ret thresh_decode_offsets(struct index *idx, 
-  struct query *query, unsigned int qterm, unsigned long int docno, 
-  struct search_metric_results *results, 
-  struct search_list_src *src, unsigned int postings, 
-  int opts, struct index_search_opt *opt) {
-    /* METRIC_STRUCT */ struct pcosine_param *param = (void *) &opt->u;
-    struct search_acc_cons *acc = results->acc,
-                           **prevptr = &results->acc,
-                           dummy;
+                                             struct query *query, unsigned int qterm, unsigned long int docno,
+                                             struct search_metric_results *results,
+                                             struct search_list_src *src, unsigned int postings,
+                                             int opts, struct index_search_opt *opt) {
+    struct search_acc_cons *acc, dummy, **prevptr = &results->acc;
     unsigned long int f_dt,           /* number of offsets for this document */
                       docno_d;        /* d-gap */
 
@@ -884,13 +836,13 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
+
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
 
-    const float w_qt = (query->term[qterm].f_qt) * log(1 + (N / (float) (query->term[qterm].f_t)));
-
+    const double w_qt = (query->term[qterm].f_qt) * log(1 + (N/(double)(query->term[qterm].f_t)));
 
     /* METRIC_PER_CALL */
 
@@ -1046,7 +998,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -1104,13 +1056,13 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -1126,7 +1078,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }
@@ -1143,7 +1095,6 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
                 return SEARCH_EINVAL;
             }
         } else {
-            param = NULL;   /* avoid 'param not used' warning */
             return ret;
         }
     }

@@ -25,7 +25,7 @@ enum search_ret {
 /* structure to accumulate the weight for a document during ranking */
 struct search_acc {
     unsigned long int docno;
-    float weight;
+    double weight;
 };
 
 /* linked list of accumulators */
@@ -66,7 +66,7 @@ struct search_metric_results {
      unsigned int accs;               /* count of accumulators */
      unsigned int acc_limit;          /* 'soft' accumulator limit */
      struct objalloc *alloc;          /* allocator for acc's */
-     float v_t;                       /* threshold for accepting accumulators */
+     double v_t;                       /* threshold for accepting accumulators */
      int estimated;                   /* whether total_results is estimated */
      double total_results;            /* total number of possible results for 
                                        * this query */
@@ -136,7 +136,7 @@ struct search_metric {
 unsigned int search_qterms(struct query *q);
 
 /* function to return the cosine weight of a query structure */
-float search_qweight(struct query *q);
+double search_qweight(struct query *q);
 
 struct alloc;
 struct term;

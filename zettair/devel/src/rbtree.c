@@ -5,7 +5,7 @@
  * NULL values.  We also use parent pointers, since they seemed easier than
  * maintaining a stack in this instance.
  *
- * if DEAR_DEBUG is set to 1, and NDEBUG is left undefined, then the red-black
+ * if DEBUG is set to 1, and NDEBUG is left undefined, then the red-black
  * tree will consume potentially a lot of time and stack space recursively
  * checking that it is a valid red-black tree.  This is useful for debugging,
  * but you'll probably want to turn this off in production.
@@ -120,11 +120,10 @@ void rbtree_print(const struct rbtree *rb, FILE *output) {
 
 /* invariant checking stuff */
 
-static enum rbtree_ret rbtree_node_not_under(const struct rbtree *rb, 
-  const struct rbtree_node *node, const struct rbtree_node *banned) {
-    enum rbtree_ret ret;
-
-    if (DEAR_DEBUG) {
+static enum rbtree_ret rbtree_node_not_under(const struct rbtree *rb,
+                                             const struct rbtree_node *node, const struct rbtree_node *banned) {
+    if (DEBUG) {
+        enum rbtree_ret ret;
 
         assert(node);
 
@@ -282,10 +281,10 @@ static enum rbtree_ret rbtree_node_check_black(const struct rbtree *rb,
 
 /* internal function (not static to avoid warnings) to check red-black tree invariants */
 enum rbtree_ret rbtree_invariant(const struct rbtree *rb) {
-    unsigned int max, min, bh;
-    enum rbtree_ret ret;
+    if (DEBUG) {
+        unsigned int max, min, bh;
+        enum rbtree_ret ret;
 
-    if (DEAR_DEBUG) {
         /* check that link structure is sane */
         if ((rb->nil.parent != &rb->nil)
          || (rb->nil.child[RBTREE_LEFT] != &rb->nil)
@@ -346,10 +345,7 @@ enum rbtree_ret rbtree_invariant(const struct rbtree *rb) {
 static struct rbtree *rbtree_new(void) {
     struct rbtree *rb;
 
-    if ((rb = malloc(sizeof(*rb))) 
-      && (rb->alloc = objalloc_new(sizeof(struct rbtree_node), 0, 
-          !!DEAR_DEBUG, 4096, NULL))) {
-
+    if ((rb = malloc(sizeof(*rb)))  && (rb->alloc = objalloc_new(sizeof(struct rbtree_node), 0, DEBUG, 4096, NULL))) {
         rb->size = 0;
         rb->nil.red = 0;
         rb->nil.child[RBTREE_LEFT] = rb->nil.child[RBTREE_RIGHT] = rb->nil.parent = &rb->nil;

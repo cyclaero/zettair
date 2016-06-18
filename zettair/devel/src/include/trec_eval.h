@@ -1,6 +1,6 @@
 /* trec_eval.h is an interface to perform trec_eval calculations
  * programmatically.  It is based upon the trec_eval program (7.0beta)
- * available from ftp://ftp.cs.cornell.edu/pub/smart.  trec_eval.c
+ * available from ftp://ftp.cs.cornell.edu/pub/smart. trec_eval.c
  * contains code copyright Chris Buckley and Gerard Salton.
  *
  * written bodob, nml 2004-10-10
@@ -21,20 +21,14 @@ struct treceval;
 
 /* structure to hold evaluated results */
 struct treceval_results {
-    unsigned int queries;               /* number of queries this result
-                                           is over */
+    unsigned int queries;               /* number of queries this result is over */
     unsigned int retrieved;             /* number of retrieved documents */
-    unsigned int relevant;              /* number of all relevant
-                                           documents in collection */
+    unsigned int relevant;              /* number of all relevant documents in collection */
     unsigned int relevant_retrieved;    /* relevant documents retrieved */
-    float interpolated_rp[11];          /* interpolated recall-precision
-                                           at 11 points, in ascending
-                                           order of position */
-    float average_precision;            /* average precision measure */
-    float precision_at[9];              /* precision at 9 recall points:
-                                           5, 10, 15, 20, 30, 100, 200,
-                                           500, 1000 */
-    float rprecision;                   /* r-precision value */
+    double interpolated_rp[11];         /* interpolated recall-precision at 11 points, in ascending order of position */
+    double average_precision;           /* average precision measure */
+    double precision_at[9];             /* precision at 9 recall points: 5, 10, 15, 20, 30, 100, 200, 500, 1000 */
+    double rprecision;                  /* r-precision value */
 };
 
 /* enumerated type used for statistics below */
@@ -66,11 +60,11 @@ struct treceval_statistics {
                                            degraded */
         treceval_hypothesis hypothesis; /* hypothesis was (not) rejected
                                            ... */
-        float confidence;               /* ... with this confidence */
-        float z_score;                  /* the confidence level at which
+        double confidence;              /* ... with this confidence */
+        double z_score;                 /* the confidence level at which
                                            the hypothesis has been
                                            rejected/accepted */
-        float actual_confidence;        /* the "exact" confidence ... */
+        double actual_confidence;       /* the "exact" confidence ... */
         char sign;                      /* equal or smaller thant the
                                            value shown */
     } stats[11];
@@ -105,7 +99,7 @@ void treceval_qrels_delete(struct treceval_qrels **qrels);
  * returns currently 1 if successful */
 int treceval_add_result(struct treceval *raw_results, 
   const unsigned int query_id, const char *trec_document_number, 
-  const float score);
+  const double score);
 
 /* results for a particular query_id are evaluated;
  * accepts a query ID, a pointer to a results structure, a pointer to a
@@ -156,8 +150,7 @@ int treceval_stats_calculate(const struct treceval *one,
  * seemingly-useless interpolated statistics;
  * returns 1 on success, 0 in case the statistics haven't been
  * calculated (ie the structure is empty or corrupted) */
-int treceval_stats_print(const struct treceval_statistics *stats,
-  FILE *output);
+int treceval_stats_print(const struct treceval_statistics *stats, FILE *output);
 
 #ifdef _cplusplus
 }

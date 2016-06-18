@@ -24,8 +24,8 @@
 #include "str.h"
 #include "ioutil.h"
 
-#define IMPACT_UNSET -1.0F
-#define W_QT_UNSET -1.0F
+#define IMPACT_UNSET -1.0
+#define W_QT_UNSET -1.0
 #define E_VALUE 0.0001 
 
 /* In-memory, decompressed representation of a postings list, without wpos. */
@@ -721,11 +721,10 @@ static void impact_transform_list(struct list_decomp * list,
         }
     }
     impact_order_sort(list);
-#ifndef NDEBUG
+#if DEBUG
     for (d = 0; d < list->f_t; d++) {
         if (d != 0) {
-            assert(list->postings[d].docno > list->postings[d - 1].docno
-              || list->postings[d].impact < list->postings[d - 1].impact);
+            assert(list->postings[d].docno > list->postings[d - 1].docno || list->postings[d].impact < list->postings[d - 1].impact);
         }
     }
 #endif

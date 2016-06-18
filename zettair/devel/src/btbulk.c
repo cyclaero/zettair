@@ -87,7 +87,7 @@ struct btbulk_state {
     struct btbulk_bucket *btree;      /* pointer to bottom level of btree */
     unsigned int pagesize;            /* pagesize of btree buckets */
     unsigned long int maxfilesize;    /* maximum size of a file */
-    float fill;                       /* btree fill factor */
+    double fill;                       /* btree fill factor */
     int leaf_strategy;                /* btree leaf node bucket strategy */
     int node_strategy;                /* btree internal node bucket strategy */
     unsigned int levels;              /* btree levels */
@@ -96,7 +96,7 @@ struct btbulk_state {
                                        * leaf.  Contains NO_LAST_LEAF if 
                                        * absent. */
 
-    float overhead;                   /* estimate of overhead for each bucket */
+    double overhead;                   /* estimate of overhead for each bucket */
     double used;                      /* total bytes used in finished buckets */
     double total;                     /* total bytes in finished buckets */
 
@@ -112,7 +112,7 @@ struct btbulk_state {
 };
 
 struct btbulk *btbulk_new(unsigned int pagesize, unsigned long int maxfilesize,
-  int leaf_strategy, int node_strategy, float fill_factor, 
+  int leaf_strategy, int node_strategy, double fill_factor, 
   unsigned int buffer_pages, struct btbulk *space) {
     unsigned int size;
 
@@ -305,7 +305,7 @@ int btbulk_insert(struct btbulk *bulk) {
 insert_label:
     /* write an entry into the vocab, checking for appropriate fill rate */
     if (((bulk->state->fill < 1.0) 
-      && ((bulk->state->btree->used / (float) bulk->state->pagesize) 
+      && ((bulk->state->btree->used/(double)bulk->state->pagesize) 
         + bulk->state->overhead > bulk->state->fill))
       || !(bulk->output.ok.data 
         = bucket_append(BTBUCKET_BUCKET(bulk->state->btree->mem), 
@@ -482,7 +482,7 @@ new_label:
     while (curr) {
         assert(curr->parent);
         if (((bulk->state->fill < 1.0) 
-          && ((curr->parent->used / (float) bulk->state->pagesize) 
+          && ((curr->parent->used/(double)bulk->state->pagesize) 
             + bulk->state->overhead > bulk->state->fill))
           || (!(curr->parent_space 
             = bucket_alloc(BTBUCKET_BUCKET(curr->parent->mem), 

@@ -235,25 +235,24 @@ static void merge_free(void *ptr, void *mem) {
 }
 
 int merge_final_new(struct merge_final *merger, void *opaque,
-  void *(*allocfn)(void *opaque, unsigned int size),
-  void (*freefn)(void *opaque, void *mem), struct storagep *storage,
-  void *outbuf, unsigned int outbufsz, int offsets) {
-    unsigned int i,
-                 j;
+                    void *(*allocfn)(void *opaque, unsigned int size),
+                    void (*freefn)(void *opaque, void *mem), struct storagep *storage,
+                    void *outbuf, unsigned int outbufsz, int offsets) {
 
-    if (!opaque && !allocfn && !freefn) {
-        allocfn = merge_malloc;
-        freefn = merge_free;
+    unsigned int i, j;
+
+    if (!opaque)
+    {
+        if (!allocfn)
+            allocfn = merge_malloc;
+        if (!freefn)
+            freefn = merge_free;
     }
 
     if ((merger->state = allocfn(opaque, sizeof(*merger->state)))
-      && (merger->state->input 
-        = allocfn(opaque, sizeof(*merger->state->input) * merger->inputs))
-      && (merger->state->iinput 
-        = allocfn(opaque, sizeof(struct input *) * merger->inputs))
-      && (btbulk_new(storage->pagesize, storage->max_filesize, 
-        storage->btleaf_strategy, storage->btnode_strategy, 1.0, 
-        0, &merger->state->btree))) {
+     && (merger->state->input = allocfn(opaque, sizeof(*merger->state->input)*merger->inputs))
+     && (merger->state->iinput = allocfn(opaque, sizeof(struct input *)*merger->inputs))
+     && (btbulk_new(storage->pagesize, storage->max_filesize, storage->btleaf_strategy, storage->btnode_strategy, 1.0, 0, &merger->state->btree))) {
 
         for (i = 0; i < merger->inputs; i++) {
             merger->state->input[i].input = &merger->input[i];
@@ -319,24 +318,25 @@ int merge_final_new(struct merge_final *merger, void *opaque,
 }
 
 int merge_inter_new(struct merge_inter *merger, void *opaque,
-  void *(*allocfn)(void *opaque, unsigned int size),
-  void (*freefn)(void *opaque, void *mem), 
-  void *outbuf, unsigned int outbufsz, unsigned int max_termlen,
-  void *opaque_newfile, void (*newfile)(void *opaque_newfile), 
-  unsigned long int filesize) {
-    unsigned int i,
-                 j;
+                    void *(*allocfn)(void *opaque, unsigned int size),
+                    void (*freefn)(void *opaque, void *mem),
+                    void *outbuf, unsigned int outbufsz, unsigned int max_termlen,
+                    void *opaque_newfile, void (*newfile)(void *opaque_newfile),
+                    unsigned long int filesize) {
 
-    if (!opaque && !allocfn && !freefn) {
-        allocfn = merge_malloc;
-        freefn = merge_free;
+    unsigned int i, j;
+
+    if (!opaque)
+    {
+        if (!allocfn)
+            allocfn = merge_malloc;
+        if (!freefn)
+            freefn = merge_free;
     }
 
-    if ((merger->state = allocfn(opaque, sizeof(*merger->state)))
-      && (merger->state->input 
-        = allocfn(opaque, sizeof(*merger->state->input) * merger->inputs))
-      && (merger->state->iinput 
-        = allocfn(opaque, sizeof(struct input *) * merger->inputs))) {
+   if ((merger->state = allocfn(opaque, sizeof(*merger->state)))
+    && (merger->state->input = allocfn(opaque, sizeof(*merger->state->input) * merger->inputs))
+    && (merger->state->iinput = allocfn(opaque, sizeof(struct input *) * merger->inputs))) {
 
         for (i = 0; i < merger->inputs; i++) {
             merger->state->input[i].input = &merger->input[i];
@@ -807,11 +807,9 @@ write_end_label:
      * back on the heap */
     if (merger->state->prev_index != merger->state->index) {
         /* it didn't finish, put it back on the heap */
-        void *heapret;
-
-        heapret = heap_insert(merger->state->iinput, &merger->state->inputs, 
-            sizeof(*merger->state->iinput), iinput_cmp, 
-            &merger->state->iinput[merger->state->prev_index]);
+        heap_insert(merger->state->iinput, &merger->state->inputs,
+                    sizeof(*merger->state->iinput), iinput_cmp,
+                    &merger->state->iinput[merger->state->prev_index]);
     }
 
     /* finished, select next input */
@@ -918,11 +916,9 @@ write_vocab_end_label:
      * back on the heap */
     if (merger->state->prev_index != merger->state->index) {
         /* it didn't finish, put it back on the heap */
-        void *heapret;
-
-        heapret = heap_insert(merger->state->iinput, &merger->state->inputs, 
-            sizeof(*merger->state->iinput), iinput_cmp, 
-            &merger->state->iinput[merger->state->prev_index]);
+        heap_insert(merger->state->iinput, &merger->state->inputs,
+                    sizeof(*merger->state->iinput), iinput_cmp,
+                    &merger->state->iinput[merger->state->prev_index]);
     }
 
     if (merger->state->index < merger->inputs - merger->state->finished) {
@@ -1027,11 +1023,9 @@ write_file_end_label:
      * back on the heap */
     if (merger->state->prev_index != merger->state->index) {
         /* it didn't finish, put it back on the heap */
-        void *heapret;
-
-        heapret = heap_insert(merger->state->iinput, &merger->state->inputs, 
-            sizeof(*merger->state->iinput), iinput_cmp, 
-            &merger->state->iinput[merger->state->prev_index]);
+        heap_insert(merger->state->iinput, &merger->state->inputs,
+                    sizeof(*merger->state->iinput), iinput_cmp,
+                    &merger->state->iinput[merger->state->prev_index]);
         input = merger->state->iinput[merger->state->index];
     }
     goto write_file_first_label;
@@ -1453,11 +1447,9 @@ write_end_label:
      * back on the heap */
     if (merger->state->prev_index != merger->state->index) {
         /* it didn't finish, put it back on the heap */
-        void *heapret;
-
-        heapret = heap_insert(merger->state->iinput, &merger->state->inputs, 
-            sizeof(*merger->state->iinput), iinput_cmp, 
-            &merger->state->iinput[merger->state->prev_index]);
+        heap_insert(merger->state->iinput, &merger->state->inputs,
+                    sizeof(*merger->state->iinput), iinput_cmp,
+                    &merger->state->iinput[merger->state->prev_index]);
     }
 
     if (merger->state->index < merger->inputs - merger->state->finished) {

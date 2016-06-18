@@ -55,7 +55,7 @@ unsigned int storagep_no_overalloc(unsigned int size);
  * overallocation.  If the size given is over thresh, it is multiplied
  * by gradient (must be > 1.0) and has offset added to it.  It is then rounded
  * up to the nearest multiple of granularity. */
-void storagep_linear_overalloc_init(unsigned int thresh, float gradient, 
+void storagep_linear_overalloc_init(unsigned int thresh, double gradient, 
   unsigned int offset, unsigned int granularity);
 
 /* fill a struct with storage default values (fd is a file to provide default

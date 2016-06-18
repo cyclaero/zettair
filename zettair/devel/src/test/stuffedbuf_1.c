@@ -272,7 +272,7 @@ static int timing_test(char * conf_line) {
         fprintf(stderr, "TIMING: %u elements, %u max_len "
           "(full:dump:ratio size %u:%u:%.3f): 0.%06lu secs/get\n", 
           num_elements, max_len, full_len, dump_len,
-          (float) full_len / dump_len, usecs_per_get);
+          (double)full_len / dump_len, usecs_per_get);
     }
     unlink(tmpfile_template);
     tu_delete_elements(elements);

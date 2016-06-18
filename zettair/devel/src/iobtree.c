@@ -216,7 +216,9 @@ static struct page *read_page(struct iobtree *btree, unsigned int fileno,
                             if (!givenpage) {
                                 free(page);
                             }
-                            *err = IOBTREE_ENOMEM;
+                            if (err) {
+                                *err = IOBTREE_ENOMEM;
+                            }
                             return NULL;
                         }
                     }
@@ -302,7 +304,7 @@ static enum iobtree_ret iobtree_invariant(struct iobtree *btree) {
                  side;
     void *data;
 
-    if (!DEAR_DEBUG) {
+    if (!DEBUG) {
         return IOBTREE_OK;
     }
 
@@ -811,19 +813,21 @@ struct iobtree *iobtree_new(unsigned int pagesize, int leaf_strategy,
 }
 
 static struct iobtree *iobtree_load_int(unsigned int pagesize, 
-  int leaf_strategy, int node_strategy, struct freemap *freemap, 
-  struct fdset *fds, unsigned int fdset_type, unsigned int root_fileno, 
-  unsigned long int root_offset, unsigned long int entries) {
+                                        int leaf_strategy, int node_strategy, struct freemap *freemap,
+                                        struct fdset *fds, unsigned int fdset_type, unsigned int root_fileno,
+                                        unsigned long int root_offset, unsigned long int entries) {
+    char   io = 0;
     struct iobtree *btree = NULL;
 
-    if ((pagesize <= 65535) && (btree = malloc(sizeof(*btree)))
-      && ((btree->fd = fds), (btree->fdset = fdset_type), 
-        (btree->leaf_strategy = leaf_strategy), 
-        (btree->node_strategy = node_strategy), 
-        (btree->pagesize = pagesize))
-      && (btree->root 
-        = read_page(btree, root_fileno, root_offset, NULL, NULL, NULL))
-      && (btree->tmp = new_page(pagesize, NULL))) {
+    if ((pagesize <= 65535)
+     && (btree = malloc(sizeof(*btree)))
+     && (io = ((btree->fd = fds)
+            && (btree->fdset = fdset_type)
+            && (btree->leaf_strategy = leaf_strategy)
+            && (btree->node_strategy = node_strategy)
+            && (btree->pagesize = pagesize)))
+     && (btree->root = read_page(btree, root_fileno, root_offset, NULL, NULL, NULL))
+     && (btree->tmp = new_page(pagesize, NULL))) {
 
         if (!BTBUCKET_LEAF(btree->root->mem, btree->pagesize)) {
             if ((btree->leaf = new_page(pagesize, NULL))) {
@@ -841,7 +845,7 @@ static struct iobtree *iobtree_load_int(unsigned int pagesize,
         btree->entries = entries;
         btree->timestamp = 0;
     } else if (btree) {
-        if (btree->root) {
+        if (io && btree->root) {
             if (btree->leaf) {
                 free(btree->leaf);
             }
@@ -862,12 +866,9 @@ struct iobtree *iobtree_load_quick(unsigned int pagesize, int leaf_strategy,
     struct page *curr;
     void *addr = NULL;
     enum iobtree_ret ret;
-    unsigned int termlen,
-                 len;
+    unsigned int termlen, len;
 
-    btree = iobtree_load_int(pagesize, leaf_strategy, node_strategy, freemap, 
-        fds, fdset_type, root_fileno, root_offset, entries);
-
+    btree = iobtree_load_int(pagesize, leaf_strategy, node_strategy, freemap, fds, fdset_type, root_fileno, root_offset, entries);
     if (btree) {
         /* calculate the number of levels and find the right-most leaf by
          * traversing down the right side of the tree */
@@ -1958,7 +1959,7 @@ void *iobtree_append(struct iobtree *btree, const char *term,
         && read_page(btree, btree->right.fileno, btree->right.offset, 
             btree->leaf, NULL, &ret))) {
 
-        if (DEAR_DEBUG) {
+        if (DEBUG) {
             /* ensure that the term we're inserting really is larger than the
              * ones already here */
 
@@ -2079,19 +2080,17 @@ struct iobtree_iter {
 };
 
 enum iobtree_ret iobtree_iter_invariant(struct iobtree_iter *iter) {
-    struct iobtree *btree = iter->btree;
-
-    if (!DEAR_DEBUG) {
+    if (!DEBUG) {
         return IOBTREE_OK;
     }
+
+    struct iobtree *btree = iter->btree;
 
     if (btree->leaf->h.fileno != iter->fileno
       || btree->leaf->h.offset != iter->offset) {
         /* page in the leaf we're on */
-        if ((!btree->leaf->h.dirty
-            || (write_page(btree, btree->leaf) == IOBTREE_OK))
-          && read_page(btree, iter->fileno, iter->offset, btree->leaf, 
-              NULL, NULL)) {
+        if ((!btree->leaf->h.dirty || write_page(btree, btree->leaf) == IOBTREE_OK)
+         && read_page(btree, iter->fileno, iter->offset, btree->leaf, NULL, NULL)) {
             /* successfully read node, do nothing */
         } else {
             return IOBTREE_OK;   /* its ok to fail in _invariant */
@@ -2296,8 +2295,8 @@ enum iobtree_ret iobtree_iter_curr(struct iobtree_iter *iter,
 }
 
 enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter, 
-  char *termbuf, unsigned int termbuflen, unsigned int *termlen,
-  const char *seekterm, unsigned int seektermlen) {
+                                   char *termbuf, unsigned int termbuflen, unsigned int *termlen,
+                                   const char *seekterm, unsigned int seektermlen) {
     struct iobtree *btree = iter->btree;
     enum iobtree_ret ret;
 
@@ -2324,7 +2323,7 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
         void *data;
         struct page *parent;
         enum iobtree_ret ret;
-        int cmp;
+        int cmp = 0;
 
         /* finger search toward selected location.  Finger searching was
          * originally (i believe) proposed in 'A new representation for linear
@@ -2336,9 +2335,7 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
 
         /* search current node */
         index = iter->entries - 1;
-        currterm = locate(BTBUCKET_BUCKET(btree->leaf->mem), 
-            BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize),
-            btree->leaf_strategy, seekterm, seektermlen, &datalen, &index);
+        currterm = locate(BTBUCKET_BUCKET(btree->leaf->mem), BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize), btree->leaf_strategy, seekterm, seektermlen, &datalen, &index);
         assert(currterm || (index == iter->entries - 1));
 
         if (currterm) {
@@ -2349,11 +2346,8 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
         }
 
         /* have to move to the next bucket, get a pointer to the parent node 
-         * (we started at a leaf, so we don't this currently), which we'll 
-         * need below */
-        if ((ret = traverse(btree, seekterm, seektermlen, btree->root, NULL, 
-            &parent)) != IOBTREE_OK) {
-
+         * (we started at a leaf, so we don't this currently), which we'll need below */
+        if ((ret = traverse(btree, seekterm, seektermlen, btree->root, NULL, &parent)) != IOBTREE_OK) {
             return ret;
         }
  
@@ -2390,25 +2384,18 @@ enum iobtree_ret iobtree_iter_next(struct iobtree_iter *iter,
         assert(entries); /* shouldn't have an empty internal node */
 
         /* now descend down to appropriate leaf (note that we traverse starting at the parent we just found) */
-        if ((ret = traverse(btree, seekterm, seektermlen, parent, NULL, NULL))
-          != IOBTREE_OK) {
+        if ((ret = traverse(btree, seekterm, seektermlen, parent, NULL, NULL)) != IOBTREE_OK) {
             return ret;
         }
 
         iter->fileno = btree->leaf->h.fileno;
         iter->offset = btree->leaf->h.offset;
-        iter->entries = bucket_entries(BTBUCKET_BUCKET(btree->leaf->mem), 
-            BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize), 
-            btree->leaf_strategy);
+        iter->entries = bucket_entries(BTBUCKET_BUCKET(btree->leaf->mem), BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize), btree->leaf_strategy);
 
         /* find the seek term in the bucket we just found */
-        currterm = locate(BTBUCKET_BUCKET(btree->leaf->mem), 
-            BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize),
-            btree->leaf_strategy, seekterm, seektermlen, &datalen, 
-            &iter->index);
-
-        /* FIXME: what happens if this bucket doesn't contain an item greater
-         * than the seekterm? */
+        /*currterm = */
+        locate(BTBUCKET_BUCKET(btree->leaf->mem), BTBUCKET_SIZE(btree->leaf->mem, btree->pagesize), btree->leaf_strategy, seekterm, seektermlen, &datalen, &iter->index);
+        /* FIXME: what happens if this bucket doesn't contain an item greater than the seekterm? */
 
         assert(iobtree_iter_invariant(iter) == IOBTREE_OK);
         return IOBTREE_OK; 
@@ -2511,14 +2498,12 @@ void *iobtree_iter_alloc(struct iobtree_iter *iter,
     return ret;
 }
 
-void *iobtree_iter_realloc(struct iobtree_iter *iter, 
-  unsigned int newsize, int *toobig) {
+void *iobtree_iter_realloc(struct iobtree_iter *iter, unsigned int newsize, int *toobig) {
     struct iobtree *btree = iter->btree;
     const char *term;
-    unsigned int termlen,
+    unsigned int termlen = 0,
                  datalen;
-    void *data,
-         *ret;
+    void *data, *ret;
 
     btree->timestamp++;               /* update timestamp */
     iter->timestamp++;                /* update iteration timestamp */

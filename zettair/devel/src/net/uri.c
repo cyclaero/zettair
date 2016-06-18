@@ -69,15 +69,14 @@ static const char *uri_parse_char;
         return URI_OK; \
     } else
 
-/* internal function to parse an IPv4 address, returning URI_OK if it
- * parses, URI_PARSE_ERR if not */
+/* internal function to parse an IPv4 address, returning URI_OK if it parses, URI_PARSE_ERR if not */
 static enum uri_ret uri_parse_ipv4(const char *str, unsigned int len);
 
 enum uri_ret uri_parse(const char *uri, unsigned int uri_len, 
   struct uri_parsed *parse) {
     unsigned int count = 0,
                  tmp_count = 0;
-#ifndef NDEBUG
+#if NDEBUG == 1
     unsigned int orig_len = uri_len;
     const char *orig_uri = uri;
 #endif

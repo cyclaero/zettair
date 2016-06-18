@@ -139,7 +139,7 @@ static unsigned int sizelist_size(const struct freerec *rec,
 
 /* internal function to ensure that the freemap is sane */
 static int freemap_invariant(struct freemap *map) {
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         struct freerec *curr,
                        *prev;
         unsigned int count = 0,
@@ -369,10 +369,10 @@ struct freemap *freemap_new(enum freemap_strategies strategy,
     if ((map = malloc(sizeof(*map))) 
       && (map->index = rbtree_ptr_new(freerec_cmp))
       && (map->rand = lcrand_new((unsigned int) time(NULL)))
-      && (map->alloc 
+      && (map->alloc =
         /* XXX: should allow setting of chunksize and underlying allocator for 
          * object alloctor from outside interface */
-        = objalloc_new(sizeof(struct freerec), 0, !!DEAR_DEBUG, 1024, NULL))) {
+           objalloc_new(sizeof(struct freerec), 0, DEBUG, 1024, NULL))) {
 
         map->first = map->unused = NULL;
         map->strategy = strategy;

@@ -47,7 +47,7 @@
  *       - number of prefix bytes from previous TREC docno (vbyte)
  *       - length of suffix bytes (vbyte)
  *       - suffix bytes
- *     - weight (float)
+ *     - weight (double)
  *
  * this implementation doesn't currently handle deletion, but has been designed
  * so that adding it shouldn't be too much hassle.  The in-memory arrays can be
@@ -481,7 +481,7 @@ static enum docmap_ret init_append_buffer(struct docmap *dm,
     *dm->write.pos.pos++ = DATA_BYTE;
     dm->write.pos.pos += sizeof(uint32_t);       /* skip space for entries */
     assert(vec_len(&dm->write.pos));
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         memset(dm->write.pos.pos, 0, vec_len(&dm->write.pos));
     }
     return DOCMAP_OK;
@@ -778,13 +778,13 @@ enum docmap_ret docmap_add(struct docmap *dm,
   unsigned int fileno, off_t offset, 
   unsigned int bytes, enum docmap_flag flags, 
   unsigned int words, unsigned int distinct_words,
-  float weight, const char *trecno, unsigned trecno_len, enum mime_types mtype,
+  double weight, const char *trecno, unsigned trecno_len, enum mime_types mtype,
   unsigned long int *docno) {
     enum docmap_ret dmret;
     struct docmap_entry entry;
     char *tmp;
-    unsigned int tmplen,
-                 reposno = 0;
+    unsigned int tmplen;
+    unsigned int reposno = 0;
     enum reposset_ret rret;
 
     assert(offset >= 0);
@@ -803,13 +803,11 @@ enum docmap_ret docmap_add(struct docmap *dm,
     entry.trecno_size = entry.trecno_len = trecno_len;
 
     /* fiddle reposset in response to new docno */
-    assert(!entry.docno 
-      || reposset_reposno(dm->rset, entry.docno - 1, &reposno) == REPOSSET_OK);
+    assert(!entry.docno || reposset_reposno(dm->rset, entry.docno - 1, &reposno) == REPOSSET_OK);
     if (!offset) {
         unsigned int reposno;
 
-        if ((rret = reposset_append(dm->rset, entry.docno, &reposno)) 
-          == REPOSSET_OK) {
+        if ((rret = reposset_append(dm->rset, entry.docno, &reposno)) == REPOSSET_OK) {
             assert(reposno == entry.fileno);
         } else {
             assert(!CRASH);
@@ -831,12 +829,9 @@ enum docmap_ret docmap_add(struct docmap *dm,
         return DOCMAP_MEM_ERROR;
     }
     /* check that previous reposno hasn't changed */
-    assert(!entry.docno 
-      || (reposset_reposno(dm->rset, entry.docno - 1, &tmplen) == REPOSSET_OK
-        && tmplen == reposno));
+    assert(!entry.docno || (reposset_reposno(dm->rset, entry.docno - 1, &tmplen) == REPOSSET_OK && tmplen == reposno));
     /* check that this reposno is as expected */
-    assert(reposset_reposno(dm->rset, entry.docno, &tmplen) == REPOSSET_OK
-      && tmplen == entry.fileno);
+    assert(reposset_reposno(dm->rset, entry.docno, &tmplen) == REPOSSET_OK && tmplen == entry.fileno);
 
     /* ensure we've got enough space to store docno *before* we encode */
     while (dm->write.entry.trecno_size <= entry.trecno_len) {
@@ -862,8 +857,7 @@ enum docmap_ret docmap_add(struct docmap *dm,
         }
     }
 
-    while ((dmret = encode(&dm->write.pos, &dm->write.entry, &entry)) 
-      != DOCMAP_OK) {
+    while ((dmret = encode(&dm->write.pos, &dm->write.entry, &entry)) != DOCMAP_OK) {
         switch (dmret) {
         case DOCMAP_OK: assert("can't get here" && 0); break;
         default: return dmret;
@@ -1453,8 +1447,7 @@ static enum docmap_ret map_realloc(struct docmap *dm) {
     }
 }
 
-static enum docmap_ret docmap_cache_int(struct docmap *dm, 
-  enum docmap_cache tocache, int reread) {
+static enum docmap_ret docmap_cache_int(struct docmap *dm, enum docmap_cache tocache, int reread) {
     enum docmap_cache prev = dm->cache.cache;
     enum docmap_ret dmret;
     unsigned int page,
@@ -1515,8 +1508,7 @@ static enum docmap_ret docmap_cache_int(struct docmap *dm,
     }
 
     dm->dirty = 1;
-    dm->agg.sum_weight = dm->agg.sum_bytes 
-      = dm->agg.sum_words = dm->agg.sum_dwords = 0;
+    dm->agg.sum_weight = dm->agg.sum_bytes = dm->agg.sum_words = dm->agg.sum_dwords = 0;
 
     /* ensure that we've got initial memory for cached items */
     dm->cache.cache = tocache;
@@ -1537,9 +1529,7 @@ static enum docmap_ret docmap_cache_int(struct docmap *dm,
         }
     }
 
-    /* need to read all entries in the docmap (rebuilding map and reposset 
-     * and entries along the way) */
-    prev_entries = dm->entries;
+    /* need to read all entries in the docmap (rebuilding map and reposset and entries along the way) */
     dm->entries = 0;
     dm->cache.len = 0;
     dm->cache.typeex_len = 0;
@@ -1769,15 +1759,15 @@ enum docmap_ret docmap_save(struct docmap *dm) {
 
             /* write aggregate quantities */
             *v.pos++ = CACHE_ID_AGG;
-            vec_flt_write(&v, (float) dm->agg.sum_bytes, 
+            vec_flt_write(&v, (double)dm->agg.sum_bytes, 
               VEC_FLT_FULL_PRECISION);
-            vec_flt_write(&v, (float) dm->agg.sum_words, 
+            vec_flt_write(&v, (double)dm->agg.sum_words, 
               VEC_FLT_FULL_PRECISION);
-            vec_flt_write(&v, (float) dm->agg.sum_dwords, 
+            vec_flt_write(&v, (double)dm->agg.sum_dwords, 
               VEC_FLT_FULL_PRECISION);
-            vec_flt_write(&v, (float) dm->agg.sum_weight, 
+            vec_flt_write(&v, (double)dm->agg.sum_weight, 
               VEC_FLT_FULL_PRECISION);
-            vec_flt_write(&v, (float) dm->agg.sum_trecno, 
+            vec_flt_write(&v, (double)dm->agg.sum_trecno, 
               VEC_FLT_FULL_PRECISION);
 
 /* macro to perform repetitive paging out of arrays */
@@ -1816,7 +1806,7 @@ enum docmap_ret docmap_save(struct docmap *dm) {
                     /* ran out of space, terminate this page and start anew */\
                     v.pos = end_pos;                                          \
                     vec_byte_write(&v, "", 1);                                \
-                    if (DEAR_DEBUG) {                                         \
+                    if (DEBUG) {                                         \
                         memset(v.pos, 0, vec_len(&v));                        \
                     }                                                         \
                     NEW_PAGE();                                               \
@@ -1868,7 +1858,7 @@ enum docmap_ret docmap_save(struct docmap *dm) {
                     } else {
                         v.pos = pos;
                         vec_byte_write(&v, "", 1);
-                        if (DEAR_DEBUG) {
+                        if (DEBUG) {
                             memset(v.pos, 0, vec_len(&v));
                         }
                         NEW_PAGE();
@@ -1895,7 +1885,7 @@ enum docmap_ret docmap_save(struct docmap *dm) {
                 } else {
                     v.pos = pos;
                     vec_byte_write(&v, "", 1);
-                    if (DEAR_DEBUG) {
+                    if (DEBUG) {
                         memset(v.pos, 0, vec_len(&v));
                     }
                     NEW_PAGE();
@@ -1904,7 +1894,7 @@ enum docmap_ret docmap_save(struct docmap *dm) {
 
             /* terminate final page, and mark it as final */
             vec_byte_write(&v, "", 1);
-            if (DEAR_DEBUG) {
+            if (DEBUG) {
                 memset(v.pos, 0, vec_len(&v));
             }
             v.pos = dm->readbuf.buf + (page - 1) * dm->pagesize;
@@ -2063,8 +2053,7 @@ struct docmap *docmap_load(struct fdset *fdset,
 
     /* page last data page into append buffer, read until the end */
     if ((dmret = take_read_buffer(dm)) == DOCMAP_OK 
-      && (dm->appendbuf.buflen = read(fd, dm->appendbuf.buf, dm->pagesize)) 
-        == dm->pagesize) {
+      && (dm->appendbuf.buflen = read(fd, dm->appendbuf.buf, dm->pagesize)) == dm->pagesize) {
 
         dm->appendbuf.buflen /= dm->pagesize;
         dm->appendbuf.page = page;
@@ -2084,7 +2073,6 @@ struct docmap *docmap_load(struct fdset *fdset,
         FAIL(DOCMAP_IO_ERROR);
     }
     fdset_unpin(fdset, fd_type, fileno, fd);
-    fd = -1;
 
     /* read cache pages */
     corrupt = 0;
@@ -2111,12 +2099,12 @@ struct docmap *docmap_load(struct fdset *fdset,
                 uint32_t entries,
                          tmptries;
                 unsigned long int **larrptr = NULL;
-                float **farrptr = NULL;
+                double **farrptr = NULL;
                 char **carrptr = NULL;
                 unsigned int target = 0,
                              bytes,
                              **arrptr = NULL;
-                float tmpf;
+                double tmpf;
                 struct reposset_record tmprec;
                 struct reposset_check tmpcheck;
 
@@ -2268,8 +2256,7 @@ struct docmap *docmap_load(struct fdset *fdset,
                         switch (type) {
                         case PAGE_OUT_LONG:
                             if (corrupt || !vec_len(&v)) break;
-                            if (!*larrptr 
-                              && !(*larrptr = malloc(sizeof(long) * target))) {
+                            if (!*larrptr && !(*larrptr = malloc(sizeof(unsigned long)*target))) {
                                 assert(!CRASH);
                                 FAIL(DOCMAP_MEM_ERROR);
                             }
@@ -2283,8 +2270,7 @@ struct docmap *docmap_load(struct fdset *fdset,
 
                         case PAGE_OUT_INT:
                             if (corrupt || !vec_len(&v)) break;
-                            if (!*arrptr 
-                              && !(*arrptr = malloc(sizeof(int) * target))) {
+                            if (!*arrptr && !(*arrptr = malloc(sizeof(unsigned int)*target))) {
                                 assert(!CRASH);
                                 FAIL(DOCMAP_MEM_ERROR);
                             }
@@ -2298,8 +2284,7 @@ struct docmap *docmap_load(struct fdset *fdset,
 
                         case PAGE_OUT_FLT:
                             if (corrupt || !vec_len(&v)) break;
-                            if (!*farrptr 
-                              && !(*farrptr = malloc(sizeof(float) * target))) {
+                            if (!*farrptr && !(*farrptr = malloc(sizeof(double)*target))) {
                                 assert(!CRASH);
                                 FAIL(DOCMAP_MEM_ERROR);
                             }
@@ -2314,8 +2299,7 @@ struct docmap *docmap_load(struct fdset *fdset,
 
                         case PAGE_OUT_CHR:
                             if (corrupt || !vec_len(&v)) break;
-                            if (!*carrptr 
-                              && !(*carrptr = malloc(sizeof(float) * target))) {
+                            if (!*carrptr && !(*carrptr = malloc(sizeof(char)*sizeof(double)*target))) {
                                 assert(!CRASH);
                                 FAIL(DOCMAP_MEM_ERROR);
                             }
@@ -2353,7 +2337,7 @@ struct docmap *docmap_load(struct fdset *fdset,
         }
     }
 
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         dmret = docmap_cache_check(dm);
         assert(dmret == DOCMAP_OK);
     }
@@ -2394,7 +2378,7 @@ static enum docmap_ret docmap_cache_check(struct docmap *dm) {
     /* need to read all entries in the docmap */
     for (page = 0; page < dm->map_len; page++) {
         if ((dmret = page_in(dm, page)) == DOCMAP_OK) {
-            unsigned int len;
+            unsigned int len = 0;
 
             if (page >= dm->readbuf.page 
               && page < dm->readbuf.page + dm->readbuf.buflen) {
@@ -2408,8 +2392,7 @@ static enum docmap_ret docmap_cache_check(struct docmap *dm) {
             }
 
             /* iterate through page entries */
-            while ((dmret = decode(&dm->read)) 
-              == DOCMAP_OK) {
+            while ((dmret = decode(&dm->read)) == DOCMAP_OK) {
                 char buf[BUFSIZ + 1];
 
                 if (((dm->cache.cache & DOCMAP_CACHE_WORDS)
@@ -2435,8 +2418,7 @@ static enum docmap_ret docmap_cache_check(struct docmap *dm) {
                 }
 
                 if (dm->cache.cache & DOCMAP_CACHE_TRECNO) {
-                    dmret = docmap_get_trecno(dm, dm->read.entry.docno,
-                        buf, BUFSIZ, &len);
+                    /* dmret = */ docmap_get_trecno(dm, dm->read.entry.docno, buf, BUFSIZ, &len);
 
                     if (len < BUFSIZ) {
                         buf[len] = '\0';

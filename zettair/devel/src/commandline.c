@@ -56,12 +56,12 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "    --anh-impact: evaluate using impact-ordered lists\n"
                     "                  (must have specified --anh-impact while indexing)\n");
     fprintf(output, "    --okapi: use Okapi BM25 metric\n");
-    fprintf(output, "    --k1=[float]: set Okapi BM25 k1 value\n");
-    fprintf(output, "    --k3=[float]: set Okapi BM25 k3 value\n");
-    fprintf(output, "    --b=[float]: set Okapi BM25 b value\n");
-    fprintf(output, "    --pivoted-cosine=[float]: use pivoted cosine metric, with given pivot\n");
+    fprintf(output, "    --k1=[double]: set Okapi BM25 k1 value\n");
+    fprintf(output, "    --k3=[double]: set Okapi BM25 k3 value\n");
+    fprintf(output, "    --b=[double]: set Okapi BM25 b value\n");
+    fprintf(output, "    --pivoted-cosine=[double]: use pivoted cosine metric, with given pivot\n");
     fprintf(output, "    --cosine: use cosine metric\n");
-    fprintf(output, "    --hawkapi=[float]: use Dave Hawking's metric, with alpha given\n");
+    fprintf(output, "    --hawkapi=[double]: use Dave Hawking's metric, with alpha given\n");
     fprintf(output, "    --dirichlet=[uint]: use Dirichlet-smoothed LM metric, with mu given\n");
     fprintf(output, "    --metric=[string]: use named metric, with given parameters\n");
     fprintf(output, "    --metric-parameters=[string]: parameters for metric, in the form [name]=[value], separated by commas\n");
@@ -1119,7 +1119,9 @@ static struct args *parse_args(unsigned int argc, char **argv,
     }
 
     /* count initial items */
-    for (listitems = 0; args->list[listitems]; listitems++) ;
+    listitems = 0;
+    if (args->list)
+        for (; args->list[listitems]; listitems++) ;
 
     while (!err && (ind < argc)) {
         void *ptr;
@@ -1152,7 +1154,8 @@ static struct args *parse_args(unsigned int argc, char **argv,
         }
         ind++;
     }
-    args->list[listitems] = NULL;
+    if (args->list)
+        args->list[listitems] = NULL;
 
     if (err) {
         if (!quiet) {
@@ -1294,27 +1297,17 @@ int build(struct args *args, FILE *output) {
     unsigned long int docno;
     struct index_stats stats;
     struct index_expensive_stats estats;
-    struct timeval now,
-                   then;
+    struct timeval now, then;
     double seconds;
 
     TIMINGS_DECL();
-
     TIMINGS_START();
 
     fprintf(output, "%s version %s", PACKAGE, PACKAGE_VERSION);
 
     if (!isdigit(PACKAGE_VERSION[0])) {
         /* its not a release, print a little more info */
-        int ndebug = 0;
-
-#ifdef NDEBUG
-        ndebug = 1;
-#endif
-
-        fprintf(output, ", %s%s",  
-          ndebug ? "" : ", no NDEBUG", 
-          DEAR_DEBUG ? ", DEAR_DEBUG! (may run EXTREMELY slowly)" : "");
+        fprintf(output, ", %s", DEBUG ? ", DEBUG! (may run EXTREMELY slowly)" : "");
     }
     fprintf(output, "\n");
 
@@ -1491,9 +1484,8 @@ int main(int argc, char **argv) {
     if ((args = parse_args(argc, argv, &argspace, output, path))) {
         if (!args->index && !args->index_add && !args->stat) {
             /* load the index */
-            if ((idx = index_load(args->prefix, args->memory, 
-                  args->lopts, &args->lopt)) 
-              && (results = malloc(sizeof(*results) * args->results))) {
+            if ((idx = index_load(args->prefix, args->memory, args->lopts, &args->lopt))
+             && (results = malloc(sizeof(*results) * args->results))) {
 
                 gettimeofday(&then, NULL);
 
@@ -1501,6 +1493,7 @@ int main(int argc, char **argv) {
                 if (!index_stats(idx, &stats)) {
                     index_delete(idx);
                     free_args(args);
+                    free(results);
                     return EXIT_FAILURE;
                 }
 

@@ -66,8 +66,8 @@ struct postings* postings_new(unsigned int tablesize,
     tablesize = bit_pow2(bits);  /* tablesize is now guaranteed to be a power of two */
 
     if (p && (p->hash = malloc(sizeof(struct postings_node *) * tablesize))
-          && (p->string_mem = poolalloc_new(!!DEAR_DEBUG, MEMPOOL_SIZE, NULL))
-          && (p->node_mem = objalloc_new(sizeof(struct postings_node), 0, !!DEAR_DEBUG, MEMPOOL_SIZE, NULL))) {
+          && (p->string_mem = poolalloc_new(DEBUG, MEMPOOL_SIZE, NULL))
+          && (p->node_mem = objalloc_new(sizeof(struct postings_node), 0, DEBUG, MEMPOOL_SIZE, NULL))) {
         p->stop = list;
         p->stem = stem; 
         p->offsets = offsets; 
@@ -158,12 +158,12 @@ int postings_update(struct postings* post, struct postings_docstats* stats) {
     struct postings_node* node = post->update;
     unsigned int terms = 0,
                  dterms = 0;
-    float weight = 0,
+    double weight = 0,
            fdt_log;
 
     while (node) {
         /* calculate document weight */
-        fdt_log = logf((float) node->offsets);
+        fdt_log = logf((double)node->offsets);
         weight += (1 + fdt_log) * (1 + fdt_log);
 
         assert(node->offsets);

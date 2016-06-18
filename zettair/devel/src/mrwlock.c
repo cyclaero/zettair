@@ -158,10 +158,7 @@ enum mrwlock_ret mrwlock_delete(struct mrwlock *lock) {
         while (lock->reader.active || (lock->reader.passive > 1)) {
             assert(lock->reader.max_active);
 
-            if ((pret 
-              = zpthread_cond_wait(&lock->reader.passive_cond, &lock->mutex)) 
-                == ZPTHREAD_OK) {
-
+            if ((pret = zpthread_cond_wait(&lock->reader.passive_cond, &lock->mutex)) == ZPTHREAD_OK) {
                 /* propagate signal to other waiters, if any */
                 pret = zpthread_cond_signal(&lock->reader.passive_cond);
                 assert(pret == ZPTHREAD_OK);
@@ -179,10 +176,7 @@ enum mrwlock_ret mrwlock_delete(struct mrwlock *lock) {
         while (lock->writer.active || (lock->writer.passive > 1)) {
             assert(lock->writer.max_active);
 
-            if ((pret 
-              = zpthread_cond_wait(&lock->writer.passive_cond, &lock->mutex)) 
-                == 0) {
-
+            if ((pret = zpthread_cond_wait(&lock->writer.passive_cond, &lock->mutex)) == 0) {
                 /* propagate signal to other waiters, if any */
                 pret = zpthread_cond_signal(&lock->writer.passive_cond);
                 assert(pret == ZPTHREAD_OK);
@@ -325,8 +319,7 @@ enum mrwlock_ret mrwlock_wlock(struct mrwlock *lock) {
     return mrwlock_lock(lock, &lock->writer, &lock->reader, 0);
 }
 
-/* internal function to handle the symmetrical cases for reading and writing
- * unlock */
+/* internal function to handle the symmetrical cases for reading and writing unlock */
 static enum mrwlock_ret mrwlock_unlock(struct mrwlock *lock, 
   struct lockset *wanted, struct lockset *other, int read) {
     int pret;
@@ -337,8 +330,7 @@ static enum mrwlock_ret mrwlock_unlock(struct mrwlock *lock,
         wanted->active--;
 
         /* if both are able to proceed, nothing should be waiting */
-        assert((lock->state != LOCKSTATE_EITHER)
-          || (wanted->waiting == 0 && other->waiting == 0));
+        assert((lock->state != LOCKSTATE_EITHER) || (wanted->waiting == 0 && other->waiting == 0));
 
         /* unless both are able to proceed, there should be no active or 
          * passive threads waiting for locks of the other type */
@@ -346,8 +338,7 @@ static enum mrwlock_ret mrwlock_unlock(struct mrwlock *lock,
         assert((lock->state == LOCKSTATE_EITHER) || other->active == 0);
 
         /* signal passive threads of this type to start */
-        for (signal = 0; signal < wanted->passive 
-          && wanted->active + signal < wanted->max_active; signal++) {
+        for (signal = 0; signal < wanted->passive && wanted->active + signal < wanted->max_active; signal++) {
             pret = zpthread_cond_signal(&wanted->passive_cond);
             assert(pret == ZPTHREAD_OK);
         }

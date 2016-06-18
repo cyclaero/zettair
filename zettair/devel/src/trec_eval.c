@@ -61,47 +61,47 @@ typedef struct {
     long num_rel;                   /* Number of relevant docs */
     long num_ret;                   /* Number of retrieved docs */
     long num_rel_ret;               /* Number of relevant retrieved docs */
-    float avg_doc_prec;             /* Average of precision over all
+    double avg_doc_prec;            /* Average of precision over all
                                        relevant documents (query
                                        independent) */
 
     /* Measures after num_ret docs */
-    float exact_recall;             /* Recall after num_ret docs */
-    float exact_precis;             /* Precision after num_ret docs */
-    float exact_rel_precis;         /* Relative Precision (or recall) */
+    double exact_recall;            /* Recall after num_ret docs */
+    double exact_precis;            /* Precision after num_ret docs */
+    double exact_rel_precis;        /* Relative Precision (or recall) */
     /* Defined to be precision / max possible precision */
 
     /* Measures after each document */
-    float recall_cut[NUM_CUTOFF];   /* Recall after cutoff[i] docs */
+    double recall_cut[NUM_CUTOFF];  /* Recall after cutoff[i] docs */
 
-    float precis_cut[NUM_CUTOFF];   /* precision after cutoff[i] docs.
+    double precis_cut[NUM_CUTOFF];  /* precision after cutoff[i] docs.
                                        If less than cutoff[i] docs
                                        retrieved, then assume an
                                        additional cutoff[i]-num_ret
                                        non-relevant docs are retrieved. */
-    float rel_precis_cut            /* Relative precision after cutoff[i] */
+    double rel_precis_cut           /* Relative precision after cutoff[i] */
       [NUM_CUTOFF];                 /* docs */
 
     /* Measures after each rel doc */
-    float av_recall_precis;         /* average(integral) of precision at
+    double av_recall_precis;        /* average(integral) of precision at
                                        all rel doc ranks */
-    float int_av_recall_precis;     /* Same as above, but the precision
+    double int_av_recall_precis;    /* Same as above, but the precision
                                        values have been interpolated, so
                                        that prec(X) is actually MAX
                                        prec(Y) for all Y >= X */
-    float int_recall_precis         /* interpolated precision at 0.1 */
+    double int_recall_precis        /* interpolated precision at 0.1 */
       [NUM_RP_PTS];                 /* increments of recall */
-    float int_av3_recall_precis;    /* interpolated average at 3 intermediate
+    double int_av3_recall_precis;   /* interpolated average at 3 intermediate
                                        points */
-    float int_av11_recall_precis;   /* interpolated average at NUM_RP_PTS
+    double int_av11_recall_precis;  /* interpolated average at NUM_RP_PTS
                                        intermediate points (recall_level) */
 
     /* Measures after each non-rel doc */
-    float fall_recall[NUM_FR_PTS];  /* max recall after each non-rel
+    double fall_recall[NUM_FR_PTS]; /* max recall after each non-rel
                                        doc, at 11 points starting at 0.0
                                        and ending at MAX_FALL_RET
                                        /num_docs */
-    float av_fall_recall;           /* Average of fallout-recall, after
+    double av_fall_recall;          /* Average of fallout-recall, after
                                        each non-rel doc until fallout of
                                        MAX_FALL_RET / num_docs achieved */
 
@@ -111,22 +111,22 @@ typedef struct {
      * retrieved.  R-related cutoffs are really only applicable to a
      * situtation where there are many relevant docs per query (or lots
      * of queries). */
-    float R_recall_precis;          /* Recall or precision after R docs
+    double R_recall_precis;         /* Recall or precision after R docs
                                        (note they are equal at this
                                        point) */
-    float av_R_precis;              /* Average (or integral) of
+    double av_R_precis;             /* Average (or integral) of
                                        precision at each doc until R
                                        docs have been retrieved */
-    float R_prec_cut[NUM_PREC_PTS]; /* Precision measured after
+    double R_prec_cut[NUM_PREC_PTS];/* Precision measured after
                                        multiples of R docs have been
                                        retrieved.  11 equal points, with
                                        max multiple having value
                                        MAX_RPREC */
-    float int_R_recall_precis;      /* Interpolated precision after R
+    double int_R_recall_precis;     /* Interpolated precision after R
                                        docs Prec(X) = MAX(prec(Y)) for
                                        all Y>=X */
-    float int_av_R_precis;          /* Interpolated */
-    float int_R_prec_cut            /* Interpolated */
+    double int_av_R_precis;         /* Interpolated */
+    double int_R_prec_cut           /* Interpolated */
       [NUM_PREC_PTS]; 
 } TREC_EVAL;
 
@@ -140,7 +140,7 @@ typedef struct {
     char iter;                      /* Number of feedback runs for this
                                        query */
     char trtup_unused;              /* Presently unused field */
-    float sim;                      /* similarity of did to qid */
+    double sim;                     /* similarity of did to qid */
 } TR_TUP;
 
 typedef struct {
@@ -152,7 +152,7 @@ typedef struct {
 
 typedef struct {
     char *docno;
-    float sim;
+    double sim;
     long int rank;
 } TEXT_TR;
 
@@ -211,7 +211,7 @@ typedef struct {
     int query_id;                   /* Holds query ID */
     char trec_document_number[TREC_DOCUMENT_NUMBER_MAX_LENGTH];
                                     /* TREC document ID */
-    float score;                    /* accumulator score of document */
+    double score;                    /* accumulator score of document */
 } result_tuple;
 
 struct treceval_qrels {
@@ -560,34 +560,34 @@ static int close_tr_trec_eval(TREC_EVAL * eval) {
     /* Calculate averages (for those eval fields returning averages) */
     if (eval->qid > 0) {
         if (eval->num_rel > 0) {
-            eval->avg_doc_prec /= (float) eval->num_rel;
+            eval->avg_doc_prec /= (double)eval->num_rel;
         }
-        eval->exact_recall /= (float) eval->qid;
-        eval->exact_precis /= (float) eval->qid;
-        eval->exact_rel_precis /= (float) eval->qid;
-        eval->av_recall_precis /= (float) eval->qid;
-        eval->int_av_recall_precis /= (float) eval->qid;
-        eval->int_av3_recall_precis /= (float) eval->qid;
-        eval->int_av11_recall_precis /= (float) eval->qid;
-        eval->av_fall_recall /= (float) eval->qid;
-        eval->R_recall_precis /= (float) eval->qid;
-        eval->av_R_precis /= (float) eval->qid;
-        eval->int_R_recall_precis /= (float) eval->qid;
-        eval->int_av_R_precis /= (float) eval->qid;
+        eval->exact_recall /= (double)eval->qid;
+        eval->exact_precis /= (double)eval->qid;
+        eval->exact_rel_precis /= (double)eval->qid;
+        eval->av_recall_precis /= (double)eval->qid;
+        eval->int_av_recall_precis /= (double)eval->qid;
+        eval->int_av3_recall_precis /= (double)eval->qid;
+        eval->int_av11_recall_precis /= (double)eval->qid;
+        eval->av_fall_recall /= (double)eval->qid;
+        eval->R_recall_precis /= (double)eval->qid;
+        eval->av_R_precis /= (double)eval->qid;
+        eval->int_R_recall_precis /= (double)eval->qid;
+        eval->int_av_R_precis /= (double)eval->qid;
         for (i = 0; i < NUM_CUTOFF; i++) {
-            eval->recall_cut[i] /= (float) eval->qid;
-            eval->precis_cut[i] /= (float) eval->qid;
-            eval->rel_precis_cut[i] /= (float) eval->qid;
+            eval->recall_cut[i] /= (double)eval->qid;
+            eval->precis_cut[i] /= (double)eval->qid;
+            eval->rel_precis_cut[i] /= (double)eval->qid;
         }
         for (i = 0; i < NUM_RP_PTS; i++) {
-            eval->int_recall_precis[i] /= (float) eval->qid;
+            eval->int_recall_precis[i] /= (double)eval->qid;
         }
         for (i = 0; i < NUM_FR_PTS; i++) {
-            eval->fall_recall[i] /= (float) eval->qid;
+            eval->fall_recall[i] /= (double)eval->qid;
         }
         for (i = 0; i < NUM_PREC_PTS; i++) {
-            eval->R_prec_cut[i] /= (float) eval->qid;
-            eval->int_R_prec_cut[i] /= (float) eval->qid;
+            eval->R_prec_cut[i] /= (double)eval->qid;
+            eval->int_R_prec_cut[i] /= (double)eval->qid;
         }
     }
 
@@ -693,42 +693,42 @@ static int trvec_trec_eval(TR_VEC * tr_vec, TREC_EVAL * eval,
 
     /* Note for interpolated precision values (Prec(X) = MAX (PREC(Y))
      * for all Y >= X) */
-    int_precis = (float) rel_so_far / (float) eval->num_ret;
+    int_precis = (double)rel_so_far/(double)eval->num_ret;
     for (j = eval->num_ret; j > 0; j--) {
-        recall = (float) rel_so_far / (float) eval->num_rel;
-        precis = (float) rel_so_far / (float) j;
+        recall = (double)rel_so_far/(double)eval->num_rel;
+        precis = (double)rel_so_far/(double)j;
         if (int_precis < precis) {
             int_precis = precis;
         }
         while (j == cutoff[current_cutoff]) {
-            eval->recall_cut[current_cutoff] = (float) recall;
-            eval->precis_cut[current_cutoff] = (float) precis;
+            eval->recall_cut[current_cutoff] = (double)recall;
+            eval->precis_cut[current_cutoff] = (double)precis;
             eval->rel_precis_cut[current_cutoff]
-              = (float) (j > eval->num_rel ? recall : precis);
+              = (double)(j > eval->num_rel ? recall : precis);
             current_cutoff--;
         }
         while (j == cut_rprec[current_cut_rprec]) {
-            eval->R_prec_cut[current_cut_rprec] = (float) precis;
-            eval->int_R_prec_cut[current_cut_rprec] = (float) int_precis;
+            eval->R_prec_cut[current_cut_rprec] = (double)precis;
+            eval->int_R_prec_cut[current_cut_rprec] = (double)int_precis;
             current_cut_rprec--;
         }
 
         if (j == eval->num_rel) {
-            eval->R_recall_precis = (float) precis;
-            eval->int_R_recall_precis = (float) int_precis;
+            eval->R_recall_precis = (double)precis;
+            eval->int_R_recall_precis = (double)int_precis;
         }
 
         if (j < eval->num_rel) {
-            eval->av_R_precis += (float) precis;
-            eval->int_av_R_precis += (float) int_precis;
+            eval->av_R_precis += (double)precis;
+            eval->int_av_R_precis += (double)int_precis;
         }
 
         if (tr_vec->tr[j - 1].rel) {
-            eval->int_av_recall_precis += (float) int_precis;
-            eval->av_recall_precis += (float) precis;
-            eval->avg_doc_prec += (float) precis;
+            eval->int_av_recall_precis += (double)int_precis;
+            eval->av_recall_precis += (double)precis;
+            eval->avg_doc_prec += (double)precis;
             while (rel_so_far == cut_rp[current_cut_rp]) {
-                eval->int_recall_precis[current_cut_rp] = (float) int_precis;
+                eval->int_recall_precis[current_cut_rp] = (double)int_precis;
                 current_cut_rp--;
             }
             rel_so_far--;
@@ -739,58 +739,58 @@ static int trvec_trec_eval(TR_VEC * tr_vec, TREC_EVAL * eval,
              * retrieved docs where X-1 non-rel retrieved */
             while (current_cut_fr >= 0 &&
               j - rel_so_far == cut_fr[current_cut_fr] + 1) {
-                eval->fall_recall[current_cut_fr] = (float) recall;
+                eval->fall_recall[current_cut_fr] = (double)recall;
                 current_cut_fr--;
             }
             if (j - rel_so_far < MAX_FALL_RET) {
-                eval->av_fall_recall += (float) recall;
+                eval->av_fall_recall += (double)recall;
             }
         }
     }
 
     /* Fill in the 0.0 value for recall-precision (== max precision at
      * any point in the retrieval ranking) */
-    eval->int_recall_precis[0] = (float) int_precis;
+    eval->int_recall_precis[0] = (double)int_precis;
 
     /* Fill in those cutoff values and averages that were not achieved
      * because insufficient docs were retrieved. */
     for (i = 0; i < NUM_CUTOFF; i++) {
         if (eval->num_ret < cutoff[i]) {
-            eval->recall_cut[i] = ((float) eval->num_rel_ret /
-              (float) eval->num_rel);
-            eval->precis_cut[i] = ((float) eval->num_rel_ret /
-              (float) cutoff[i]);
+            eval->recall_cut[i] = ((double)eval->num_rel_ret /
+              (double)eval->num_rel);
+            eval->precis_cut[i] = ((double)eval->num_rel_ret /
+              (double)cutoff[i]);
             eval->rel_precis_cut[i] = (cutoff[i] < eval->num_rel) ?
               eval->precis_cut[i] : eval->recall_cut[i];
         }
     }
     for (i = 0; i < NUM_FR_PTS; i++) {
         if (eval->num_ret - eval->num_rel_ret < cut_fr[i]) {
-            eval->fall_recall[i] = (float) eval->num_rel_ret /
-              (float) eval->num_rel;
+            eval->fall_recall[i] = (double)eval->num_rel_ret /
+              (double)eval->num_rel;
         }
     }
     if (eval->num_ret - eval->num_rel_ret < MAX_FALL_RET) {
         eval->av_fall_recall += ((MAX_FALL_RET -
             (eval->num_ret - eval->num_rel_ret))
-          * ((float) eval->num_rel_ret / (float) eval->num_rel));
+          * ((double)eval->num_rel_ret/(double)eval->num_rel));
     }
     if (eval->num_rel > eval->num_ret) {
-        eval->R_recall_precis = (float) eval->num_rel_ret /
-          (float) eval->num_rel;
-        eval->int_R_recall_precis = (float) eval->num_rel_ret /
-          (float) eval->num_rel;
+        eval->R_recall_precis = (double)eval->num_rel_ret /
+          (double)eval->num_rel;
+        eval->int_R_recall_precis = (double)eval->num_rel_ret /
+          (double)eval->num_rel;
         for (i = eval->num_ret; i < eval->num_rel; i++) {
-            eval->av_R_precis += (float) eval->num_rel_ret / (float) i;
-            eval->int_av_R_precis += (float) eval->num_rel_ret / (float) i;
+            eval->av_R_precis += (double)eval->num_rel_ret/(double)i;
+            eval->int_av_R_precis += (double)eval->num_rel_ret/(double)i;
         }
     }
     for (i = 0; i < NUM_PREC_PTS; i++) {
         if (eval->num_ret < cut_rprec[i]) {
-            eval->R_prec_cut[i] = (float) eval->num_rel_ret /
-              (float) cut_rprec[i];
-            eval->int_R_prec_cut[i] = (float) eval->num_rel_ret /
-              (float) cut_rprec[i];
+            eval->R_prec_cut[i] = (double)eval->num_rel_ret /
+              (double)cut_rprec[i];
+            eval->int_R_prec_cut[i] = (double)eval->num_rel_ret /
+              (double)cut_rprec[i];
         }
     }
 
@@ -822,8 +822,8 @@ static int trvec_trec_eval(TR_VEC * tr_vec, TREC_EVAL * eval,
     if (eval->num_rel) {
         eval->av_R_precis /= eval->num_rel;
         eval->int_av_R_precis /= eval->num_rel;
-        eval->exact_recall = (float) eval->num_rel_ret / eval->num_rel;
-        eval->exact_precis = (float) eval->num_rel_ret / eval->num_ret;
+        eval->exact_recall = (double)eval->num_rel_ret / eval->num_rel;
+        eval->exact_precis = (double)eval->num_rel_ret / eval->num_ret;
         if (eval->num_rel > eval->num_ret)
             eval->exact_rel_precis = eval->exact_precis;
         else
@@ -873,7 +873,7 @@ static int compare_iter_rank(const void *vptr1, const void *vptr2) {
 #define POSITIVE 1
 
 struct data_point {
-    float absolute_difference;
+    double absolute_difference;
     int sign;
 };
 
@@ -892,21 +892,21 @@ static int compare_data_points(struct data_point *data_point1,
 
 static int calculate_statistics(unsigned int statistic_id,
   struct treceval_statistics *stats, unsigned int number_of_queries,
-  float *measurements[2]) {
+  double *measurements[2]) {
     unsigned int i = 0;
-    float difference = (float) 0;
+    double difference = 0.0;
     struct data_point *data_points = NULL;
-    float *ranks;
+    double *ranks;
     unsigned int non_zero_results_counter = 0;
     unsigned int counter = 0;
-    float average = (float) 0;
+    double average = 0.0;
     unsigned int old_position = 0;
-    float number_of_positive_differences = (float) 0;
-    float number_of_negative_differences = (float) 0;
+    double number_of_positive_differences = 0.0;
+    double number_of_negative_differences = 0.0;
     int number_of_queries_improved = 0;
     int number_of_queries_degraded = 0;
-    float z = (float) 0;
-    float rounded_z = (float) 0;
+    double z = 0.0;
+    double rounded_z = 0.0;
     int test_stat = 0;
 
     /* Wilcoxon's table of critical values of T at alpha = .1 and .05 */
@@ -923,119 +923,116 @@ static int calculate_statistics(unsigned int statistic_id,
       {389, 361}, {408, 379}, {427, 397}, {446, 415}, {466, 434}
     };
 
-    const float z_scores[Z_SCORE_TABLE_SIZE] = { 
-      0.00000F, 0.00399F, 0.00798F, 0.01197F, 0.01595F,
-      0.01994F, 0.02392F, 0.02790F, 0.03188F, 0.03586F,
-      0.03983F, 0.04380F, 0.04776F, 0.05172F, 0.05567F,
-      1.05962F, 0.06356F, 0.06749F, 0.07142F, 0.07535F,
-      0.07926F, 0.08317F, 0.08706F, 0.09095F, 0.09483F,
-      0.09871F, 0.10257F, 0.10642F, 0.11026F, 0.11409F,
-      0.11791F, 0.12172F, 0.12552F, 0.12930F, 0.13307F,
-      0.13683F, 0.14058F, 0.14431F, 0.14803F, 0.15173F,
-      0.15542F, 0.15910F, 0.16276F, 0.16640F, 0.17003F,
-      0.17364F, 0.17724F, 0.18082F, 0.18439F, 0.18793F,
-      0.19146F, 0.19497F, 0.19847F, 0.20194F, 0.20540F,
-      0.20884F, 0.21226F, 0.21566F, 0.21904F, 0.22240F,
-      0.22575F, 0.22907F, 0.23237F, 0.23565F, 0.23891F,
-      0.24215F, 0.24537F, 0.24857F, 0.25175F, 0.25490F,
-      0.25804F, 0.26115F, 0.26424F, 0.26730F, 0.27035F,
-      0.27337F, 0.27637F, 0.27935F, 0.28230F, 0.28524F,
-      0.28814F, 0.29103F, 0.29389F, 0.29673F, 0.29955F,
-      0.30234F, 0.30511F, 0.30785F, 0.31057F, 0.31327F,
-      0.31594F, 0.31859F, 0.32121F, 0.32381F, 0.32639F,
-      0.32894F, 0.33147F, 0.33398F, 0.33646F, 0.33891F,
-      0.34134F, 0.34375F, 0.34614F, 0.34849F, 0.35083F,
-      0.35314F, 0.35543F, 0.35769F, 0.35993F, 0.36214F,
-      0.36433F, 0.36650F, 0.36864F, 0.37076F, 0.37286F,
-      0.37493F, 0.37698F, 0.37900F, 0.38100F, 0.38298F,
-      0.38493F, 0.38686F, 0.38877F, 0.39065F, 0.39251F,
-      0.39435F, 0.39617F, 0.39796F, 0.39973F, 0.40147F,
-      0.40320F, 0.40490F, 0.40658F, 0.40824F, 0.40988F,
-      0.41149F, 0.41308F, 0.41466F, 0.41621F, 0.41774F,
-      0.41924F, 0.42073F, 0.42220F, 0.42364F, 0.42507F,
-      0.42647F, 0.42785F, 0.42922F, 0.43056F, 0.43189F,
-      0.43319F, 0.43448F, 0.43574F, 0.43699F, 0.43822F,
-      0.43943F, 0.44062F, 0.44179F, 0.44295F, 0.44408F,
-      0.44520F, 0.44630F, 0.44738F, 0.44845F, 0.44950F,
-      0.45053F, 0.45154F, 0.45254F, 0.45352F, 0.45449F,
-      0.45543F, 0.45637F, 0.45728F, 0.45818F, 0.45907F,
-      0.45994F, 0.46080F, 0.46164F, 0.46246F, 0.46327F,
-      0.46407F, 0.46485F, 0.46562F, 0.46638F, 0.46712F,
-      0.46784F, 0.46856F, 0.46926F, 0.46995F, 0.47062F,
-      0.47128F, 0.47193F, 0.47257F, 0.47320F, 0.47381F,
-      0.47441F, 0.47500F, 0.47558F, 0.47615F, 0.47670F,
-      0.47725F, 0.47778F, 0.47831F, 0.47882F, 0.47932F,
-      0.47982F, 0.48030F, 0.48077F, 0.48124F, 0.48169F,
-      0.48214F, 0.48257F, 0.48300F, 0.48341F, 0.48382F,
-      0.48422F, 0.48461F, 0.48500F, 0.48537F, 0.48574F,
-      0.48610F, 0.48645F, 0.48679F, 0.48713F, 0.48745F,
-      0.48778F, 0.48809F, 0.48840F, 0.48870F, 0.48899F,
-      0.48928F, 0.48956F, 0.48983F, 0.49010F, 0.49036F,
-      0.49061F, 0.49086F, 0.49111F, 0.49134F, 0.49158F,
-      0.49180F, 0.49202F, 0.49224F, 0.49245F, 0.49266F,
-      0.49286F, 0.49305F, 0.49324F, 0.49343F, 0.49361F,
-      0.49379F, 0.49396F, 0.49413F, 0.49430F, 0.49446F,
-      0.49461F, 0.49477F, 0.49492F, 0.49506F, 0.49520F,
-      0.49534F, 0.49547F, 0.49560F, 0.49573F, 0.49585F,
-      0.49598F, 0.49609F, 0.49621F, 0.49632F, 0.49643F,
-      0.49653F, 0.49664F, 0.49674F, 0.49683F, 0.49693F,
-      0.49702F, 0.49711F, 0.49720F, 0.49728F, 0.49736F,
-      0.49744F, 0.49752F, 0.49760F, 0.49767F, 0.49774F,
-      0.49781F, 0.49788F, 0.49795F, 0.49801F, 0.49807F,
-      0.49813F, 0.49819F, 0.49825F, 0.49831F, 0.49836F,
-      0.49841F, 0.49846F, 0.49851F, 0.49856F, 0.49861F,
-      0.49865F, 0.49869F, 0.49874F, 0.49878F, 0.49882F,
-      0.49886F, 0.49889F, 0.49893F, 0.49896F, 0.49900F,
-      0.49903F, 0.49906F, 0.49910F, 0.49913F, 0.49916F,
-      0.49918F, 0.49921F, 0.49924F, 0.49926F, 0.49929F,
-      0.49931F, 0.49934F, 0.49936F, 0.49938F, 0.49940F,
-      0.49942F, 0.49944F, 0.49946F, 0.49948F, 0.49950F,
-      0.49952F, 0.49953F, 0.49955F, 0.49957F, 0.49958F,
-      0.49960F, 0.49961F, 0.49962F, 0.49964F, 0.49965F,
-      0.49966F, 0.49968F, 0.49969F, 0.49970F, 0.49971F,
-      0.49972F, 0.49973F, 0.49974F, 0.49975F, 0.49976F,
-      0.49977F, 0.49978F, 0.49978F, 0.49979F, 0.49980F,
-      0.49981F, 0.49981F, 0.49982F, 0.49983F, 0.49983F,
-      0.49984F, 0.49985F, 0.49985F, 0.49986F, 0.49986F,
-      0.49987F, 0.49987F, 0.49988F, 0.49988F, 0.49989F,
-      0.49989F, 0.49990F, 0.49990F, 0.49990F, 0.49991F,
-      0.49991F, 0.49992F, 0.49992F, 0.49992F, 0.49992F,
-      0.49993F, 0.49993F, 0.49993F, 0.49994F, 0.49994F,
-      0.49994F, 0.49994F, 0.49995F, 0.49995F, 0.49995F,
-      0.49995F, 0.49995F, 0.49996F, 0.49996F, 0.49996F,
-      0.49996F, 0.49996F, 0.49996F, 0.49997F, 0.49997F,
-      0.49997F, 0.49997F, 0.49997F, 0.49997F, 0.49997F,
-      0.49997F, 0.49998F, 0.49998F, 0.49998F, 0.49998F
+    const double z_scores[Z_SCORE_TABLE_SIZE] = { 
+      0.00000, 0.00399, 0.00798, 0.01197, 0.01595,
+      0.01994, 0.02392, 0.02790, 0.03188, 0.03586,
+      0.03983, 0.04380, 0.04776, 0.05172, 0.05567,
+      1.05962, 0.06356, 0.06749, 0.07142, 0.07535,
+      0.07926, 0.08317, 0.08706, 0.09095, 0.09483,
+      0.09871, 0.10257, 0.10642, 0.11026, 0.11409,
+      0.11791, 0.12172, 0.12552, 0.12930, 0.13307,
+      0.13683, 0.14058, 0.14431, 0.14803, 0.15173,
+      0.15542, 0.15910, 0.16276, 0.16640, 0.17003,
+      0.17364, 0.17724, 0.18082, 0.18439, 0.18793,
+      0.19146, 0.19497, 0.19847, 0.20194, 0.20540,
+      0.20884, 0.21226, 0.21566, 0.21904, 0.22240,
+      0.22575, 0.22907, 0.23237, 0.23565, 0.23891,
+      0.24215, 0.24537, 0.24857, 0.25175, 0.25490,
+      0.25804, 0.26115, 0.26424, 0.26730, 0.27035,
+      0.27337, 0.27637, 0.27935, 0.28230, 0.28524,
+      0.28814, 0.29103, 0.29389, 0.29673, 0.29955,
+      0.30234, 0.30511, 0.30785, 0.31057, 0.31327,
+      0.31594, 0.31859, 0.32121, 0.32381, 0.32639,
+      0.32894, 0.33147, 0.33398, 0.33646, 0.33891,
+      0.34134, 0.34375, 0.34614, 0.34849, 0.35083,
+      0.35314, 0.35543, 0.35769, 0.35993, 0.36214,
+      0.36433, 0.36650, 0.36864, 0.37076, 0.37286,
+      0.37493, 0.37698, 0.37900, 0.38100, 0.38298,
+      0.38493, 0.38686, 0.38877, 0.39065, 0.39251,
+      0.39435, 0.39617, 0.39796, 0.39973, 0.40147,
+      0.40320, 0.40490, 0.40658, 0.40824, 0.40988,
+      0.41149, 0.41308, 0.41466, 0.41621, 0.41774,
+      0.41924, 0.42073, 0.42220, 0.42364, 0.42507,
+      0.42647, 0.42785, 0.42922, 0.43056, 0.43189,
+      0.43319, 0.43448, 0.43574, 0.43699, 0.43822,
+      0.43943, 0.44062, 0.44179, 0.44295, 0.44408,
+      0.44520, 0.44630, 0.44738, 0.44845, 0.44950,
+      0.45053, 0.45154, 0.45254, 0.45352, 0.45449,
+      0.45543, 0.45637, 0.45728, 0.45818, 0.45907,
+      0.45994, 0.46080, 0.46164, 0.46246, 0.46327,
+      0.46407, 0.46485, 0.46562, 0.46638, 0.46712,
+      0.46784, 0.46856, 0.46926, 0.46995, 0.47062,
+      0.47128, 0.47193, 0.47257, 0.47320, 0.47381,
+      0.47441, 0.47500, 0.47558, 0.47615, 0.47670,
+      0.47725, 0.47778, 0.47831, 0.47882, 0.47932,
+      0.47982, 0.48030, 0.48077, 0.48124, 0.48169,
+      0.48214, 0.48257, 0.48300, 0.48341, 0.48382,
+      0.48422, 0.48461, 0.48500, 0.48537, 0.48574,
+      0.48610, 0.48645, 0.48679, 0.48713, 0.48745,
+      0.48778, 0.48809, 0.48840, 0.48870, 0.48899,
+      0.48928, 0.48956, 0.48983, 0.49010, 0.49036,
+      0.49061, 0.49086, 0.49111, 0.49134, 0.49158,
+      0.49180, 0.49202, 0.49224, 0.49245, 0.49266,
+      0.49286, 0.49305, 0.49324, 0.49343, 0.49361,
+      0.49379, 0.49396, 0.49413, 0.49430, 0.49446,
+      0.49461, 0.49477, 0.49492, 0.49506, 0.49520,
+      0.49534, 0.49547, 0.49560, 0.49573, 0.49585,
+      0.49598, 0.49609, 0.49621, 0.49632, 0.49643,
+      0.49653, 0.49664, 0.49674, 0.49683, 0.49693,
+      0.49702, 0.49711, 0.49720, 0.49728, 0.49736,
+      0.49744, 0.49752, 0.49760, 0.49767, 0.49774,
+      0.49781, 0.49788, 0.49795, 0.49801, 0.49807,
+      0.49813, 0.49819, 0.49825, 0.49831, 0.49836,
+      0.49841, 0.49846, 0.49851, 0.49856, 0.49861,
+      0.49865, 0.49869, 0.49874, 0.49878, 0.49882,
+      0.49886, 0.49889, 0.49893, 0.49896, 0.49900,
+      0.49903, 0.49906, 0.49910, 0.49913, 0.49916,
+      0.49918, 0.49921, 0.49924, 0.49926, 0.49929,
+      0.49931, 0.49934, 0.49936, 0.49938, 0.49940,
+      0.49942, 0.49944, 0.49946, 0.49948, 0.49950,
+      0.49952, 0.49953, 0.49955, 0.49957, 0.49958,
+      0.49960, 0.49961, 0.49962, 0.49964, 0.49965,
+      0.49966, 0.49968, 0.49969, 0.49970, 0.49971,
+      0.49972, 0.49973, 0.49974, 0.49975, 0.49976,
+      0.49977, 0.49978, 0.49978, 0.49979, 0.49980,
+      0.49981, 0.49981, 0.49982, 0.49983, 0.49983,
+      0.49984, 0.49985, 0.49985, 0.49986, 0.49986,
+      0.49987, 0.49987, 0.49988, 0.49988, 0.49989,
+      0.49989, 0.49990, 0.49990, 0.49990, 0.49991,
+      0.49991, 0.49992, 0.49992, 0.49992, 0.49992,
+      0.49993, 0.49993, 0.49993, 0.49994, 0.49994,
+      0.49994, 0.49994, 0.49995, 0.49995, 0.49995,
+      0.49995, 0.49995, 0.49996, 0.49996, 0.49996,
+      0.49996, 0.49996, 0.49996, 0.49997, 0.49997,
+      0.49997, 0.49997, 0.49997, 0.49997, 0.49997,
+      0.49997, 0.49998, 0.49998, 0.49998, 0.49998
     };
 
-    if (((data_points = malloc(sizeof(*data_points) * number_of_queries))
-      == NULL)
-      || ((ranks = malloc(sizeof(float) * number_of_queries)) == NULL)) {
+    if (!(data_points = malloc(sizeof(*data_points)*number_of_queries))
+     || !(ranks = malloc(sizeof(double)*number_of_queries))) {
+        free(data_points);
         return (-1);
     }
 
     for (i = 0; i < number_of_queries; i++) {
         difference = measurements[0][i] - measurements[1][i];
-        if (difference < (float) 0) {
+        if (difference < 0.0) {
             data_points[non_zero_results_counter].sign = NEGATIVE;
-            data_points[non_zero_results_counter].absolute_difference
-              = -difference;
+            data_points[non_zero_results_counter].absolute_difference = -difference;
             non_zero_results_counter++;
         } else if (difference > 0) {
             data_points[non_zero_results_counter].sign = POSITIVE;
-            data_points[non_zero_results_counter].absolute_difference
-              = difference;
+            data_points[non_zero_results_counter].absolute_difference = difference;
             non_zero_results_counter++;
         }
     }
-    qsort(data_points, non_zero_results_counter, sizeof(*(data_points)),
-      (int (*)(const void *, const void *)) compare_data_points);
+    qsort(data_points, non_zero_results_counter, sizeof(*(data_points)), (int (*)(const void *, const void *)) compare_data_points);
 
     /* Resolve rankings of absolute_differences */
     counter = 0;
     while (counter < non_zero_results_counter) {
         /* reset average at start of every turn */
-        average = (float) 0;
+        average = 0.0;
         old_position = counter;
         /* counting duplicates */
         while ((counter < (non_zero_results_counter - 1))
@@ -1048,12 +1045,12 @@ static int calculate_statistics(unsigned int statistic_id,
         if (counter > old_position) {
             average += counter;
             counter++;
-            average /= (float) (counter - old_position);
+            average /= (double)(counter - old_position);
             for (i = old_position; i < counter; i++) {
-                ranks[i] = average + (float) 1;
+                ranks[i] = average + (double)1;
             }
         } else {
-            ranks[counter] = (float) (counter + 1);
+            ranks[counter] = (double)(counter + 1);
             counter++;
         }
     }
@@ -1076,18 +1073,18 @@ static int calculate_statistics(unsigned int statistic_id,
      * (a) 2-tailed test: z > z_alpha/2 or z < -z_alpha/2 (b)
      * right-tailed: z > z_alpha (c) left-tailed: z < -z_alpha */
 
-    z = (float) ((number_of_positive_differences 
-      - (((float) (non_zero_results_counter
-      * (non_zero_results_counter + 1))) / ((float) 4)))
-      / sqrt(((float) (non_zero_results_counter * (non_zero_results_counter +
-            1) * ((2 * non_zero_results_counter) + 1))) / ((float) 24)));
+    z = (double)((number_of_positive_differences 
+      - (((double)(non_zero_results_counter
+      * (non_zero_results_counter + 1))) / ((double)4)))
+      / sqrt(((double)(non_zero_results_counter * (non_zero_results_counter +
+            1) * ((2 * non_zero_results_counter) + 1))) / ((double)24)));
 
-    z *= (float) 100;
-    rounded_z = (float) ((int) z);
+    z *= (double)100;
+    rounded_z = (double)((int) z);
     if ((z - rounded_z) >= 0.5) {
-        rounded_z += (float) 1;
+        rounded_z += (double)1;
     }
-    rounded_z /= (float) 100;
+    rounded_z /= (double)100;
     z = rounded_z;
 
     /* Generate test statistic (the smaller of PosSum and NegSum) */
@@ -1132,34 +1129,34 @@ static int calculate_statistics(unsigned int statistic_id,
         }
     }
 
-    if (z < (float) 0) {
-        z *= (float) -1;
+    if (z < 0.0) {
+        z *= (double)-1;
     }
     if (stats->tailedness == ONE_TAILED) {
         /* 4.09 is largest z-score in lookup table... */
-        if ((z * (float) 100) >= Z_SCORE_TABLE_SIZE) {
+        if ((z * (double)100) >= Z_SCORE_TABLE_SIZE) {
             /* value in table is for area */
             stats->stats[statistic_id].sign = '<';
             stats->stats[statistic_id].actual_confidence =
-              (float) (1 - (0.49998 + 0.5));
+              (double)(1 - (0.49998 + 0.5));
         } else {
             /* value in table is for area; mu=0 to z */
             stats->stats[statistic_id].sign = '=';
             stats->stats[statistic_id].actual_confidence =
-              ((float) 1 - (z_scores[(int) (z * (float) 100)] + 0.5F));
+              ((double)1 - (z_scores[(int) (z * (double)100)] + 0.5F));
         }
     } else {
         /* 4.09 is largest z-score in lookup table... */
-        if ((z * (float) 100) >= Z_SCORE_TABLE_SIZE) {
+        if ((z * (double)100) >= Z_SCORE_TABLE_SIZE) {
             /* value in table is for area */
             stats->stats[statistic_id].sign = '<';
             stats->stats[statistic_id].actual_confidence =
-              ((float) 1 - (0.49998F * (float) 2));
+              ((double)1 - (0.49998F * (double)2));
         } else {
             /* value in table is for area; mu=0 to z */
             stats->stats[statistic_id].sign = '=';
             stats->stats[statistic_id].actual_confidence =
-              ((float) 1 - (z_scores[(int) (z * (float) 100)] * (float) 2));
+              ((double)1 - (z_scores[(int) (z * (double)100)] * (double)2));
         }
     }
 
@@ -1266,7 +1263,7 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
     unsigned int evaluated1 = 1;
     unsigned int evaluated2 = 1;
     struct treceval_results *evaluations[2];
-    float *measurements[2];
+    double *measurements[2];
 
     qsort(trec_results_a->tuples, trec_results_a->cached_results,
       sizeof(*(trec_results_a->tuples)),
@@ -1287,9 +1284,9 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
             stats->stats[i].improved = 0;
             stats->stats[i].degraded = 0;
             stats->stats[i].hypothesis = OUT_OF_RANGE;
-            stats->stats[i].confidence = (float) 0;
-            stats->stats[i].z_score = (float) 0;
-            stats->stats[i].actual_confidence = (float) 0;
+            stats->stats[i].confidence = 0.0;
+            stats->stats[i].z_score = 0.0;
+            stats->stats[i].actual_confidence = 0.0;
             stats->stats[i].sign = '?';
         }
         return 0;
@@ -1343,15 +1340,16 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
     end2 = 0;
 
     /* setting aside memory */
-    if (((evaluations[0] =
-      malloc(sizeof(struct treceval_results) * max_query_count)) == NULL)
-      || ((evaluations[1] =
-      malloc(sizeof(struct treceval_results) * max_query_count)) == NULL)) {
+    if (!(evaluations[0] = malloc(sizeof(struct treceval_results)*max_query_count))
+     || !(evaluations[1] = malloc(sizeof(struct treceval_results)*max_query_count))) {
+        free(evaluations[0]);
         return (0);
     }
-    if (((measurements[0] = malloc(sizeof(float) * max_query_count)) == NULL)
-      || ((measurements[1] 
-          = malloc(sizeof(float) * max_query_count)) == NULL)) {
+    if (!(measurements[0] = malloc(sizeof(double)*max_query_count))
+     || !(measurements[1] = malloc(sizeof(double)*max_query_count))) {
+        free(measurements[0]);
+        free(evaluations[1]);
+        free(evaluations[0]);
         return (0);
     }
 
@@ -1422,77 +1420,77 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
         measurements[1][i] = evaluations[1][i].average_precision;
     }
     if (calculate_statistics(0, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[0];
         measurements[1][i] = evaluations[1][i].precision_at[0];
     }
     if (calculate_statistics(1, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[1];
         measurements[1][i] = evaluations[1][i].precision_at[1];
     }
     if (calculate_statistics(2, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[2];
         measurements[1][i] = evaluations[1][i].precision_at[2];
     }
     if (calculate_statistics(3, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[3];
         measurements[1][i] = evaluations[1][i].precision_at[3];
     }
     if (calculate_statistics(4, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[4];
         measurements[1][i] = evaluations[1][i].precision_at[4];
     }
     if (calculate_statistics(5, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[5];
         measurements[1][i] = evaluations[1][i].precision_at[5];
     }
     if (calculate_statistics(6, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[6];
         measurements[1][i] = evaluations[1][i].precision_at[6];
     }
     if (calculate_statistics(7, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[7];
         measurements[1][i] = evaluations[1][i].precision_at[7];
     }
     if (calculate_statistics(8, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].precision_at[8];
         measurements[1][i] = evaluations[1][i].precision_at[8];
     }
     if (calculate_statistics(9, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
     for (i = 0; i < max_query_count; i++) {
         measurements[0][i] = evaluations[0][i].rprecision;
         measurements[1][i] = evaluations[1][i].rprecision;
     }
     if (calculate_statistics(10, stats, max_query_count, measurements) < 0) {
-		return (0);
+		goto finished_OK;
 	}
 
     free(measurements[0]);
@@ -1500,6 +1498,13 @@ int treceval_stats_calculate(const struct treceval *trec_results_a,
     free(evaluations[0]);
     free(evaluations[1]);
     return 1;
+
+finished_OK:
+    free(measurements[0]);
+    free(measurements[1]);
+    free(evaluations[0]);
+    free(evaluations[1]);
+    return 0;
 }
 
 /* Assumes that the first entry in the relevance judgement contains a
@@ -1523,14 +1528,13 @@ struct treceval_qrels *treceval_qrels_new(const char *qrels_file_name) {
     qrels->number_of_judgements_for_query = NULL;
 
     /* setting aside memeory for hash table */
-    if ((qrels->judgements = chash_ptr_new(8, 0.8F, 
-      (unsigned int (*)(const void *)) str_hash,
-      (int (*)(const void *, const void *)) str_cmp)) == NULL) {
+    if (!(qrels->judgements = chash_ptr_new(8, 0.8, (unsigned int (*)(const void *))str_hash, (int (*)(const void *, const void *))str_cmp))) {
+        free(qrels);
         return NULL;
     }
 
-    if ((qrels->number_of_judgements_for_query =
-        malloc(sizeof(int) * qrels->number_of_judged_queries)) == NULL) {
+    if (!(qrels->number_of_judgements_for_query = malloc(sizeof(int) * qrels->number_of_judged_queries))) {
+        free(qrels);
         return NULL;
     }
     for (i = 0; i < (unsigned int) qrels->number_of_judged_queries; i++) {
@@ -1621,15 +1625,15 @@ struct treceval_qrels *treceval_qrels_new(const char *qrels_file_name) {
 struct treceval *treceval_new() {
     struct treceval *new_trec_eval = NULL;
 
-    if ((new_trec_eval = malloc(sizeof(struct treceval))) == NULL) {
+    if (!(new_trec_eval = malloc(sizeof(struct treceval)))) {
         return NULL;
     }
     new_trec_eval->cached_results = 0;
     new_trec_eval->cache_size = 50;
 
     /* setting aside memory for cached results */
-    if ((new_trec_eval->tuples =
-        malloc(sizeof(result_tuple) * new_trec_eval->cache_size)) == NULL) {
+    if (!(new_trec_eval->tuples = malloc(sizeof(result_tuple)*new_trec_eval->cache_size))) {
+        free(new_trec_eval);
         return NULL;
     }
 
@@ -1675,9 +1679,7 @@ void treceval_delete(struct treceval **trec_results) {
     }
 }
 
-int treceval_add_result(struct treceval *trec_results,
-  const unsigned int query_id, const char *trec_document_number, 
-  const float score) {
+int treceval_add_result(struct treceval *trec_results, const unsigned int query_id, const char *trec_document_number, const double score) {
 
     /* if the current cache is exhausted, need to increase the cache size */
     if (trec_results->cached_results == trec_results->cache_size) {
