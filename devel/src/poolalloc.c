@@ -42,13 +42,14 @@ struct poolalloc {
     struct poolalloc_chunk chunk;   /* first chunk */
 };
 
-#ifndef NDEBUG
-static int poolalloc_invariant(struct poolalloc *pool) {
-    struct poolalloc_chunk *chunk = pool->curr,
-                           *next;
-    unsigned int chunklen;
 
-    if (DEAR_DEBUG) {
+static int poolalloc_invariant(struct poolalloc *pool) {
+
+    if (DEBUG) {
+        struct poolalloc_chunk *chunk = pool->curr,
+                               *next;
+        unsigned int chunklen;
+
         /* the allocator must always have a current chunk */
         if (!pool->curr) {
             assert(!CRASH);
@@ -91,7 +92,7 @@ static int poolalloc_invariant(struct poolalloc *pool) {
         return 1;
     }
 }
-#endif
+
 
 struct poolalloc *poolalloc_new(unsigned int redzone, unsigned int bulkalloc, 
   const struct alloc *alloc) {

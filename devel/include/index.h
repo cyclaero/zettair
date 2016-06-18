@@ -184,7 +184,7 @@ int index_expensive_stats(const struct index *idx,
 /* struct that is returned for each document found by search */
 struct index_result {
     unsigned long int docno;        /* the distinct number given to this doc */
-    float score;                    /* strength of the match to query */
+    double score;                   /* strength of the match to query */
     char summary                    /* a summary of the document */
       [INDEX_SUMMARYLEN + 1];
     char title                      /* the title of the document */
@@ -247,22 +247,22 @@ enum index_search_opts {
 struct index_search_opt {
     union {
         struct {
-            float k1;
-            float k3;
-            float b;
+            double k1;
+            double k3;
+            double b;
         } okapi;
 
         struct {
-            float pivot;
+            double pivot;
         } pcosine;
 
         struct {
-            float mu;
+            double mu;
         } dirichlet;
 
         struct {
-            float alpha;
-            float k3;
+            double alpha;
+            double k3;
         } hawkapi;
 
         struct {

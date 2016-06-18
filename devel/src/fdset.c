@@ -162,28 +162,31 @@ struct fdset *fdset_new(int umask, unsigned int sizehint) {
     struct fdset *set;
 
     if ((set = malloc(sizeof(*set)))
-      && (set->fdhash = chash_ptr_new(1, 1.0, fd_hash, fd_cmp))
-      && (set->typehash = chash_luint_new(1, 1.0))) {
+     && (set->fdhash = chash_ptr_new(1, 1.0, fd_hash, fd_cmp))
+     && (set->typehash = chash_luint_new(1, 1.0))) {
         set->umask = umask;
         set->fds = 0;
         set->keys = 0;
-        set->lru_default = 3;  /* FIXME: get as param */
+        set->lru_default = 3;    /* FIXME: get as param */
         set->limit = UINT_MAX;   /* no limit */
         set->clock_pos = 0;
+        set->fdsize = 0;
+        set->keysize = 0;
+        set->fd = NULL;
+        set->key = NULL;
 
         if (sizehint) {
-            if (!(set->fd = make_fd_array(sizehint))
-              || !(set->key = make_fd_array(sizehint))) {
+            if (set->fd = make_fd_array(sizehint))
+                set->fdsize = sizehint;
+
+            if (set->key = make_fd_array(sizehint))
+                set->keysize = sizehint;
+
+            if (!set->fd || !set->key)
+            {
                 fdset_delete(set);
                 return NULL;
             }
-            set->fdsize = sizehint;
-            set->keysize = sizehint;
-        } else {
-            set->fdsize = 0;
-            set->fd = NULL;
-            set->keysize = 0;
-            set->key = NULL;
         }
 #ifdef ZET_MT
         pthread_mutex_init(&set->mutex, NULL);

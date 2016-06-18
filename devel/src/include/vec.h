@@ -92,24 +92,24 @@ unsigned int vec_maxint_arr_read(struct vec *v, uintmax_t *arr,
 unsigned int vec_maxint_arr_write(struct vec *v, uintmax_t *arr, 
   unsigned int arrlen, unsigned int *bytes);
 
-/* IEEE standard specifies that single-precision floating point numbers have 23
- * bits of mantissa, making that the maximum precision for storing floats */
+/* IEEE standard specifies that single-precision doubleing point numbers have 23
+ * bits of mantissa, making that the maximum precision for storing doubles */
 #define VEC_FLT_FULL_PRECISION 23
 
-/* the float read/write functions require you to specify the precision with
- * which floating point numbers are stored.  You will be required to supply the
+/* the double read/write functions require you to specify the precision with
+ * which doubleing point numbers are stored.  You will be required to supply the
  * same precision to read as you did to write.  The current implementation
  * rounds the precision (given in bits) to an integral number of bytes,
  * including a sign bit.  Thus 7, 15, 23 are sensible values for precision. */
-unsigned int vec_flt_read(struct vec *v, float *flt, unsigned int precision);
-unsigned int vec_flt_write(struct vec *v, float flt, unsigned int precision);
-unsigned int vec_flt_arr_read(struct vec *v, float *arr, unsigned int arrlen,
+unsigned int vec_flt_read(struct vec *v, double *flt, unsigned int precision);
+unsigned int vec_flt_write(struct vec *v, double flt, unsigned int precision);
+unsigned int vec_flt_arr_read(struct vec *v, double *arr, unsigned int arrlen,
   unsigned int precision, unsigned int *bytes);
-unsigned int vec_flt_arr_write(struct vec *v, float *arr, unsigned int arrlen,
+unsigned int vec_flt_arr_write(struct vec *v, double *arr, unsigned int arrlen,
   unsigned int precision, unsigned int *bytes);
 
 /* note that we don't have double operations because they're typically overkill
- * compared to floats, and that it's difficult to manipulate 64-bit 
+ * compared to doubles, and that it's difficult to manipulate 64-bit 
  * quantities to read/write them */
 
 #ifdef __cplusplus

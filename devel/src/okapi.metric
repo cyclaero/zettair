@@ -10,16 +10,16 @@
 #
 # written nml 2005-07-18
 
-parameter float k1;
-parameter float k3;
-parameter float b;
+parameter double k1;
+parameter double k3;
+parameter double b;
 
 decode() {
-    float w_t;   /* weight of term */
-    float r_dt;  /* weight of term in document */
-	float r_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
+    double w_t;   /* weight of term */
+    double r_dt;  /* weight of term in document */
+	double r_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
 
-    w_t = (float) log((N - f_t + 0.5) / (f_t + 0.5));
+    w_t = (double)log((N - f_t + 0.5) / (f_t + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */

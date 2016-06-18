@@ -265,7 +265,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                     unsigned long int *tmp;
 
                     do {
-                        curr = (unsigned int) (((float) items * 10) 
+                        curr = (unsigned int) (((double)items * 10) 
                             * lcrand(rand) / (LCRAND_MAX + 1.0));
                     } while (rbtree_luint_luint_find(rbtree, curr, &tmp) 
                       == RBTREE_OK);
@@ -296,7 +296,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                     /* add */
 
                     do {
-                        curr = (unsigned int) (((float) items * 10) 
+                        curr = (unsigned int) (((double)items * 10) 
                             * lcrand(rand) / (LCRAND_MAX + 1.0));
                     } while (rbtree_luint_luint_find(rbtree, curr, &tmp) 
                       == RBTREE_OK);
@@ -317,7 +317,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
                     /* delete */
 
-                    curr = (unsigned int) (((float) items) 
+                    curr = (unsigned int) (((double)items) 
                         * lcrand(rand) / (LCRAND_MAX + 1.0));
                     assert(curr >= 0 && curr < items);
 

@@ -59,7 +59,7 @@ struct btbulk {
  * before writing them out. Returns a pointer to the space on success, 
  * or NULL on failure. */
 struct btbulk *btbulk_new(unsigned int pagesize, unsigned long int maxfilesize,
-  int leaf_strategy, int node_strategy, float fill_factor, 
+  int leaf_strategy, int node_strategy, double fill_factor, 
   unsigned int buffer_pages, struct btbulk *space);
 
 /* delete a bulk insertion object */

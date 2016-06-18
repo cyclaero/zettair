@@ -176,7 +176,7 @@ static enum chash_ret chash_strings_expand(struct chash *hash) {
           && (space->table                                                    \
             = malloc(sizeof(struct chash_link*) * BIT_POW2(startbits)))       \
           && (space->alloc = objalloc_new(sizeof(struct chash_link), 0,       \
-              DEAR_DEBUG, BULK_ALLOC, NULL))                                  \
+              DEBUG, BULK_ALLOC, NULL))                                  \
           /* initialise strings area */                                       \
           && (!str || ((space->strings.size = BULK_ALLOC),                    \
               (space->strings.strings = malloc(BULK_ALLOC))))) {              \
@@ -200,7 +200,7 @@ static enum chash_ret chash_strings_expand(struct chash *hash) {
         }                                                                     \
     } while (0);
 
-struct chash *chash_ptr_new(unsigned int startbits, float resize_load, 
+struct chash *chash_ptr_new(unsigned int startbits, double resize_load, 
   unsigned int (*hash)(const void *key), 
   int (*cmp)(const void *key1, const void *key2)) {
     struct chash *table;
@@ -210,14 +210,14 @@ struct chash *chash_ptr_new(unsigned int startbits, float resize_load,
     return table;
 }
 
-struct chash *chash_luint_new(unsigned int startbits, float resize_load) {
+struct chash *chash_luint_new(unsigned int startbits, double resize_load) {
     struct chash *table;
     CHASH_INIT(startbits, resize_load, NULL, table, luint, NULL, 0);
     table->key_type = CHASH_TYPE_LUINT;
     return table;
 }
 
-struct chash *chash_str_new(unsigned int startbits, float resize_load, 
+struct chash *chash_str_new(unsigned int startbits, double resize_load, 
   unsigned int (*hash)(const char *key, unsigned int len)) {
     struct chash *table;
     CHASH_INIT(startbits, resize_load, hash, table, str, NULL, 1);
@@ -386,8 +386,8 @@ enum chash_ret chash_luint_dbl_insert(struct chash *hash,
 }
 
 enum chash_ret chash_luint_flt_insert(struct chash *hash, 
-  unsigned long int key, float data) {
-    float *dummy;
+  unsigned long int key, double data) {
+    double *dummy;
     unsigned int hashval = key,   /* integral types are their own keys */
                  modhash = BIT_MOD2(hashval, hash->bits);
 
@@ -577,7 +577,7 @@ enum chash_ret chash_luint_dbl_remove(struct chash *hash,
 }
 
 enum chash_ret chash_luint_flt_remove(struct chash *hash, 
-  unsigned long int key, float *data) {
+  unsigned long int key, double *data) {
     unsigned int hashval = key,  /* integral types are their own hash values */
                  modhash = BIT_MOD2(hashval, hash->bits);
 
@@ -742,7 +742,7 @@ enum chash_ret chash_luint_dbl_find(struct chash *hash, unsigned long int key,
 }
 
 enum chash_ret chash_luint_flt_find(struct chash *hash, unsigned long int key, 
-  float **data) {
+  double **data) {
     unsigned int hashval = key,  /* integral types are their own hash values */
                  modhash = BIT_MOD2(hashval, hash->bits);
 
@@ -832,7 +832,7 @@ enum chash_ret chash_luint_dbl_find_insert(struct chash *hash,
 }
 
 enum chash_ret chash_luint_flt_find_insert(struct chash *hash, 
-  unsigned long int key, float **fnd_data, float ins_data, int *find) {
+  unsigned long int key, double **fnd_data, double ins_data, int *find) {
     unsigned int hashval = key,  /* integral types are their own hash values */
                  modhash = BIT_MOD2(hashval, hash->bits);
 
@@ -984,7 +984,7 @@ enum chash_ret chash_luint_dbl_foreach(struct chash *hash, void *userdata,
 }
 
 enum chash_ret chash_luint_flt_foreach(struct chash *hash, void *userdata,
-  void (*fn)(void *userdata, unsigned long int key, float *data)) {
+  void (*fn)(void *userdata, unsigned long int key, double *data)) {
     assert(hash->key_type == CHASH_TYPE_LUINT);
     assert((hash->data_type == CHASH_TYPE_FLT) 
       || (hash->data_type == CHASH_TYPE_UNKNOWN));
@@ -1101,7 +1101,7 @@ enum chash_ret chash_iter_luint_dbl_next(struct chash_iter *iter,
 }
 
 enum chash_ret chash_iter_luint_flt_next(struct chash_iter *iter, 
-  unsigned long int *key, float **data) {
+  unsigned long int *key, double **data) {
     struct chash *hash = iter->hash;
     assert(hash->key_type == CHASH_TYPE_LUINT);
     assert((hash->data_type == CHASH_TYPE_FLT) 

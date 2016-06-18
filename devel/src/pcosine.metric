@@ -22,10 +22,10 @@
 #
 # written nml 2005-07-18
 
-parameter float pivot;
+parameter double pivot;
 
 decode() {
-    const float w_qt = f_qt * log(1 + (N / (float) f_t));
+    const double w_qt = f_qt * log(1 + (N/(double)f_t));
 
 	accumulator += w_qt * (1 + log(f_dt));
 }

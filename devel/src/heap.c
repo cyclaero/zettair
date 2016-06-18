@@ -131,7 +131,7 @@
 #include "heap.h"
 
 #include "bit.h"
-#include "def.h"  /* for DEAR_DEBUG */
+#include "def.h"  /* for DEBUG */
 
 #include "zstdint.h"
 
@@ -393,7 +393,7 @@ void heap_heapify(void *base, unsigned int nmemb, unsigned int size,
     }
 
     /* if debugging is on, check the heap order */
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         assert(heap_isheap(base, nmemb, size, cmp, 0));
     }
 
@@ -464,7 +464,7 @@ static void maxheap_heapify(void *base, unsigned int nmemb, unsigned int size,
     }
 
     /* if debugging is on, check the heap order */
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         assert(heap_isheap(base, nmemb, size, cmp, 1));
     }
 
@@ -508,7 +508,7 @@ void heap_sort(void *base, unsigned int nmemb, unsigned int sort,
      * this) */
     maxheap_heapify(base, sort, size, cmp);
 
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         assert(heap_isheap(base, sort, size, cmp, 1));
     }
 
@@ -536,7 +536,7 @@ void heap_sort(void *base, unsigned int nmemb, unsigned int sort,
     }
 
     /* if debugging is on, check the sort order */
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         assert(heap_issorted(base, sort, size, cmp, 0));
     }
 

@@ -89,12 +89,12 @@ static struct objalloc_chunk *chunk_addr(struct objalloc_chunk *chunk) {
 }
 
 static int objalloc_invariant(struct objalloc *obj) {
-    struct objalloc_chunk *chunk = &obj->chunk,
-                          *next;
-
-    if (!DEAR_DEBUG) {
+    if (!DEBUG) {
         return 1;
     }
+
+    struct objalloc_chunk *chunk = &obj->chunk,
+                          *next;
 
     /* process active and exhausted chunks */
     do {

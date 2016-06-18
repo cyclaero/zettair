@@ -34,7 +34,7 @@ struct docmap_entry {
     unsigned int offset;              /* offset within repository file */
     unsigned int dwords;              /* number of distinct words in doc */
     unsigned int words;               /* number of words in doc */
-    float weight;                     /* the cosine weight of the doc */
+    double weight;                     /* the cosine weight of the doc */
     unsigned int bytes;               /* size of doc in bytes */
     enum mime_types mtype;            /* mime type of document */
     enum docmap_flag flags;
@@ -109,7 +109,7 @@ struct docmap {
         unsigned int size;            /* size of cache arrays */
         unsigned int *words;          /* length-in-words cache */
         unsigned int *dwords;         /* length-in-distinct-words cache */
-        float *weight;                /* cosine weight cache */
+        double *weight;                /* cosine weight cache */
 
         unsigned int *trecno_off;     /* trec docnos, as offsets 
                                        * into trecno_buf array */

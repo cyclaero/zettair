@@ -82,16 +82,16 @@ struct reposset *reposset_new(void) {
     struct reposset *rset = malloc(sizeof(*rset));
 
     if (rset && (rset->rec = malloc(sizeof(*rset->rec) * INIT_ARRAY_SIZE))
-      && (rset->check = malloc(sizeof(*rset->check) * INIT_ARRAY_SIZE))) {
+     && (rset->check = malloc(sizeof(*rset->check) * INIT_ARRAY_SIZE))) {
 
         rset->rec_size = rset->check_size = INIT_ARRAY_SIZE;
         reposset_clear(rset);
     } else if (rset) {
         if (rset->rec) {
             free(rset->rec);
-        }
-        if (rset->check) {
-            free(rset->check);
+            if (rset->check) {
+                free(rset->check);
+            }
         }
         free(rset);
         rset = NULL;
@@ -223,23 +223,17 @@ enum reposset_ret reposset_append_docno(struct reposset *rset,
     return REPOSSET_OK;
 }
 
-enum reposset_ret reposset_add_checkpoint(struct reposset *rset, 
-  unsigned int reposno, enum mime_types comp, unsigned long int point) {
+enum reposset_ret reposset_add_checkpoint(struct reposset *rset, unsigned int reposno, enum mime_types comp, unsigned long int point) {
     /* XXX: technically, reposno should be below the number of
      * entries, but we'll allow checkpoints to be entered for the
      * coming repository as well, for convenience sake.  Also, we
      * should probably maintain the sorting of the array explicitly,
      * but we assume that they come in sorted order. */
-    assert(comp == MIME_TYPE_APPLICATION_X_GZIP 
-      || comp == MIME_TYPE_APPLICATION_X_BZIP2);
+    assert(comp == MIME_TYPE_APPLICATION_X_GZIP || comp == MIME_TYPE_APPLICATION_X_BZIP2);
+    assert(!rset->check_len || rset->check[rset->check_len - 1].reposno < reposno);
 
-    assert(!rset->check_len 
-      || rset->check[rset->check_len - 1].reposno < reposno);
-
-    if (rset->check_len >= rset->check_size) {
-        void *ptr = realloc(rset->check, 
-            sizeof(*rset->check) * rset->check_size * 2);
-
+    if (rset->check_size && rset->check_size <= rset->check_len) {
+        void *ptr = realloc(rset->check, sizeof(*rset->check)*rset->check_size*2);
         if (ptr) {
             rset->check = ptr;
             rset->check_size *= 2;
@@ -252,35 +246,25 @@ enum reposset_ret reposset_add_checkpoint(struct reposset *rset,
     rset->check[rset->check_len].reposno = reposno;
     rset->check[rset->check_len].offset = point;
     rset->check[rset->check_len].comp = comp;
-    assert(!rset->check_len || check_cmp(&rset->check[rset->check_len - 1], 
-      &rset->check[rset->check_len]) < 0);  /* ensure ordering is correct */
+    assert(!rset->check_len || check_cmp(&rset->check[rset->check_len - 1], &rset->check[rset->check_len]) < 0);  /* ensure ordering is correct */
     rset->check_len++;
     return REPOSSET_OK;
 }
 
-unsigned int reposset_reposno_rec(struct reposset_record *rec, 
-  unsigned int docno) {
-    if (rec->rectype == REPOSSET_SINGLE_FILE) {
-        return rec->reposno;
-    } else {
-        return rec->reposno + docno - rec->docno;
-    }
+unsigned int reposset_reposno_rec(struct reposset_record *rec, unsigned int docno) {
+    return (rec->rectype == REPOSSET_SINGLE_FILE) ? rec->reposno : rec->reposno + docno - rec->docno;
 }
 
-enum reposset_ret reposset_reposno(struct reposset *rset, unsigned int docno, 
-  unsigned int *reposno) {
-    struct reposset_record *find,
-                           target;
+enum reposset_ret reposset_reposno(struct reposset *rset, unsigned int docno, unsigned int *reposno) {
+    struct reposset_record *find, target;
 
     target.docno = docno;
     target.quantity = 1;
 
     /* find the correct page in the map */
-    find = binsearch(&target, rset->rec, rset->rec_len, sizeof(target), 
-        rec_docno_cmp);
+    find = binsearch(&target, rset->rec, rset->rec_len, sizeof(target), rec_docno_cmp);
 
-    if (find < rset->rec + rset->rec_len && find->docno <= docno 
-      && find->docno + find->quantity > docno) {
+    if (find < rset->rec + rset->rec_len && find->docno <= docno && find->docno + find->quantity > docno) {
         *reposno = reposset_reposno_rec(find, docno);
         return REPOSSET_OK;
     } else {

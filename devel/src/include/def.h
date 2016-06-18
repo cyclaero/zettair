@@ -15,16 +15,12 @@
 /* whether to produce a core file when things start to go wrong (useful for
  * debugging, obviously not for production systems) */
 #ifndef CRASH
-#define CRASH 1
+    #define CRASH 1
 #endif
 
 /* whether to perform expensive debugging checks (define to 0 to turn off) */
-#ifdef NDEBUG
-#define DEAR_DEBUG 0
-#else
-#ifndef DEAR_DEBUG
-#define DEAR_DEBUG 1
-#endif
+#ifndef DEBUG
+    #define DEBUG 0
 #endif
 
 /* how far to look ahead to verify SGML tags and comments */

@@ -25,10 +25,10 @@
 #
 # written nml 2005-06-8
 
-parameter float mu;
+parameter double mu;
 
 decode() {
-    float w_t = terms / (mu * F_t);
+    double w_t = terms / (mu * F_t);
     accumulator += log(1 + f_dt * w_t);
 }
 

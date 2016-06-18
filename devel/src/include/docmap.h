@@ -115,7 +115,7 @@ enum docmap_ret docmap_add(struct docmap *docmap,
   unsigned int sourcefile, off_t offset, 
   unsigned int bytes, enum docmap_flag flags, 
   unsigned int words, unsigned int distinct_words,
-  float weight, const char *trecno, unsigned trecno_len, 
+  double weight, const char *trecno, unsigned trecno_len,
   enum mime_types type, unsigned long int *docno);
 
 /*

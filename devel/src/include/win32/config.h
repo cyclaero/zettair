@@ -42,7 +42,7 @@
 #define uintmax_t __int64  /* win32 doesn't seem to have uint64_t :o( */
 #define uint_fast32_t unsigned long int
 
-/* define floating point functions (visual studio 6 didn't have floating point
+/* define doubleing point functions (visual studio 6 didn't have doubleing point
  * versions at all, and visual studio 2005 declares them incorrectly 
  * (see http://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=98751
  * - thanks, fuckwits!), so we manually #define them to the double equivalents.

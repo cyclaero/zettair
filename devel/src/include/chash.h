@@ -30,7 +30,7 @@ struct chash_iter;
  * (2 ** startbits) is the initial size of the table, and it will double 
  * whenever resize_load is exceeded. hash is the hash function and cmp is the 
  * comparison function. */
-struct chash *chash_ptr_new(unsigned int startbits, float resize_load, 
+struct chash *chash_ptr_new(unsigned int startbits, double resize_load, 
   unsigned int (*hash)(const void *key), 
   int (*cmp)(const void *key1, const void *key2));
 
@@ -38,14 +38,14 @@ struct chash *chash_ptr_new(unsigned int startbits, float resize_load,
  * (2 ** startbits) is the initial size of the table, and it will double 
  * whenever resize_load is exceeded. the value of the key mod the tablesize 
  * will be taken as the hash value */
-struct chash *chash_luint_new(unsigned int startbits, float resize_load);
+struct chash *chash_luint_new(unsigned int startbits, double resize_load);
 
 /* construct a new table that contains string keys in the space given.
  * Strings are copied into the table upon insertion (no need to keep strings 
  * lying around).  (2 ** startbits) is the initial size of the table, and it 
  * will double whenever resize_load is exceeded.  hash is the string hash 
  * function */
-struct chash *chash_str_new(unsigned int startbits, float resize_load, 
+struct chash *chash_str_new(unsigned int startbits, double resize_load, 
   unsigned int (*hash)(const char *key, unsigned int len));
 
 /* delete a table */
@@ -180,17 +180,17 @@ enum chash_ret chash_iter_luint_dbl_next(struct chash_iter *iter,
 /* uint to flt functions */
 
 enum chash_ret chash_luint_flt_insert(struct chash *hash, 
-  unsigned long int key, float data);
+  unsigned long int key, double data);
 enum chash_ret chash_luint_flt_remove(struct chash *hash, 
-  unsigned long int key, float *data);
+  unsigned long int key, double *data);
 enum chash_ret chash_luint_flt_find(struct chash *hash, unsigned long int key, 
-  float **data);
+  double **data);
 enum chash_ret chash_luint_flt_find_insert(struct chash *hash, 
-  unsigned long int key, float **fnd_data, float ins_data, int *find);
+  unsigned long int key, double **fnd_data, double ins_data, int *find);
 enum chash_ret chash_luint_flt_foreach(struct chash *hash, void *userdata,
-  void (*fn)(void *userdata, unsigned long int key, float *data));
+  void (*fn)(void *userdata, unsigned long int key, double *data));
 enum chash_ret chash_iter_luint_flt_next(struct chash_iter *iter, 
-  unsigned long int *key, float **data);
+  unsigned long int *key, double **data);
 
 /* str to ptr functions */
 

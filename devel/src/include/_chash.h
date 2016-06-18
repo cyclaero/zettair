@@ -20,7 +20,7 @@ struct chash_link {
         void *d_ptr;
         unsigned long int d_luint;
         double d_dbl;
-        float d_flt;
+        double d_flt;
         /* add other types as needed */
     } data;                             /* data associated with key */
 
@@ -68,7 +68,7 @@ struct chash {
     /* not used for primitive types */
     int (*cmpfn)(const void *key1, const void *key2);
 
-    float resize_load;                  /* load to double size at */
+    double resize_load;                  /* load to double size at */
     unsigned int resize_point;          /* count to double size at */
     struct objalloc *alloc;             /* link allocator */
 

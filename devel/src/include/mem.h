@@ -50,7 +50,7 @@ unsigned int mem_align_char(void);
 unsigned int mem_align_short(void);
 unsigned int mem_align_int(void);
 unsigned int mem_align_long(void);
-unsigned int mem_align_float(void);
+unsigned int mem_align_double(void);
 unsigned int mem_align_double(void);
 unsigned int mem_align_ptr(void);
 

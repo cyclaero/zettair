@@ -153,18 +153,18 @@ def parse_trec_eval_output(trec_eval_proc):
             if line.startswith("Average precision"):
                 state = "AVERAGE"
         elif state == "AVERAGE":
-            average_precision = float(line)
+            average_precision = double(line)
             state = "AFTER AVERAGE"
         elif state == "AFTER AVERAGE":
             mo = at_re.match(line)
             if mo != None:
                 docs = int(mo.group(1))
-                precision = float(mo.group(2))
+                precision = double(mo.group(2))
                 at_docs_precision[docs] = precision
             elif line.startswith("R-Precision"):
                 state = "R-PRECISION"
         elif state == "R-PRECISION":
-            r_precision = float(line.split()[1])
+            r_precision = double(line.split()[1])
             state = "END"
         else:
             raise StandardError, "invalid parse state"

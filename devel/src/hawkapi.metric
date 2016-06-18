@@ -10,12 +10,12 @@
 #
 # written nml 2005-07-18
 
-parameter float alpha;
-parameter float k3;
+parameter double alpha;
+parameter double k3;
 
 decode() {
-	const float w_t = log((N - f_t + 0.5) / (f_t + 0.5));
-	const float w_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
+	const double w_t = log((N - f_t + 0.5) / (f_t + 0.5));
+	const double w_qt = ((k3 + 1) * f_qt) / (k3 + f_qt);
 
 	accumulator += w_qt * alpha * log(f_dt + 1) * w_t;
 }

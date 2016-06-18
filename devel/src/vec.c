@@ -291,11 +291,11 @@ unsigned int vec_byte_scan(struct vec *v, unsigned int n) {
     return n;
 }
 
-unsigned int vec_flt_write(struct vec *v, float flt, unsigned int precision) {
+unsigned int vec_flt_write(struct vec *v, double flt, unsigned int precision) {
     int exp;
     unsigned int biased_exp,
                  quant_frac;
-    float frac = (float) frexpf(flt, &exp);
+    double frac = (double)frexpf(flt, &exp);
     char *pos = v->pos;
   
     assert(precision);
@@ -340,12 +340,12 @@ unsigned int vec_flt_write(struct vec *v, float flt, unsigned int precision) {
     }
 }
 
-unsigned int vec_flt_read(struct vec *v, float *flt, unsigned int precision) {
+unsigned int vec_flt_read(struct vec *v, double *flt, unsigned int precision) {
     int exp;
     unsigned char biased_exp;
     unsigned int quant_frac = 0,
                  bits = 0;
-    float frac;
+    double frac;
     char *pos = v->pos;
 
     assert(precision);
@@ -367,12 +367,12 @@ unsigned int vec_flt_read(struct vec *v, float *flt, unsigned int precision) {
             }
 
             if (!(quant_frac & 1)) {
-                frac = ((float) (quant_frac >> 1)) / bit_lmask(precision);
+                frac = ((double)(quant_frac >> 1)) / bit_lmask(precision);
             } else {
-                frac = -((float) (quant_frac >> 1)) / bit_lmask(precision);
+                frac = -((double)(quant_frac >> 1)) / bit_lmask(precision);
             }
 
-            *flt = (float) ldexpf(frac, exp);
+            *flt = (double)ldexpf(frac, exp);
             return v->pos - pos;
         }
     }
@@ -474,12 +474,12 @@ VEC_INTARR(vbyte, unsigned long int)
 VEC_INTARR(int, unsigned int)
 VEC_INTARR(maxint, uintmax_t)
 
-unsigned int vec_flt_arr_read(struct vec *v, float *arr, unsigned int arrlen,
+unsigned int vec_flt_arr_read(struct vec *v, double *arr, unsigned int arrlen,
   unsigned int precision, unsigned int *bytes_ptr) {
     unsigned int bytes = 0,
                  len,
                  count = 0;
-    float *end = arr + arrlen;
+    double *end = arr + arrlen;
 
     while (arr < end && (len = vec_flt_read(v, arr, precision))) {
         arr++;
@@ -491,12 +491,12 @@ unsigned int vec_flt_arr_read(struct vec *v, float *arr, unsigned int arrlen,
     return count;
 }
 
-unsigned int vec_flt_arr_write(struct vec *v, float *arr, unsigned int arrlen,
+unsigned int vec_flt_arr_write(struct vec *v, double *arr, unsigned int arrlen,
   unsigned int precision, unsigned int *bytes_ptr) {
     unsigned int bytes = 0,
                  len,
                  count = 0;
-    float *end = arr + arrlen;
+    double *end = arr + arrlen;
 
     while (arr < end && (len = vec_flt_write(v, *arr, precision))) {
         arr++;

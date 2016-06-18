@@ -114,7 +114,7 @@ struct sentence {
     unsigned int start_term;      /* ordinal number of initial term */
     unsigned int terms;           /* number of terms in sentence */
     unsigned int qterms;          /* number of query terms in sentence */
-    float score;                  /* sentence score */
+    double score;                  /* sentence score */
     struct sentence *next;        /* next sentence */
     struct sentence *prev;        /* previous sentence */
 };
@@ -128,7 +128,7 @@ static int ensure_space(struct sentence **sent, unsigned int space) {
             *sent = ptr;
             (*sent)->buf = (void *) (*sent + 1);
 
-            if (DEAR_DEBUG) {
+            if (DEBUG) {
                 memset((*sent)->buf + (*sent)->bufsize, 0, (*sent)->bufsize);
             }
 
@@ -500,16 +500,14 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                 /* it's not a query term */
                 if (highlight && type == INDEX_SUMMARISE_TAG) {
                     unsigned int taglen = str_len("</b>");
-                    if (sent->buflen + taglen >= sent->bufsize 
-                      && !ensure_space(&sent, sent->buflen + taglen)) {
+                    if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
                         /* ran out of memory, just skip this term */
                         assert(sent->buflen);
                         return extract_finish(sent, ps, type, highlight);
                     }
 
                     /* end highlighting */
-                    memmove(sent->buf + sent->buflen + taglen, 
-                      sent->buf + sent->buflen, len);
+                    memmove(sent->buf + sent->buflen + taglen, sent->buf + sent->buflen, len);
                     memcpy(sent->buf + sent->buflen, "</b>", taglen);
                     sent->buflen += taglen;
                 }
@@ -564,7 +562,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
 }
 
 static void score(struct sentence *sent, const struct query *q) {
-    sent->score = (sent->qterms * sent->qterms) / (float) q->terms;
+    sent->score = (sent->qterms * sent->qterms)/(double)q->terms;
 }
 
 /* internal function (for qsort) to order sentences by position in the document */
@@ -701,7 +699,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
       && (ps.terms = chash_str_new(3, 0.5, str_nhash))
       && (ps.fd = fdset_pin(sum->fd, sum->idx->repos_type, fileno, physoffset, SEEK_SET))
       && (psettings_type_tags(sum->pset, mtype, &ps.ptype) == PSETTINGS_OK)) {
-        if (DEAR_DEBUG) {
+        if (DEBUG) {
             memset(ps.termbuf, 0, sum->max_termlen + 1);
         }
 
@@ -778,7 +776,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
             space->buf = (void *)(space + 1);
             space->bufsize = sum->max_termlen * 2;
 
-            if (DEAR_DEBUG) {
+            if (DEBUG) {
                 memset(space->buf, 0, space->bufsize);
             }
         } else {

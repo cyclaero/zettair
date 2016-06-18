@@ -30,7 +30,7 @@ struct stop *stop_new(void (*stem)(void *opaque, char *term), void *opaque) {
     struct stop *list;
 
     if ((list = malloc(sizeof(*list))) 
-      && (list->alloc = poolalloc_new(!!DEAR_DEBUG, 1024, NULL))
+      && (list->alloc = poolalloc_new(DEBUG, 1024, NULL))
       && (list->table = chash_ptr_new(1, 0.5, 
           (unsigned int (*)(const void *)) str_hash,
           (int (*)(const void *, const void *)) str_cmp))) {

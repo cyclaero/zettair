@@ -928,11 +928,9 @@ int bucket1_split(void *mem1, unsigned int bucketsize1, void *mem2,
     return 1;
 }
 
-int bucket1_set_term(void *mem, unsigned int bucketsize, unsigned int termno, 
-  const char *newterm, unsigned int newtermlen, int *toobig) {
-    unsigned int i,
-                 termlen;
-    uint16_t size,
+int bucket1_set_term(void *mem, unsigned int bucketsize, unsigned int termno, const char *newterm, unsigned int newtermlen, int *toobig) {
+    unsigned int i, termlen;
+    uint16_t size = 0,
              ptr, 
              prevptr,
              lastptr,
@@ -1272,11 +1270,9 @@ void *bucket2_search(void *mem, unsigned int bucketsize, const char *term,
     return ((char *) mem) + ptr;
 }
 
-void *bucket2_realloc_at(void *mem, unsigned int bucketsize, 
-  unsigned int index, unsigned int newsize, int *toobig) {
+void *bucket2_realloc_at(void *mem, unsigned int bucketsize, unsigned int index, unsigned int newsize, int *toobig) {
     uint16_t size,
              entries,
-             new_bucket_size,
              ptr;
 
     /* read number of entries */
@@ -1288,17 +1284,10 @@ void *bucket2_realloc_at(void *mem, unsigned int bucketsize,
         return NULL;
     }
 
-    new_bucket_size = bucketsize - sizeof(uint16_t);
-
     /* decode ptr */
     MEM_NTOH(&ptr, B2_PTR_ADDR(mem, index), sizeof(ptr));
     MEM_NTOH(&size, B2_SIZE_ADDR(mem, index), sizeof(ptr));
-
-    if (size == newsize) {
-        return ((char *) mem) + ptr;
-    } else {
-        return NULL;
-    }
+    return (size == newsize) ? ((char *)mem) + ptr : NULL;
 }
 
 void *bucket2_realloc(void *mem, unsigned int bucketsize, const char *term,
@@ -1675,11 +1664,9 @@ int bucket2_split(void *mem1, unsigned int bucketsize1, void *mem2,
     return 1;
 }
 
-int bucket2_set_term(void *mem, unsigned int bucketsize, unsigned int termno, 
-  const char *newterm, unsigned int newtermlen, int *toobig) {
-    unsigned int i,
-                 termlen;
-    uint16_t size,
+int bucket2_set_term(void *mem, unsigned int bucketsize, unsigned int termno, const char *newterm, unsigned int newtermlen, int *toobig) {
+    unsigned int i, termlen;
+    uint16_t size = 0,
              ptr, 
              prevptr,
              lastptr,
@@ -2083,13 +2070,12 @@ void bucket_print_split(void *bucketmem, unsigned int bucketsize,
     void *vec;
     unsigned int i,
                  j,
-                 len,
+                 len = 0,
                  veclen,
                  sum = 0;
 
     for (i = 0; i < terms; i++) {
-        currterm = bucket_next_term(bucketmem, bucketsize, strategy, &state, 
-            &len, &vec, &veclen);
+        currterm = bucket_next_term(bucketmem, bucketsize, strategy, &state, &len, &vec, &veclen);
         assert(currterm);
         for (j = 0; j < len; j++) {
             putc(currterm[j], stdout);

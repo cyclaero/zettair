@@ -33,9 +33,9 @@
 
 /* a structure describing the parameters used */
 struct okapi_param {
-    float k1;
-    float k3;
-    float b;
+    double k1;
+    double k3;
+    double b;
     int dummy;  /* dummy member to ensure non-empty struct */
 };
 
@@ -58,7 +58,7 @@ static enum search_ret parse(void *ptr, const char *str) {
       && parts == 3) {
         for (i = 0; i < parts; i++) {
             if (!str_ncmp(split[i], "k1=", 3)) {
-                if ((param->k1 = (float) strtod(split[i] + 3, &endptr)), !*endptr) {
+                if ((param->k1 = (double)strtod(split[i] + 3, &endptr)), !*endptr) {
                     read |= (1 << 0);
                 } else {
                     free(split);
@@ -68,7 +68,7 @@ static enum search_ret parse(void *ptr, const char *str) {
             }
             else
             if (!str_ncmp(split[i], "k3=", 3)) {
-                if ((param->k3 = (float) strtod(split[i] + 3, &endptr)), !*endptr) {
+                if ((param->k3 = (double)strtod(split[i] + 3, &endptr)), !*endptr) {
                     read |= (1 << 1);
                 } else {
                     free(split);
@@ -78,7 +78,7 @@ static enum search_ret parse(void *ptr, const char *str) {
             }
             else
             if (!str_ncmp(split[i], "b=", 2)) {
-                if ((param->b = (float) strtod(split[i] + 2, &endptr)), !*endptr) {
+                if ((param->b = (double)strtod(split[i] + 2, &endptr)), !*endptr) {
                     read |= (1 << 2);
                 } else {
                     free(split);
@@ -215,17 +215,17 @@ static enum search_ret or_decode(struct index *idx, struct query *query,
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
 
 
     /* METRIC_PER_CALL */
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -314,17 +314,17 @@ static enum search_ret or_decode_offsets(struct index *idx, struct query *query,
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
 
 
     /* METRIC_PER_CALL */
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -412,23 +412,23 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
+    double cooc_rate;               /* co-occurrance rate for list entries and 
                                     * accumulators */
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
 
 
     /* METRIC_PER_CALL */
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -475,13 +475,13 @@ static enum search_ret and_decode(struct index *idx, struct query *query,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -523,23 +523,23 @@ static enum search_ret and_decode_offsets(struct index *idx,
                  hit = 0,          /* number of entries in both accs and list*/
                  decoded = 0;      /* number of list entries seen */
     enum search_ret ret;
-    float cooc_rate;               /* co-occurrance rate for list entries and 
+    double cooc_rate;               /* co-occurrance rate for list entries and 
                                     * accumulators */
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
 
 
     /* METRIC_PER_CALL */
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -587,13 +587,13 @@ static enum search_ret and_decode_offsets(struct index *idx,
              *
              * cooccurrance rate is the percentage of list items hit */
             assert(missed + hit == decoded);
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -651,15 +651,15 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
@@ -667,7 +667,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
     /* METRIC_PER_CALL */
 
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -828,7 +828,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -887,13 +887,13 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -909,7 +909,7 @@ static enum search_ret thresh_decode(struct index *idx, struct query *query,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }
@@ -957,22 +957,22 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
     struct vec v = {NULL, NULL};
     enum search_ret ret = SEARCH_EIO;
     int infinite = 0;                 /* whether threshold is infinite */
-    float cooc_rate;
+    double cooc_rate;
     /* METRIC_DECL */
 
     const unsigned int N = docmap_entries(idx->map);
     double avg_D_terms;
-    float w_t;
-    float r_dt;
+    double w_t;
+    double r_dt;
 
-    float r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
+    double r_qt = (((param->k3) + 1) * (query->term[qterm].f_qt)) / ((param->k3) + (query->term[qterm].f_qt));
     if (docmap_avg_words(idx->map, &avg_D_terms) != DOCMAP_OK) {
         return SEARCH_EINVAL;
     }
 
 
     /* METRIC_PER_CALL */
-    w_t = (float) log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
+    w_t = (double)log((N - (query->term[qterm].f_t) + 0.5) / ((query->term[qterm].f_t) + 0.5));
     /* fix for okapi bug, w_t shouldn't be 0 or negative. */
     if (w_t <= 0.0) {
         /* use a very small increment instead */
@@ -1135,7 +1135,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
 
                 estimate = results->accs 
                   + ((postings - decoded) 
-                    * ((float) results->accs - initial_accs)) / decoded;
+                    * ((double)results->accs - initial_accs)) / decoded;
 
                 if (estimate > TOLERANCE * results->acc_limit) {
                     thresh += step;
@@ -1194,13 +1194,13 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              *   - added
              *
              * cooccurrance rate is the percentage of list items hit */
-            cooc_rate = hit / (float) decoded;
+            cooc_rate = hit/(double)decoded;
 
             /* now have sampled co-occurrance rate, use this to estimate 
              * population co-occurrance rate (assuming unbiased sampling) 
              * and then number of results from unrestricted evaluation */
             assert(results->total_results >= results->accs);
-            cooc_rate *= results->total_results / (float) results->accs; 
+            cooc_rate *= results->total_results/(double)results->accs; 
             assert(cooc_rate >= 0.0);
             if (cooc_rate > 1.0) {
                 cooc_rate = 1.0;
@@ -1216,7 +1216,7 @@ static enum search_ret thresh_decode_offsets(struct index *idx,
              * accumulators) or there were none missed, in which case the
              * accumulators have fully accounted for everything in this list.
              * In either case, the (1 - cooc_rate) * missed maths above handles
-             * it exactly (modulo floating point errors of course). */
+             * it exactly (modulo doubleing point errors of course). */
             if (initial_accs && missed) {
                 results->estimated |= 1;
             }

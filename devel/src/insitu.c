@@ -2204,7 +2204,7 @@ static enum insitu_ret permute(struct insitu *situ) {
     }
 
     /* check that everything has been permuted */
-    for (i = 0; i < maxb && DEAR_DEBUG; i++) {
+    for (i = 0; i < maxb && DEBUG; i++) {
         assert(loc[i] == i + 1 || loc[i] == 0);
     }
  
@@ -2260,7 +2260,7 @@ static enum insitu_ret permute(struct insitu *situ) {
     }
 
     /* fill empty blocks with zeroes */
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         memset(buf, 0, situ->b);
         for (i = 0; i < maxb; i++) {
             if (loc[i] == 0) {
@@ -2323,7 +2323,7 @@ enum insitu_ret prep_merge(struct insitu *situ, struct insitu_stats *stats,
 
     /* pages is the number of pages that we can allocate with discretion */
     pages = mempages - (inputs + 1);
-    if (DEAR_DEBUG) {
+    if (DEBUG) {
         /* use a minimum of memory, to help flush out errors, when debugging */
         pages = 0;
     }
@@ -2519,7 +2519,7 @@ enum insitu_ret insitu_merge(struct insitu *situ, struct insitu_stats *stats) {
             }
         }
 
-        if (DEAR_DEBUG && inter_merged) {
+        if (DEBUG && inter_merged) {
             /* permute the intermediate merge files so that they're
              * debuggable */
             if ((iret = permute(situ)) != INSITU_OK) {

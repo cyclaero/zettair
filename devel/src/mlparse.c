@@ -81,18 +81,18 @@
  * used a stub macro to marshall parameters and jump to the indirect macro
  * location.
  *
- * A major design decision in the code was to allow 'floating' states, that act
+ * A major design decision in the code was to allow 'doubleing' states, that act
  * sort of like functions in that you can jump to them from anywhere in the code
  * and they return through (an extremely) limited stack mechanism.  The stack is
- * the state->next_state variable, which specifies how the 'floating' states are
- * to exit.  The 'floating' states are those that detect/process entity
+ * the state->next_state variable, which specifies how the 'doubleing' states are
+ * to exit.  The 'doubleing' states are those that detect/process entity
  * references/tags/other entities, since they can occur in a number of contexts,
  * and keeping track of exactly what the context is without this technique is
  * extremely difficult.  However, since only one next_state variable is
- * available, only one 'floating' state can be active at a time.  This caused
+ * available, only one 'doubleing' state can be active at a time.  This caused
  * some minor issues with the end sentence detection, which i initially tried to
- * implement as a 'floating' state, but couldn't as that raised scenarios when i
- * wanted two floating states active at one time (like 'word.&nbsp;', where the
+ * implement as a 'doubleing' state, but couldn't as that raised scenarios when i
+ * wanted two doubleing states active at one time (like 'word.&nbsp;', where the
  * transition from end sentence state to entity reference state causes us to
  * kill the next_state value that the end sentence state relies upon.
  *
@@ -338,28 +338,22 @@ struct mlparse_state {
     enum mlparse_states state;            /* current state of parser */
     enum mlparse_flags flags;             /* additional state flags */
     unsigned int len;                     /* length of entity in state */
-    enum mlparse_states next_state;       /* next state to go to (where 
-                                           * applicable) */
-    unsigned int count;                   /* chars we've processed in current 
-                                           * state */
+    enum mlparse_states next_state;       /* next state to go to (where applicable) */
+    unsigned int count;                   /* chars we've processed in current state */
     unsigned int wordlen;                 /* maximum length of a word */
-    unsigned int lookahead;               /* maximum length to look ahead for 
-                                           * end tags */
+    unsigned int lookahead;               /* maximum length to look ahead for end tags */
     unsigned int buflen;                  /* length of the internal buffer */
     const char *pos;                      /* current position in buffer */
-    const char *end;                      /* first position past end of 
-                                           * buffer */
+    const char *end;                      /* first position past end of buffer */
     char *buf;                            /* buffer for lookahead */
     char *tagbuf;                         /* buffer to store tag names in */
     unsigned int tagbuflen;               /* length of stuff in tagbuf */
     char *tmpbuf;                         /* temporary buffer (size of buf) */
     char erefbuf[MAXENTITYREF + 1];       /* entity reference buffer */
-    unsigned int errline;                 /* line error occurred on (debugging 
-                                           * tool) */
+    unsigned int errline;                 /* line error occurred on (debugging tool) */
 };
 
-int mlparse_new(struct mlparse *space, unsigned int wordlen, 
-  unsigned int lookahead) {
+int mlparse_new(struct mlparse *space, unsigned int wordlen, unsigned int lookahead) {
 
     if (wordlen <= 1) {
         return 0;
@@ -369,18 +363,18 @@ int mlparse_new(struct mlparse *space, unsigned int wordlen,
      * sometimes the maths are a bit funny, so we allow a few extra characters
      * on the end just in case */
 
-    if ((space->state = malloc(sizeof(*space->state))) 
-      && (space->state->buflen = lookahead + 2 * MAXENTITYREF)
-      && (space->state->buf = malloc(space->state->buflen + 1)) 
-      && (space->state->tmpbuf = malloc(space->state->buflen + 1)) 
-      && (space->state->tagbuf = malloc(wordlen + 1))) {
+    if ((space->state = malloc(sizeof(*space->state)))
+     && (space->state->buflen = lookahead + 2 * MAXENTITYREF)
+     && (space->state->buf = malloc(space->state->buflen + 1))
+     && (space->state->tmpbuf = malloc(space->state->buflen + 1))
+     && (space->state->tagbuf = malloc(wordlen + 1))) {
         space->state->wordlen = wordlen;
         space->state->lookahead = lookahead;
         space->state->tagbuf[0] = '\0';
         space->state->erefbuf[0] = '\0';
         space->state->buf[space->state->buflen] = '\0';
         mlparse_reinit(space);
-    } else if (space->state) {
+    } else if (space->state && space->state->buflen) {
         if (space->state->buf) {
             if (space->state->tmpbuf) {
                 free(space->state->tmpbuf);

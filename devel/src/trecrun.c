@@ -76,13 +76,13 @@ static void print_usage(FILE *output, const char *progname) {
     fprintf(output, "    --anh-impact: evaluate using impact-ordered lists\n"
       "                  (must have specified --anh-impact while indexing)\n");
     fprintf(output, "    -o,--okapi: use Okapi BM25 metric\n");
-    fprintf(output, "    -1,--k1=[float]: set Okapi BM25 k1 value\n");
-    fprintf(output, "    -3,--k3=[float]: set Okapi BM25 k3 value\n");
-    fprintf(output, "    -b,--b=[float]: set Okapi BM25 b value\n");
-    fprintf(output, "    -p,--pivoted-cosine=[float]: use pivoted cosine "
+    fprintf(output, "    -1,--k1=[double]: set Okapi BM25 k1 value\n");
+    fprintf(output, "    -3,--k3=[double]: set Okapi BM25 k3 value\n");
+    fprintf(output, "    -b,--b=[double]: set Okapi BM25 b value\n");
+    fprintf(output, "    -p,--pivoted-cosine=[double]: use pivoted cosine "
       "metric, with given pivot\n");
     fprintf(output, "    -c,--cosine: use cosine metric\n");
-    fprintf(output, "    --hawkapi=[float]: use Dave Hawking's metric, "
+    fprintf(output, "    --hawkapi=[double]: use Dave Hawking's metric, "
       "with alpha given\n");
     fprintf(output, "    --dirichlet=[uint]: use Dirichlet-smoothed LM "
       "metric, with mu given\n");
@@ -1106,7 +1106,7 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                     if (teresults 
                       && docno
                       && treceval_add_result(teresults, atoi(querynum), 
-                          docno, (float) results[i].score)) {
+                          docno, (double)results[i].score)) {
                         /* they want evaluated results, stuck it in the results
                          * structure */
                     } else if (!teresults && docno) {

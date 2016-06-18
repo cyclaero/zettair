@@ -606,7 +606,6 @@ struct index *index_new(const char *name, const char *config,
     idx->storage.bigendian = bigendian;
     retval = fdset_unpin(idx->fd, idx->index_type, 0, fd);
     assert(retval == FDSET_OK);
-    fd = -1;
 
     /* process storage-related options */
     if (opts & INDEX_NEW_MAXFILESIZE) {
@@ -689,8 +688,7 @@ struct index *index_load(const char *name, unsigned int memory, int opts,
   struct index_load_opt *opt) {
     struct index *idx = NULL;
     void *buf = NULL;
-    unsigned int fd_fileno = -1,
-                 root_fileno,
+    unsigned int root_fileno,
                  terms,
                  vfileno,
                  vsize,
@@ -739,8 +737,6 @@ struct index *index_load(const char *name, unsigned int memory, int opts,
         index_delete(idx);
         return NULL;
     }
-
-    fd_fileno = 0;
 
     /* get parameters from disk */
     if (!(index_params_read(idx, &root_fileno, &root_offset, &terms,
@@ -816,9 +812,7 @@ struct index *index_load(const char *name, unsigned int memory, int opts,
     /* read the docmap off of disk */
     if ((idx->map = docmap_load(idx->fd, idx->docmap_type,
           idx->storage.pagesize, 0, idx->storage.max_filesize,
-          dm_cache, &dm_ret))
-      == NULL) {
-
+          dm_cache, &dm_ret)) == NULL) {
         ERROR1("loading docmap: error is '%s'", docmap_strerror(dm_ret));
         index_delete(idx);
         return NULL;
@@ -835,7 +829,7 @@ struct index *index_load(const char *name, unsigned int memory, int opts,
 
     if (idx->params.config) {
         if ((fp = fopen((const char *) idx->params.config, "rb"))
-          && (idx->settings = psettings_read(fp, PSETTINGS_ATTR_INDEX))) {
+         && (idx->settings = psettings_read(fp, PSETTINGS_ATTR_INDEX))) {
             fclose(fp);
         } else {
             if (fp) {
@@ -845,17 +839,13 @@ struct index *index_load(const char *name, unsigned int memory, int opts,
             index_delete(idx);
             return NULL;
         }
-    } else if (!(idx->settings
-      = psettings_new_default(PSETTINGS_ATTR_INDEX))) {
+    } else if (!(idx->settings = psettings_new_default(PSETTINGS_ATTR_INDEX))) {
         ERROR("loading default parser settings");
         index_delete(idx);
         return NULL;
     }
 
-    if ((idx->vocab = iobtree_load_quick(idx->storage.pagesize,
-            idx->storage.btleaf_strategy, idx->storage.btnode_strategy,
-            NULL, idx->fd, idx->vocab_type, root_fileno,
-            root_offset, terms)) == NULL) {
+    if ((idx->vocab = iobtree_load_quick(idx->storage.pagesize, idx->storage.btleaf_strategy, idx->storage.btnode_strategy, NULL, idx->fd, idx->vocab_type, root_fileno, root_offset, terms)) == NULL) {
         ERROR("quick-loading btree");
         index_delete(idx);
         return NULL;
@@ -872,7 +862,6 @@ int index_rm(struct index *idx) {
                  len;
     int write;
     int error = 0;
-    int last_errno = 0;
 
     if (mrwlock_wlock(idx->biglock) == MRWLOCK_OK) {
         if (idx->fd == NULL) {
@@ -890,7 +879,6 @@ int index_rm(struct index *idx) {
                 if (unlink((char *) buf) < 0) {
                     ERROR1("Error trying to unlink repository file %s", buf);
                     error = 1;
-                    last_errno = errno;
                 }
             }
         }
@@ -899,7 +887,6 @@ int index_rm(struct index *idx) {
             if (fdset_unlink(idx->fd, idx->vocab_type, i) != FDSET_OK) {
                 ERROR1("Error trying to unlink vocab file %u", i);
                 error = 1;
-                last_errno = errno;
             }
         }
 
@@ -922,7 +909,6 @@ int index_rm(struct index *idx) {
                     } else {
                         ERROR1("Error trying to unlink index file %s", buf);
                         error = 1;
-                        last_errno = errno;
                     }
                 }
             }
@@ -1175,7 +1161,6 @@ unsigned int index_retrieve(const struct index *idx, unsigned long int docno,
                          * chunk */
                         readb = instream->avail_out - lcloffset;
                         memcpy(dst, instream->curr_out + lcloffset, readb);
-                        curroffset += readb;
                     }
 
                     /* move to next chunk */
@@ -1404,8 +1389,7 @@ int index_add(struct index *idx, const char *file, const char *mimetype,
     unsigned int i,
                  bytes_read = 0,
                  last_pos = 0,
-                 curr_pos = 0,
-                 multiple_compression = 0;
+                 curr_pos = 0;
     ssize_t readlen;
     enum makeindex_ret miret;
     unsigned int accbuf = idx->params.memory,
@@ -1531,14 +1515,13 @@ int index_add(struct index *idx, const char *file, const char *mimetype,
 
         /* figure out what compression was detected */
         comptype = MIME_TYPE_UNKNOWN_UNKNOWN;
-        multiple_compression = 0;
         for (i = stream_filters(instream) - 1; i != -1; i--) {
             const char *id;
 
             if (stream_filter(instream, i, &id) == STREAM_OK) {
                 if (!str_cmp(id, "gunzip")) {
                     if (comptype == MIME_TYPE_UNKNOWN_UNKNOWN) {
-                        multiple_compression = 1;
+                        /* multiple_compression = 1; */
                     }
                     flags = DOCMAP_COMPRESSED;
                     comptype = MIME_TYPE_APPLICATION_X_GZIP;
