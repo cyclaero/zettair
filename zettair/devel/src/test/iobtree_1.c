@@ -184,7 +184,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             if ((fscanf(fp, "%255s %u %d %d", name, &size, &leaf_strategy, 
                 &node_strategy) == 4)
               && (fd = fdset_new(0644, 0))
-              && (fdset_set_type_name(fd, 0, "iobtree", str_len("iobtree"), 1) 
+              && (fdset_set_type_name(fd, 0, "iobtree", strvlen("iobtree"), 1) 
                 == FDSET_OK)
               && (map = freemap_new(FREEMAP_STRATEGY_FIRST, 0, fd, addfile))
               && (btree = iobtree_new(size, leaf_strategy, node_strategy, map, 
@@ -210,7 +210,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             if (((tmplen = fscanf(fp, "%65535s %u", buf, &veclen)) == 2) 
               && (veclen <= 65535)) {
 
-                len = str_len(buf);
+                len = strvlen(buf);
                 if ((ret = iobtree_alloc(btree, buf, len, veclen, &toobig))) {
                     /* do nothing */
                     if (params.verbose) {
@@ -219,7 +219,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                 } else {
                     fprintf(stderr, 
                       "%s: failed to add '%s' (len %u data %u) to btree\n", 
-                      name, buf, (unsigned int) str_len(buf), veclen);
+                      name, buf, (unsigned int) strvlen(buf), veclen);
                     return 0;
                 }
             } else {
@@ -242,7 +242,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             if (((tmplen = fscanf(fp, "%65535s %u", buf, &veclen)) == 2) 
               && (veclen <= 65535)) {
 
-                len = str_len(buf);
+                len = strvlen(buf);
                 if ((ret = iobtree_append(btree, buf, len, veclen, &toobig))) {
                     /* do nothing */
                     if (params.verbose) {
@@ -251,7 +251,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                 } else {
                     fprintf(stderr, 
                       "%s: failed to add '%s' (len %u data %u) to btree\n", 
-                      name, buf, (unsigned int) str_len(buf), veclen);
+                      name, buf, (unsigned int) strvlen(buf), veclen);
                     return 0;
                 }
             } else {
@@ -286,7 +286,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                     if ((term = iobtree_next_term(btree, state, &len, &addr, 
                         &veclen)) 
                       && fscanf(fp, "%65535s %u ", buf, &veclen2)
-                      && (len == str_len(buf))
+                      && (len == strvlen(buf))
                       && !str_ncmp(buf, term, len)
                       && (tmpstr = str_dup(buf))) {
                         /* compare vectors */
@@ -296,7 +296,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
                             /* locate it through _find and compare again */
                             if ((addr = iobtree_find(btree, tmpstr, 
-                                str_len(tmpstr), 0, &veclen))
+                                strvlen(tmpstr), 0, &veclen))
                               && (veclen == veclen2)
                               && !memcmp(buf, addr, veclen)) {
                                 /* do nothing */
@@ -362,7 +362,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             if ((fscanf(fp, "%65535s %u ", buf, &veclen) == 2) 
               && (veclen <= 65535)) {
 
-                addr = iobtree_find(btree, buf, str_len(buf), 1, &reallen);
+                addr = iobtree_find(btree, buf, strvlen(buf), 1, &reallen);
 
                 if (addr && (reallen == veclen) 
                   && fread(addr, 1, veclen, fp)) {
@@ -387,7 +387,7 @@ int test_file(FILE *fp, int argc, char **argv) {
               && (veclen <= 65535)) {
 
                 if (!iobtree_realloc(btree, buf, 
-                  str_len(buf), veclen, 
+                  strvlen(buf), veclen, 
                   &toobig)) {
                     fprintf(stderr, "%s: failed to realloc!\n", name);
                     return 0;
@@ -405,7 +405,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
             if (fscanf(fp, "%65535s %u", buf, &succeed) == 2) {
                 if ((!(intret 
-                      = iobtree_remove(btree, buf, str_len(buf))) 
+                      = iobtree_remove(btree, buf, strvlen(buf))) 
                     && succeed) 
                   || (intret && !succeed)) {
                     fprintf(stderr, "%s: failed to rm '%s'\n", name, buf);
@@ -450,7 +450,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
                 printf("%u entries\n\n", iobtree_size(btree));
             }
-        } else if ((*pos != '#') && str_len(pos)) {
+        } else if ((*pos != '#') && strvlen(pos)) {
             fprintf(stderr, "%s: unknown command '%s'\n", name, pos);
             return 0;
         }

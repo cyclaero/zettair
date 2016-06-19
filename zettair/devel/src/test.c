@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
             perror("glob failed");
             return EXIT_FAILURE;
         }
-        len = strlen(srcdir) + 1 + strlen(*argv) + 1;
+        len = strvlen(srcdir) + 1 + strvlen(*argv) + 1;
 
         /* traverse the glob */
         for (i = 0; i < globbuf.gl_pathc; i++) {

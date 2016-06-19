@@ -132,11 +132,11 @@ static int index_params_read(struct index *idx,
         /* open succeeded */
 
         /* get signature bytes from the start */
-        assert(str_len(INDEX_HEADER) < FILENAME_MAX);
-        if (fread(buf, 1, str_len(INDEX_HEADER), fp) < str_len(INDEX_HEADER)) {
+        assert(strvlen(INDEX_HEADER) < FILENAME_MAX);
+        if (fread(buf, 1, strvlen(INDEX_HEADER), fp) < strvlen(INDEX_HEADER)) {
             FAIL();
         }
-        if (str_ncmp(buf, INDEX_HEADER, str_len(INDEX_HEADER))) {
+        if (str_ncmp(buf, INDEX_HEADER, strvlen(INDEX_HEADER))) {
             ERROR1("index header not found at head of params buffer: "
               "looking for '%s'", INDEX_HEADER);
             FAIL();
@@ -277,7 +277,7 @@ static int index_params_write(struct index *idx,
           && (fdset_close(idx->fd) == FDSET_OK)
           && (fp = fopen(filename, "wb"))))
       /* write in signature bytes */
-      && fwrite(INDEX_HEADER, str_len(INDEX_HEADER), 1, fp)) {
+      && fwrite(INDEX_HEADER, strvlen(INDEX_HEADER), 1, fp)) {
         /* open succeeded */
 
         i = INDEX_FILE_FORMAT_VERSION;
@@ -316,7 +316,7 @@ static int index_params_write(struct index *idx,
 
         /* write config filename */
         if (idx->params.config) {
-            i = str_len(idx->params.config);
+            i = strvlen(idx->params.config);
         } else {
             i = 0;
         }
@@ -1450,7 +1450,7 @@ int index_add(struct index *idx, const char *file, const char *mimetype,
 
     if ((parsebuf = malloc(idx->params.parsebuf))
       && (fdset_set_fd_name(idx->fd, idx->repos_type, idx->repos, file,
-          str_len(file), 0) == FDSET_OK)
+          strvlen(file), 0) == FDSET_OK)
       && ((infd = fdset_pin(idx->fd, idx->repos_type, idx->repos, 0,
           SEEK_SET)) >= 0)
       && (instream = stream_new())
@@ -1501,7 +1501,7 @@ int index_add(struct index *idx, const char *file, const char *mimetype,
             ret = fdset_unpin(idx->fd, idx->repos_type, idx->repos, infd);
             assert(ret == FDSET_OK);
             ret = fdset_set_fd_delete_name(idx->fd, idx->repos_type,
-            		idx->repos, file, str_len(file));
+            		idx->repos, file, strvlen(file));
             assert(ret == FDSET_OK);
             ret = fdset_close_file(idx->fd, idx->repos_type, idx->repos);
             assert(ret == FDSET_OK);
@@ -1587,7 +1587,7 @@ int index_add(struct index *idx, const char *file, const char *mimetype,
                     dm_ret = docmap_add(idx->map, idx->repos, last_pos,
                       curr_pos - last_pos, flags,
                       mi->stats.terms, mi->stats.distinct,
-                      mi->stats.weight, aux_docno, strlen(aux_docno), mtype,
+                      mi->stats.weight, aux_docno, strvlen(aux_docno), mtype,
                       &docno_out);
                     zpthread_mutex_unlock(&idx->docmap_mutex);
 

@@ -519,7 +519,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             printf("\n%u entries, %f utilised out of %f, %f wasted\n\n", 
               freemap_entries(map), freemap_utilisation(map), 
               freemap_space(map), freemap_wasted(map));
-        } else if ((*pos != '#') && str_len(pos)) {
+        } else if ((*pos != '#') && strvlen(pos)) {
             fprintf(stderr, "%s: unknown command '%s'\n", name, pos);
             return 0;
         }

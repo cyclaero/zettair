@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 
         str_rtrim(buf);
         str = (char *) str_ltrim(buf);
-        if (str_len(str)) {
+        if (strvlen(str)) {
             if ((word = str_split(str, " \t\v\n\r", &words))) {
                 for (i = 0; i < words; i++) {
                     stem(NULL, word[i]);

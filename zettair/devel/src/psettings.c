@@ -474,14 +474,14 @@ static int psettings_read_type(struct psettings *pset,
 
     /* process list of 'tag' tags */
     while ((ret == MLPARSE_TAG)
-      && !str_nncmp(buf, len, "tag", str_len("tag"))) {
+      && !str_nncmp(buf, len, "tag", strvlen("tag"))) {
         if (!psettings_read_tag(pset, parser, type, buf, tagbuf)) {
             return 0;
         }
         ret = parse(parser, buf, &len, 1);
     }
 
-    if (ret == MLPARSE_TAG && !str_nncmp(buf, len, "/type", str_len("/type"))) {
+    if (ret == MLPARSE_TAG && !str_nncmp(buf, len, "/type", strvlen("/type"))) {
         /* succeeded */
         return 1;
     } else {

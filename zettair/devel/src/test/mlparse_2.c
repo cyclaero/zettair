@@ -20,7 +20,7 @@ int test_hanging_tag() {
 
     mlparse_new(&parser, 50, 200);
     parser.next_in = txt;
-    parser.avail_in = strlen(txt);
+    parser.avail_in = strvlen(txt);
     ret = mlparse_parse(&parser, buf, &len, 1);
     TEST(ret == MLPARSE_INPUT, "Failed to ask for more input!");
     mlparse_eof(&parser);
@@ -38,7 +38,7 @@ int test_end_sentence() {
 
     mlparse_new(&parser, 50, 200);
     parser.next_in = txt;
-    parser.avail_in = strlen(txt);
+    parser.avail_in = strvlen(txt);
     ret = mlparse_parse(&parser, buf, &len, 1);
     TEST(ret == MLPARSE_TAG, "Not tag");
     ret = mlparse_parse(&parser, buf, &len, 1);

@@ -734,9 +734,9 @@ static struct args *parse_args(unsigned int argc, char **argv, FILE *output) {
 
 /* small function to append a string to a buffer */
 static char *strappend(char **buf, unsigned int *len, unsigned int *cap, 
-  char *str, unsigned int strlen) {
+  char *str, unsigned int strvlen) {
 
-    while (*cap <= *len + strlen) {
+    while (*cap <= *len + strvlen) {
         void *ptr = realloc(*buf, *cap * 2 + 1);
 
         if (ptr) {
@@ -747,20 +747,20 @@ static char *strappend(char **buf, unsigned int *len, unsigned int *cap,
         }
     }
 
-    memcpy(*buf + *len, str, strlen);
-    *len += strlen;
+    memcpy(*buf + *len, str, strvlen);
+    *len += strvlen;
     return *buf;
 }
 
 /* small macro to append a string to the buffer, exiting with an error message
  * on failure */
-#define APPEND(buf, buflen, bufcap, str, strlen)                              \
-    if (!strappend(&buf, &buflen, &bufcap, str, strlen)) {                    \
+#define APPEND(buf, buflen, bufcap, str, strvlen)                              \
+    if (!strappend(&buf, &buflen, &bufcap, str, strvlen)) {                    \
         if (buf) {                                                            \
             free(buf);                                                        \
         }                                                                     \
         fprintf(stderr, "error allocating memory for query, length %u + %u\n",\
-          buflen, strlen);                                                    \
+          buflen, strvlen);                                                    \
         return NULL;                                                          \
     } else 
 
@@ -935,13 +935,13 @@ static char *get_next_query(struct mlparse_wrap *parser, char *querynum,
              * the description with 'Description:' and narrative with
              * 'Narrative:' :o( */
             if ((intitle && (!firstword 
-                || str_nncmp(word, wordlen, "Topic:", str_len("Topic:"))))
+                || str_nncmp(word, wordlen, "Topic:", strvlen("Topic:"))))
               || (indescr && (!firstword 
                   || str_nncmp(word, wordlen, "Description:", 
-                      str_len("Description:"))))
+                      strvlen("Description:"))))
               || (innarr && (!firstword 
                   || str_nncmp(word, wordlen, "Narrative:", 
-                      str_len("Narrative:"))))) {
+                      strvlen("Narrative:"))))) {
 
                 /* we have to add the word to the buffer */
                 (*words)++;
@@ -949,7 +949,7 @@ static char *get_next_query(struct mlparse_wrap *parser, char *querynum,
                 APPEND(buf, buflen, bufcapacity, " ", 1);
             } else if (innum 
               && (!firstword 
-                || str_nncmp(word, wordlen, "Number:", str_len("Number:")))) {
+                || str_nncmp(word, wordlen, "Number:", strvlen("Number:")))) {
 
                 if (wordlen < querynum_len) {
                     str_ncpy(querynum, word, wordlen);
@@ -1019,7 +1019,7 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
             args->narr, &args->sopt.word_limit, args))) {
 
             /* check that we actually got a query */
-            if (!str_len(query)) {
+            if (!strvlen(query)) {
                 fprintf(stderr, "failed to extract query for topic %s\n", 
                   querynum);
                 if (atoi((const char *) querynum) == 201) {
@@ -1028,7 +1028,7 @@ static int process_topic_file(FILE *fp, struct args *args, FILE *output,
                       "title-only run and it doesn't contain titles\n");
                 }
 
-                if (args->cont && strlen(querynum)) {
+                if (args->cont && strvlen(querynum)) {
                     /* continue evaluation */
                     if (args->dummy) {
                         /* no results, insert dummy result if requested */

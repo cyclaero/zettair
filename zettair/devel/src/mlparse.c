@@ -81,18 +81,18 @@
  * used a stub macro to marshall parameters and jump to the indirect macro
  * location.
  *
- * A major design decision in the code was to allow 'doubleing' states, that act
+ * A major design decision in the code was to allow 'floating' states, that act
  * sort of like functions in that you can jump to them from anywhere in the code
  * and they return through (an extremely) limited stack mechanism.  The stack is
- * the state->next_state variable, which specifies how the 'doubleing' states are
- * to exit.  The 'doubleing' states are those that detect/process entity
+ * the state->next_state variable, which specifies how the 'floating' states are
+ * to exit.  The 'floating' states are those that detect/process entity
  * references/tags/other entities, since they can occur in a number of contexts,
  * and keeping track of exactly what the context is without this technique is
  * extremely difficult.  However, since only one next_state variable is
- * available, only one 'doubleing' state can be active at a time.  This caused
+ * available, only one 'floating' state can be active at a time.  This caused
  * some minor issues with the end sentence detection, which i initially tried to
- * implement as a 'doubleing' state, but couldn't as that raised scenarios when i
- * wanted two doubleing states active at one time (like 'word.&nbsp;', where the
+ * implement as a 'floating' state, but couldn't as that raised scenarios when i
+ * wanted two floating states active at one time (like 'word.&nbsp;', where the
  * transition from end sentence state to entity reference state causes us to
  * kill the next_state value that the end sentence state relies upon.
  *
@@ -363,11 +363,11 @@ int mlparse_new(struct mlparse *space, unsigned int wordlen, unsigned int lookah
      * sometimes the maths are a bit funny, so we allow a few extra characters
      * on the end just in case */
 
-    if ((space->state = malloc(sizeof(*space->state)))
-     && (space->state->buflen = lookahead + 2 * MAXENTITYREF)
-     && (space->state->buf = malloc(space->state->buflen + 1))
-     && (space->state->tmpbuf = malloc(space->state->buflen + 1))
-     && (space->state->tagbuf = malloc(wordlen + 1))) {
+    if ((space->state = malloc(sizeof(*space->state))) 
+      && (space->state->buflen = lookahead + 2 * MAXENTITYREF)
+      && (space->state->buf = malloc(space->state->buflen + 1)) 
+      && (space->state->tmpbuf = malloc(space->state->buflen + 1)) 
+      && (space->state->tagbuf = malloc(wordlen + 1))) {
         space->state->wordlen = wordlen;
         space->state->lookahead = lookahead;
         space->state->tagbuf[0] = '\0';
@@ -1116,7 +1116,6 @@ toplevel_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             word[0] = *pos++;
             st->len = 1;
             goto word_label;
@@ -1131,6 +1130,7 @@ toplevel_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         default:
             if (strip) {
                 /* ignore junk as input */
@@ -1234,7 +1234,6 @@ word_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_WORD);
             break;
@@ -1255,6 +1254,7 @@ word_label:
             *length = st->len;
             RETURN(MLPARSE_WORD, STATE_TOPLEVEL);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             if (strip) {
                 /* ignore junk in words */
@@ -1367,7 +1367,6 @@ punc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_PUNC);
             goto word_label;
@@ -1387,6 +1386,7 @@ punc_label:
             *length = st->len;
             RETURN(MLPARSE_WORD, STATE_TOPLEVEL);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             if (strip) {
                 /* ignore junk in words */
@@ -1497,11 +1497,11 @@ acronym_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_ACRONYM);
             goto word_label;
 
+        case ASCII_CASE_EXTENDED:
         default:
             /* anything else, let the word state deal with it */
             goto word_label;
@@ -1556,11 +1556,11 @@ acronym_letter_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* acronym ends, push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_ACRONYM_LETTER);  
             goto word_label;
 
+        case ASCII_CASE_EXTENDED:
         default:
             /* anything else, let the punc state deal with it */
             goto punc_label;
@@ -1598,6 +1598,7 @@ tag_peek_first_label:
     while (tmppos < tmpend) {
         switch (*tmppos) {
         default:
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_SPACE:
             /* can't have space or other junk directly after tag open, 
              * its not a tag */
@@ -1628,7 +1629,6 @@ tag_peek_first_label:
         case '/': case '?': 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* pretty much anything else qualifies, loosely speaking */
             st->tagbuf[0] = *tmppos;
             st->tagbuflen = 1;
@@ -1643,6 +1643,7 @@ tag_peek_name_label:
     while (tmppos < tmpend) {
         switch (*tmppos) {
         default:
+        case ASCII_CASE_EXTENDED:
             /* don't accept junk in tag names */
             JUMP(st->next_state, st->flags & ~FLAG_BUFFER, 0);
 
@@ -1680,7 +1681,6 @@ tag_peek_name_label:
         case '.': case '-': case '_': case ':':
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* pretty much anything else qualifies, loosely speaking */
             if (st->tagbuflen < st->wordlen) {
                 st->tagbuf[st->tagbuflen++] = *tmppos;
@@ -1700,6 +1700,7 @@ tag_peek_name_cont_label:
     while (tmppos < tmpend) {
         switch (*tmppos) {
         default:
+        case ASCII_CASE_EXTENDED:
             /* don't accept junk in tag names */
             JUMP(st->next_state, st->flags & ~FLAG_BUFFER, 0);
 
@@ -1719,7 +1720,6 @@ tag_peek_name_cont_label:
         case '.': case '-': case '_': case ':':
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* pretty much anything else qualifies, loosely speaking */
             tmppos++;
             st->count++;
@@ -1807,7 +1807,6 @@ tag_name_cont_label:
             /* fallthrough */
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* add character to tag name */
             PUSH(*pos++, MLPARSE_TAG, STATE_TAG_NAME_CONT);
             break;
@@ -1822,6 +1821,7 @@ tag_name_cont_label:
             CANT_GET_HERE();
 
         default:
+        case ASCII_CASE_EXTENDED:
             /* ignore anything else */
             pos++;
             break;
@@ -1871,7 +1871,6 @@ tag_label:
             /* fallthrough */
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* add character to tag name */
             word[0] = *pos++;
             st->len = 1;
@@ -1887,6 +1886,7 @@ tag_label:
             pos++;
             goto pval_dquot_label;
 
+        case ASCII_CASE_EXTENDED:
         default:
             /* ignore everything else */
             pos++;
@@ -1962,11 +1962,11 @@ param_label:
             /* fallthrough */
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* add character to tag name */
             PUSH(*pos++, MLPARSE_PARAM, STATE_PARAM);
             break;
 
+        case ASCII_CASE_EXTENDED:
         default:
             /* ignore junk */
             pos++;
@@ -2009,12 +2009,12 @@ param_eq_label:
             /* fallthrough */
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* start of a different parameter */
             word[0] = *pos++;
             st->len = 1;
             goto param_label;
 
+        case ASCII_CASE_EXTENDED:
         default:
         case ASCII_CASE_SPACE:
             /* ignore */
@@ -2056,12 +2056,12 @@ pval_first_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* start of a whitespace delimited parameter value */
             word[0] = *pos++;
             st->len = 1;
             goto pval_label;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_SPACE:
         default:
             /* ignore */
@@ -2103,7 +2103,6 @@ pval_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL);
             break;
@@ -2120,6 +2119,7 @@ pval_label:
             st->next_state = STATE_PVAL;
             goto pval_selfend_label;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:   
             /* ignore junk */
             pos++;
@@ -2161,7 +2161,6 @@ pval_punc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL_PUNC);
             goto pval_label;
@@ -2178,6 +2177,7 @@ pval_punc_label:
             st->next_state = STATE_PVAL_PUNC;
             goto pval_selfend_label;
  
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore junk */
             pos++;
@@ -2228,7 +2228,6 @@ pval_quot_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             word[0] = *pos++;
             st->len = 1;
@@ -2254,6 +2253,7 @@ pval_quot_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -2304,7 +2304,6 @@ pval_quot_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             word[0] = *tmppos;
             st->len = 1;
@@ -2326,6 +2325,7 @@ pval_quot_esc_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -2373,7 +2373,6 @@ pval_quot_word_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL_QUOT_WORD);
             goto pval_quot_word_label;
@@ -2383,6 +2382,7 @@ pval_quot_word_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_QUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -2443,7 +2443,6 @@ pval_quot_word_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*tmppos, MLPARSE_PARAMVAL, STATE_PVAL_QUOT_WORD_ESC);
             break;
@@ -2453,6 +2452,7 @@ pval_quot_word_esc_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_QUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -2502,7 +2502,6 @@ pval_quot_punc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL_QUOT_PUNC);
             goto pval_quot_word_label;
@@ -2512,6 +2511,7 @@ pval_quot_punc_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_QUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -2566,7 +2566,6 @@ pval_quot_punc_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*tmppos, MLPARSE_PARAMVAL, STATE_PVAL_QUOT_PUNC_ESC);
             goto pval_quot_word_label;
@@ -2576,6 +2575,7 @@ pval_quot_punc_esc_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_QUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -2690,7 +2690,6 @@ pval_dquot_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             word[0] = *pos++;
             st->len = 1;
@@ -2716,6 +2715,7 @@ pval_dquot_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -2769,7 +2769,6 @@ pval_dquot_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             word[0] = *tmppos;
             st->len = 1;
@@ -2785,6 +2784,7 @@ pval_dquot_esc_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -2832,7 +2832,6 @@ pval_dquot_word_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL_DQUOT_WORD);
             goto pval_dquot_word_label;
@@ -2842,6 +2841,7 @@ pval_dquot_word_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_DQUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -2894,7 +2894,6 @@ pval_dquot_word_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*tmppos, MLPARSE_PARAMVAL, STATE_PVAL_DQUOT_WORD_ESC);
             goto pval_dquot_word_label;
@@ -2904,6 +2903,7 @@ pval_dquot_word_esc_label:
             *length = st->len;
             RETURN(MLPARSE_PARAMVAL, STATE_PVAL_DQUOT);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -2957,11 +2957,11 @@ pval_dquot_punc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*pos++, MLPARSE_PARAMVAL, STATE_PVAL_DQUOT_PUNC);
             goto pval_dquot_word_label;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             pos++;
@@ -3020,11 +3020,11 @@ pval_dquot_punc_esc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto pval */
             PUSH(*tmppos, MLPARSE_PARAMVAL, STATE_PVAL_DQUOT_PUNC_ESC);
             goto pval_dquot_word_label;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             /* ignore */
             break;
@@ -3119,7 +3119,6 @@ eref_peek_first_label:
         case '.': case '-': case '_': case ':':
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             st->erefbuf[0] = *tmppos++;
             st->count = 1;
             goto eref_peek_label;
@@ -3130,6 +3129,7 @@ eref_peek_first_label:
             goto eref_num_peek_first_label;
 
         default:
+        case ASCII_CASE_EXTENDED:
             /* shouldn't get anything else */
             JUMP(st->next_state, st->flags & ~FLAG_BUFFER, 0);
         }
@@ -3278,7 +3278,6 @@ eref_peek_label:
         case '.': case '-': case '_': case ':':
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             st->erefbuf[st->count++] = *tmppos++;
             break;
 
@@ -3355,6 +3354,7 @@ eref_peek_label:
             }
             /* fallthrough for failed conversions */
 
+        case ASCII_CASE_EXTENDED:
         default:
             /* anything else isn't valid */
             JUMP(st->next_state, st->flags & ~FLAG_BUFFER, 0);
@@ -3575,7 +3575,6 @@ ccdata_toplevel_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             word[0] = *pos++;
             st->len = 1;
@@ -3613,6 +3612,7 @@ ccdata_toplevel_label:
             }
             break;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             if (strip) {
                 /* ignore junk in words */
@@ -3640,7 +3640,6 @@ ccdata_word_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_WORD);
             break;
@@ -3672,6 +3671,7 @@ ccdata_word_label:
             }
             goto ccdata_punc_label;
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             if (strip) {
                 /* ignore junk in words */
@@ -3710,7 +3710,6 @@ ccdata_punc_label:
 
         case ASCII_CASE_LOWER:
         case ASCII_CASE_DIGIT:
-        case ASCII_CASE_EXTENDED:
             /* push character onto word */
             PUSH(*pos++, MLPARSE_WORD, STATE_PUNC);
             goto ccdata_word_label;
@@ -3721,6 +3720,7 @@ ccdata_punc_label:
             *length = st->len;
             RETURN(MLPARSE_WORD, STATE_TOPLEVEL);
 
+        case ASCII_CASE_EXTENDED:
         case ASCII_CASE_CONTROL:
             if (strip) {
                 /* ignore junk in words */
@@ -4058,7 +4058,7 @@ marksec_peek_end_label:
     while ((tmppos < tmpend) && (st->count < st->lookahead)) {
         switch (*tmppos) {
         case '>':
-            if (!str_ncmp(st->tagbuf, "cdata", 5 /* strlen("cdata") */)) {
+            if (!str_ncmp(st->tagbuf, "cdata", 5 /* strvlen("cdata") */)) {
                 /* end marked section */
                 st->flags |= FLAG_CDATA;
             

@@ -83,8 +83,8 @@ enum stop_ret stop_add_file(struct stop *list, const char *filename) {
     if (fp) {
         buf[BUFSIZE] = '\0';
         while (fgets(buf, BUFSIZE - 1, fp)) {
-            if ((buf[str_len(buf) - 1] != '\n')
-              && (buf[str_len(buf) - 1] != '\r')) {
+            if ((buf[strvlen(buf) - 1] != '\n')
+              && (buf[strvlen(buf) - 1] != '\r')) {
                 /* line too long */
                 fclose(fp);
                 return STOP_EINVAL;
@@ -122,7 +122,7 @@ enum stop_ret stop_add_term(struct stop *list, const char *term) {
         return STOP_EEXIST;
     }
 
-    len = str_len(term);
+    len = strvlen(term);
     if ((copy = poolalloc_memalign(list->alloc, len + 1, 1))) {
         memcpy(copy, term, len + 1);
         assert(copy[len] == '\0');

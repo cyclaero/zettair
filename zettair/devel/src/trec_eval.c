@@ -1548,7 +1548,7 @@ struct treceval_qrels *treceval_qrels_new(const char *qrels_file_name) {
     /* populating relevance judgements hash table */
     while (fgets(line, MAX_LINE_LENGTH, qrels_file) != NULL) {
         /* Only care whether a document is relevant. */
-        if (line[strlen(line) - 2] != '0') {
+        if (line[strvlen(line) - 2] != '0') {
             line_pointer = line;
             /* getting Query ID first */
             while (*line_pointer != ' ') {
@@ -1605,7 +1605,7 @@ struct treceval_qrels *treceval_qrels_new(const char *qrels_file_name) {
              * "381 FBIS3-1") into hash table. Just need to check for
              * presence when checking if document is relevant. */
             if ((judgement_string = malloc(sizeof(*judgement_string)
-              * (strlen(judgement) + 1))) == NULL) {
+              * (strvlen(judgement) + 1))) == NULL) {
                 return NULL;
             }
             str_cpy(judgement_string, judgement);
@@ -1693,7 +1693,7 @@ int treceval_add_result(struct treceval *trec_results, const unsigned int query_
 
     /* copying the result fields into the cache tuple */
     trec_results->tuples[trec_results->cached_results].query_id = query_id;
-    if (strlen(trec_document_number)
+    if (strvlen(trec_document_number)
       >= (TREC_DOCUMENT_NUMBER_MAX_LENGTH - 1)) {
         return (0);
     }

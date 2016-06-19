@@ -205,7 +205,7 @@ int do_run(char ** cmds, int num_cmds) {
         goto ERROR;
     }
     fdset_set_type_name(fdset, VECARR_TEST_FD_TYPE, "vecarrtest",
-      strlen("vecarrtest"), 1 /* writeable */);
+      strvlen("vecarrtest"), 1 /* writeable */);
     freemap = freemap_new(FREEMAP_STRATEGY_FIRST, 0 /* append */, fdset,
       fdset_freemap_addfile);
     if (freemap == NULL) {

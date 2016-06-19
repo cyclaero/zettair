@@ -92,22 +92,22 @@ int test_file(FILE * fp, int argc, char ** argv) {
         str_rtrim(ptr);
         if (*ptr == '#' || *ptr == '\0') {
         } else if (*ptr == '@') {
-            if (strncmp(ptr + 1, "SEED", strlen("SEED")) == 0) {
+            if (strncmp(ptr + 1, "SEED", strvlen("SEED")) == 0) {
                 unsigned seed;
-                if (sscanf(ptr + 1 + strlen("SEED"), "%u", &seed) < 1) {
+                if (sscanf(ptr + 1 + strvlen("SEED"), "%u", &seed) < 1) {
                     fprintf(stderr, "Can't find seed on SEED directive, "
                       "line %d\n", line_num);
                 } else {
                     tu_init_rand_or_die(seed);
                 }
-            } else if (strncmp(ptr + 1, "VERBOSE", strlen("VERBOSE")) == 0) {
+            } else if (strncmp(ptr + 1, "VERBOSE", strvlen("VERBOSE")) == 0) {
                 verbose = 1;
                 fprintf(stderr, "... VERBOSE mode on\n");
-            } else if (strncmp(ptr + 1, "NOVERBOSE", strlen("NOVERBOSE")) 
+            } else if (strncmp(ptr + 1, "NOVERBOSE", strvlen("NOVERBOSE")) 
               == 0) {
                 verbose = 0;
-            } else if (strncmp(ptr + 1, "INPUT", strlen("INPUT")) == 0) {
-                const char * fname = str_ltrim(buf + strlen("INPUT") + 1);
+            } else if (strncmp(ptr + 1, "INPUT", strvlen("INPUT")) == 0) {
+                const char * fname = str_ltrim(buf + strvlen("INPUT") + 1);
                 if (input_file != NULL) {
                     fclose(input_file);
                 }
@@ -115,15 +115,15 @@ int test_file(FILE * fp, int argc, char ** argv) {
                     fprintf(stderr, "Can't open '%s' for input; reverting "
                       "to random data\n", fname);
                 }
-            } else if (strncmp(ptr + 1, "THRESHOLD", strlen("THRESHOLD")) 
+            } else if (strncmp(ptr + 1, "THRESHOLD", strvlen("THRESHOLD")) 
               == 0) {
-                int new_threshold = atoi(ptr + strlen("THRESHOLD") + 1);
+                int new_threshold = atoi(ptr + strvlen("THRESHOLD") + 1);
                 if (new_threshold >= 0)
                     threshold = new_threshold;
                 else 
                     fprintf(stderr, "Invalid THRESHOLD command\n");
-            } else if (strncmp(ptr + 1, "MAXFILE", strlen("MAXFILE")) == 0) {
-                int new_maxfile = atoi(ptr + strlen("MAXFILE") + 1);
+            } else if (strncmp(ptr + 1, "MAXFILE", strvlen("MAXFILE")) == 0) {
+                int new_maxfile = atoi(ptr + strvlen("MAXFILE") + 1);
                 if (new_maxfile > 0)
                     maxfile = new_maxfile;
                 else
@@ -232,7 +232,7 @@ int do_run(char ** cmds, int num_cmds) {
         goto ERROR;
     }
     fdset_set_type_name(fdset, MRBUF_TEST_FD_TYPE, "mrbuftest", 
-      strlen("mrbuftest"), 1 /* writeable */);
+      strvlen("mrbuftest"), 1 /* writeable */);
 
     freemap = freemap_new(FREEMAP_STRATEGY_FIRST, 0 /* append */, fdset,
       fdset_freemap_addfile);

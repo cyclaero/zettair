@@ -450,7 +450,7 @@ int cat_intermediate(FILE* output, FILE* idx, int verbose) {
 
 FILE* file_open(const char* prefix, const char* suffix) {
     FILE* fp = NULL;
-    unsigned int len = strlen(prefix) + strlen(suffix);
+    unsigned int len = strvlen(prefix) + strvlen(suffix);
     char* buf = malloc(len + 1);
 
     if (buf) {

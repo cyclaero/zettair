@@ -205,15 +205,15 @@ void simsplit(const char *one, const char *two) {
                  len2,
                  len3;
 
-    len3 = btbucket_common_prefix(one, str_len((char *) one), two, 
-        str_len((char *) two), &lastchar);
+    len3 = btbucket_common_prefix(one, strvlen((char *) one), two, 
+        strvlen((char *) two), &lastchar);
 
     str_ncpy((char *) buf3, (char *) one, len3 - 1 + !len3);
     buf3[len3 - 1 + !len3] = lastchar;
     buf3[len3] = '\0';
 
-    len = btbucket_split_term(one, str_len((char *) one), two, 
-        str_len((char *) two), &lastchar);
+    len = btbucket_split_term(one, strvlen((char *) one), two, 
+        strvlen((char *) two), &lastchar);
 
     assert(len < 100);
 
@@ -221,15 +221,15 @@ void simsplit(const char *one, const char *two) {
     buf[len - 1 + !len] = lastchar;
     buf[len] = '\0';
 
-    len1 = btbucket_common_prefix(one, str_len((char *) one), buf, 
-        str_len((char *) buf), &lastchar);
+    len1 = btbucket_common_prefix(one, strvlen((char *) one), buf, 
+        strvlen((char *) buf), &lastchar);
 
     str_ncpy((char *) buf1, (char *) one, len1 - 1 + !len1);
     buf1[len1 - 1 + !len1] = lastchar;
     buf1[len1] = '\0';
 
-    len2 = btbucket_common_prefix(buf, str_len((char *) buf), two, 
-        str_len((char *) two), &lastchar);
+    len2 = btbucket_common_prefix(buf, strvlen((char *) buf), two, 
+        strvlen((char *) two), &lastchar);
 
     str_ncpy((char *) buf2, (char *) buf, len2 - 1 + !len2);
     buf2[len2 - 1 + !len2] = lastchar;
@@ -246,8 +246,8 @@ void writeprefix(const char *one, const char *two) {
     char lastchar;
     unsigned int len;
 
-    len = btbucket_common_prefix(one, str_len((char *) one), two, 
-        str_len((char *) two), &lastchar);
+    len = btbucket_common_prefix(one, strvlen((char *) one), two, 
+        strvlen((char *) two), &lastchar);
 
     if (len < 100) {
         str_ncpy((char *) buf, (char *) one, len - 1);
@@ -266,8 +266,8 @@ void writesplit(const char *one, const char *two) {
     char lastchar;
     unsigned int len;
 
-    len = btbucket_split_term(one, str_len((char *) one), two, 
-        str_len((char *) two), &lastchar);
+    len = btbucket_split_term(one, strvlen((char *) one), two, 
+        strvlen((char *) two), &lastchar);
 
     if (len < 100) {
         str_ncpy((char *) buf, (char *) one, len - 1);

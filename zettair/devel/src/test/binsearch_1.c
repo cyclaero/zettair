@@ -158,12 +158,12 @@ int test_file(FILE *fp, int argc, char **argv) {
         str_rtrim((char*) buf);
         pos = (char*) str_ltrim((char*) buf);
 
-        if ((*pos != '#') && str_len(pos)) {
+        if ((*pos != '#') && strvlen(pos)) {
             errno = 0;
             entries = strtol(pos, &pos, 10);
             if (!errno && (isspace(*pos) || (*pos == '\0'))) {
                 pos = (char*) str_ltrim(pos);
-                if (str_len(pos)) {
+                if (strvlen(pos)) {
                     seed = strtol(pos, &pos, 10);
                     if (!errno && (isspace(*pos) || (*pos == '\0'))) {
                         if (!test_bsearch(entries, seed, params.verbose)) {

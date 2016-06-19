@@ -150,7 +150,7 @@ int test_file(FILE *fp, int argc, char **argv) {
               && (ptr = malloc(size))
               && (hash = chash_ptr_new(1, 2.0, 
                 /* some fn pointer casting dodginess */
-                (unsigned int (*)(const void *)) str_len, 
+                (unsigned int (*)(const void *)) strvlen, 
                 (int (*)(const void *, const void *)) str_cmp))
               && (bucket_new(ptr, bucketsize, strategy))) {
                 /* succeeded, do nothing */
@@ -176,7 +176,7 @@ int test_file(FILE *fp, int argc, char **argv) {
             if ((fscanf(fp, "%65535s %u %u", buf, &veclen, &succeed) == 3) 
               && (veclen <= 65535)) {
 
-                len = str_len(buf);
+                len = strvlen(buf);
                 if ((((ret = bucket_alloc(ptr, bucketsize, strategy, buf, len, 
                         veclen, &toobig, NULL))
                       && succeed)
@@ -216,7 +216,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
             if (!(tmphash = chash_ptr_new(1, 2.0, 
               /* some fn pointer casting dodginess */
-              (unsigned int (*)(const void *)) str_len, 
+              (unsigned int (*)(const void *)) strvlen, 
               (int (*)(const void *, const void *)) str_cmp))) {
                 fprintf(stderr, "%s: failed to init hashtable\n", name);
                 return 0;
@@ -247,7 +247,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                         }
                         
                         if ((addr = bucket_find(ptr, bucketsize, strategy,
-                            buf, str_len(buf), &veclen2, NULL))
+                            buf, strvlen(buf), &veclen2, NULL))
                           /* remove it from hashtable */
                           && chash_ptr_ptr_find(tmphash, buf, &tmpptr) 
                             == CHASH_OK
@@ -306,7 +306,7 @@ int test_file(FILE *fp, int argc, char **argv) {
               && (veclen <= 65535)) {
 
                 addr = bucket_find(ptr, bucketsize, strategy, buf, 
-                  str_len(buf), &reallen, NULL);
+                  strvlen(buf), &reallen, NULL);
 
                 if (addr && (reallen == veclen) 
                   && fread(addr, 1, veclen, fp)) {
@@ -341,7 +341,7 @@ int test_file(FILE *fp, int argc, char **argv) {
               && (veclen <= 65535)) {
 
                 if (!bucket_realloc(ptr, bucketsize, strategy, buf, 
-                  str_len(buf), veclen, &toobig)) {
+                  strvlen(buf), veclen, &toobig)) {
                     fprintf(stderr, "%s: failed to realloc!\n", name);
                     return 0;
                 }
@@ -363,7 +363,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                 if (succeed) {
 
                     if (!(bucket_remove(ptr, bucketsize, strategy, buf, 
-                      str_len(buf)))) {
+                      strvlen(buf)))) {
                         fprintf(stderr, "%s: failed to rm '%s'\n", name, 
                           buf);
                         return 0;
@@ -420,7 +420,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
             if (fscanf(fp, "%65535s %u ", buf, &veclen)) {
                 if ((addr = bucket_find(ptr, bucketsize, strategy,
-                    buf, str_len(buf), &veclen2, NULL))
+                    buf, strvlen(buf), &veclen2, NULL))
                   && (veclen <= 65535)
                   && (veclen2 >= veclen)
                   && (!params.verbose 
@@ -439,7 +439,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                 fprintf(stderr, "%s: match failed\n", name);
                 return 0;
             }
-        } else if ((*pos != '#') && str_len(pos)) {
+        } else if ((*pos != '#') && strvlen(pos)) {
             fprintf(stderr, "%s: unknown command '%s'\n", name, pos);
             return 0;
         }

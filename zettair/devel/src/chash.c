@@ -1148,22 +1148,22 @@ enum chash_ret chash_iter_nstr_ptr_next(struct chash_iter *iter,
 
 enum chash_ret chash_str_ptr_insert(struct chash *hash, 
   const char *key, void *data) {
-    return chash_nstr_ptr_insert(hash, key, str_len(key), data);
+    return chash_nstr_ptr_insert(hash, key, strvlen(key), data);
 }
 
 enum chash_ret chash_str_ptr_remove(struct chash *hash, 
   const char *key, void **data) {
-    return chash_nstr_ptr_remove(hash, key, str_len(key), data);
+    return chash_nstr_ptr_remove(hash, key, strvlen(key), data);
 }
 
 enum chash_ret chash_str_ptr_find(struct chash *hash, const char *key, 
   void ***data) {
-    return chash_nstr_ptr_find(hash, key, str_len(key), data);
+    return chash_nstr_ptr_find(hash, key, strvlen(key), data);
 }
 
 enum chash_ret chash_str_ptr_find_insert(struct chash *hash, 
   const char *key, void ***fnd_data, void *ins_data, int *find) {
-    return chash_nstr_ptr_find_insert(hash, key, str_len(key), 
+    return chash_nstr_ptr_find_insert(hash, key, strvlen(key), 
         fnd_data, ins_data, find);
 }
 

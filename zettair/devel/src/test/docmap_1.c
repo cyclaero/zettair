@@ -237,7 +237,7 @@ int do_run(char ** cmds, int num_cmds) {
         goto ERROR;
     }
     fdset_set_type_name(fdset, NEWDOCMAP_TEST_FD_TYPE, "docmaptest", 
-      strlen("docmaptest"), 1 /* writeable */);
+      strvlen("docmaptest"), 1 /* writeable */);
 
     docmap = docmap_new(fdset, NEWDOCMAP_TEST_FD_TYPE, 4096, 0, 
       filelen_max, 0xfffff, &dm_ret);

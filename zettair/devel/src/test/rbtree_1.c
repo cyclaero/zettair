@@ -686,7 +686,7 @@ int test_file(FILE *fp, int argc, char **argv) {
                 fprintf(stderr, "%s: iteration over rbtree failed\n", name);
                 return 0;
             }
-        } else if ((*pos != '#') && str_len(pos)) {
+        } else if ((*pos != '#') && strvlen(pos)) {
             fprintf(stderr, "%s: unknown command '%s'\n", name, pos);
             return 0;
         }

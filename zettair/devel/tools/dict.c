@@ -136,7 +136,7 @@ static int get_query(FILE * stream, char * buf, int buf_size) {
         else
             return -1;
     }
-    query_len = strlen(buf);
+    query_len = strvlen(buf);
     if (buf[query_len - 1] == '\n')
         buf[query_len - 1] = '\0';
     return 1;
@@ -194,7 +194,7 @@ static int get_vocab_vector(struct iobtree * vocab, char * term,
     unsigned int veclen;
     struct vec v;
 
-    data = iobtree_find(vocab, term, strlen(term), 0, &veclen);
+    data = iobtree_find(vocab, term, strvlen(term), 0, &veclen);
     if (data == NULL)  /* XXX how to detect error? */
         return 0;
     v.pos = data;

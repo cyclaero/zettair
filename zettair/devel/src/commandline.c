@@ -158,13 +158,13 @@ static char *path_dup(const char *file, const char *path) {
         return str_dup(file);
     }
 #endif
-    if ((len = str_len(file) + 1 + str_len(path) + 1) 
+    if ((len = strvlen(file) + 1 + strvlen(path) + 1) 
       && (tmp = malloc(len))) {
         unsigned int tmplen;
 
         str_lcpy(tmp, path, len);
 
-        tmplen = str_len(tmp);
+        tmplen = strvlen(tmp);
         tmp[tmplen] = OS_SEPARATOR;
         tmp[tmplen + 1] = '\0';
 
@@ -1179,13 +1179,13 @@ static int is_cache_request(const char *querystr, unsigned int maxwordlen, unsig
     int parse_ret;                   /* parsing result */
     char *end;
     
-    if (!(qp = queryparse_new(maxwordlen, querystr, str_len(querystr)))) {
+    if (!(qp = queryparse_new(maxwordlen, querystr, strvlen(querystr)))) {
         return 0;
     }
 
     /* first element must be a cache: modifier */
     parse_ret = queryparse_parse(qp, word, &wordlen);
-    if ((parse_ret != QUERYPARSE_START_MODIFIER) || (wordlen != str_len("cache")) || str_ncmp(word, "cache", wordlen)) {
+    if ((parse_ret != QUERYPARSE_START_MODIFIER) || (wordlen != strvlen("cache")) || str_ncmp(word, "cache", wordlen)) {
         /* didn't match */
         queryparse_delete(qp);
         return 0;
@@ -1455,10 +1455,32 @@ int build(struct args *args, FILE *output) {
     }
 }
 
+
+#include <iconv.h>
+
 int main(int argc, char **argv) {
-//    for (int k = 0; k < argc; k++)
-//        printf("%s\n", argv[k]);
-//    return 0;
+/*
+    for (int k = 0; k < argc; k++)
+       printf("%s\n", argv[k]);
+
+    int enableFlag = 1;
+    int disableFlag = 0;
+
+    int   len = strvlen(argv[4]);
+    char *arg = malloc(len+1);
+    char *p = argv[4];
+    char *q = arg;
+    size_t pl = len,
+           ql = len;
+    iconv_t cd = iconv_open("ISO-8859-1", "UTF-8");
+    iconvctl(cd, ICONV_SET_TRANSLITERATE, &disableFlag);
+    iconvctl(cd, ICONV_SET_DISCARD_ILSEQ, &enableFlag);
+    iconv(cd, &p, &pl, &q, &ql);
+
+    char medic[] = {0x6D, 0x65, 0x64, 0x69, 0xE7, 0xE3, 0x6F, 0x00};
+    strcpy(argv[4], medic);
+    printf("%s\n", argv[4]);
+*/
 
     struct args argspace, *args;
     FILE *output;

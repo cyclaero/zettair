@@ -605,7 +605,7 @@ static void print_name(unsigned int len, unsigned int gap, const char **name,
                  total = len + gap,
                  ns,
                  i,
-                 slen = strlen(name[names - 1]),
+                 slen = strvlen(name[names - 1]),
                  outc = 0;
 
     /* figure out how much space we need for last (present) string, and infer
@@ -1904,7 +1904,7 @@ static const char *uri_strerror(enum uri_ret err) {
 }
 
 enum uri_ret uri_parse_str(const char *uri, struct uri_parsed *parse) {
-    return uri_parse(uri, strlen(uri), parse);
+    return uri_parse(uri, strvlen(uri), parse);
 }
 
 enum uri_ret test_uri(char *uri, int verbose, const char *res) {
@@ -1942,7 +1942,7 @@ enum uri_ret test_uri(char *uri, int verbose, const char *res) {
 
 enum uri_ret test_const_uri(const char *uri, int verbose, const char *res) {
     char buf[BUFSIZ + 1];
-    assert(strlen(uri) < BUFSIZ);
+    assert(strvlen(uri) < BUFSIZ);
     strcpy(buf, uri);
     return test_uri(buf, verbose, res);
 }
@@ -1953,7 +1953,7 @@ enum uri_ret test_append_uri(const char *base, const char *end, int verbose,
     struct uri_parsed bp, ep;
     enum uri_ret ret;
 
-    assert(strlen(base) + strlen(end) + 1 < BUFSIZ);
+    assert(strvlen(base) + strvlen(end) + 1 < BUFSIZ);
     strcpy(buf, base);
 
     if ((ret = uri_parse_str(buf, &bp)) != URI_OK) {
@@ -2006,7 +2006,7 @@ void test_file(FILE *fp, int verbose) {
     unsigned int len;
 
     while (fgets(buf, BUFSIZ, fp)) {
-        len = strlen(buf);
+        len = strvlen(buf);
         if (len) {
             assert(buf[len - 1] == '\n');
             buf[len - 1] = '\0';

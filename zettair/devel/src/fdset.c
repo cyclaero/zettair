@@ -399,7 +399,7 @@ int fdset_set_fd_name(struct fdset *set, unsigned int typeno,
         if (chash_luint_ptr_find(type->specific, fileno, &find) == CHASH_OK) {
             /* trying to set name thats already been set */
             sp = *find;
-            if ((namelen == str_len(sp->filename))
+            if ((namelen == strvlen(sp->filename))
               && !str_ncmp(name, sp->filename, namelen)) {
                 /* setting it to the same thing it was, allow it (rebuild
                  * depends on this behaviour) */
@@ -446,7 +446,7 @@ int fdset_set_fd_delete_name(struct fdset *set, unsigned int typeno,
         if (chash_luint_ptr_find(type->specific, fileno, &find) == CHASH_OK) {
             sp = *find;
 
-            if ((namelen != str_len(sp->filename))
+            if ((namelen != strvlen(sp->filename))
                           || str_ncmp(name, sp->filename, namelen)) {
             	/* the user specified filename, and our recorded one don't match */
             	return -ENOENT;
@@ -808,7 +808,7 @@ int fdset_type_name(struct fdset *set, unsigned int typeno,
         type = *find;
         *write = type->write;
         *len
-          = untemplate(buf, buflen, type->template, str_len(type->template));
+          = untemplate(buf, buflen, type->template, strvlen(type->template));
         return FDSET_OK;
     } else {
         return -ENOENT;

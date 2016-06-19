@@ -183,7 +183,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
 
     while ((posting < posting_end) || (readret != BTBULK_FINISH)) {
         if (posting < posting_end) {
-            new_vocab->termlen = str_len((*posting)->term);
+            new_vocab->termlen = strvlen((*posting)->term);
             if (readret == BTBULK_OK) {
                 cmp = str_nncmp(old_vocab->output.ok.term, 
                     old_vocab->output.ok.termlen, 
@@ -356,7 +356,7 @@ static unsigned int actual_remerge(struct index *idx, struct filep *in,
         } else {
             assert(cmp > 0);
 
-            assert(new_vocab->termlen == str_len((*posting)->term));
+            assert(new_vocab->termlen == strvlen((*posting)->term));
             new_vocab->term = (*posting)->term;
 
             /* check whether we're about to go above file size 
