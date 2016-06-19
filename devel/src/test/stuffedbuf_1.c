@@ -134,22 +134,22 @@ int test_file(FILE * fp, int argc, char ** argv) {
         str_rtrim(ptr);
         if (*ptr == '#' || *ptr == '\0') {
         } else if (*ptr == '@') {
-            if (strncmp(ptr + 1, "SEED", strlen("SEED")) == 0) {
+            if (strncmp(ptr + 1, "SEED", strvlen("SEED")) == 0) {
                 unsigned seed;
-                if (sscanf(ptr + 1 + strlen("SEED"), "%u", &seed) < 1) {
+                if (sscanf(ptr + 1 + strvlen("SEED"), "%u", &seed) < 1) {
                     fprintf(stderr, "Can't find seed on SEED directive, "
                       "line %d\n", line_num);
                 } else {
                     tu_init_rand_or_die(seed);
                 }
-            } else if (strncmp(ptr + 1, "VERBOSE", strlen("VERBOSE")) == 0) {
+            } else if (strncmp(ptr + 1, "VERBOSE", strvlen("VERBOSE")) == 0) {
                 verbose = 1;
                 fprintf(stderr, "... VERBOSE mode on\n");
-            } else if (strncmp(ptr + 1, "NOVERBOSE", strlen("NOVERBOSE")) 
+            } else if (strncmp(ptr + 1, "NOVERBOSE", strvlen("NOVERBOSE")) 
               == 0) {
                 verbose = 0;
-            } else if (strncmp(ptr + 1, "INPUT", strlen("INPUT")) == 0) {
-                const char * fname = str_ltrim(buf + strlen("INPUT") + 1);
+            } else if (strncmp(ptr + 1, "INPUT", strvlen("INPUT")) == 0) {
+                const char * fname = str_ltrim(buf + strvlen("INPUT") + 1);
                 if (input_file != NULL) {
                     fclose(input_file);
                 }
@@ -165,8 +165,8 @@ int test_file(FILE * fp, int argc, char ** argv) {
             int i;
             for (i = 0; test_cases[i].cmd != NULL; i++) {
                 char * cmd = test_cases[i].cmd;
-                if (strncmp(ptr, cmd, strlen(cmd)) == 0) {
-                    char * args = (char *) str_ltrim(buf + strlen(cmd));
+                if (strncmp(ptr, cmd, strvlen(cmd)) == 0) {
+                    char * args = (char *) str_ltrim(buf + strvlen(cmd));
                     int ret;
                     if (verbose)
                         fprintf(stderr, "... Running %s\n", cmd);

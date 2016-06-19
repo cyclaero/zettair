@@ -289,7 +289,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query, const char
                 /* FIXME: word needs to be looked up in in-memory postings as well */
                 word[wordlen] = '\0';
                 stem(idx->stem, word);
-                wordlen = str_len(word);
+                wordlen = strvlen(word);
                 retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen, vec_buf, sizeof(vec_buf), impacts);
                 if (retval < 0) {
                     return 0;
@@ -329,7 +329,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query, const char
             if (stem) {
                 word[wordlen] = '\0';
                 stem(idx->stem, word);
-                wordlen = str_len(word);
+                wordlen = strvlen(word);
             }
             retval = get_vocab_vector(idx, idx->vocab, &entry, word, wordlen, vec_buf, sizeof(vec_buf), impacts);
             if (retval < 0) {
@@ -467,7 +467,7 @@ unsigned int index_querybuild(struct index *idx, struct query *query, const char
             if (current && (current->terms == 1)) {
                 struct conjunct *ret;
                 /* see if this single-word occurred previously */
-                ret = conjunct_find(query, &current->term.vocab, current->term.term, str_len(current->term.term), CONJUNCT_TYPE_WORD);
+                ret = conjunct_find(query, &current->term.vocab, current->term.term, strvlen(current->term.term), CONJUNCT_TYPE_WORD);
                 if (ret == NULL) {
                     /* ok, this is the first occurence */
                     current->type = CONJUNCT_TYPE_WORD;

@@ -487,7 +487,7 @@ int postings_dump(struct postings* post, void *buf, unsigned int bufsize,
     v.end = dbuf + dbufsz;
     for (i = 0; i < j;) {
         while ((i < j)
-          && ((len = str_len(arr[i]->term)), 1)
+          && ((len = strvlen(arr[i]->term)), 1)
           && (((unsigned int) VEC_LEN(&v)) >= vec_vbyte_len(len) + len 
             + vec_vbyte_len(arr[i]->docs) + vec_vbyte_len(arr[i]->occurs) 
             + vec_vbyte_len(arr[i]->last_docno) 

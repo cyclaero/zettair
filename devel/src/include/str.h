@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include "utf8.h"
 
 /* version of strlen.  calculates the length of the string s *not*
  * including the terminating '\0' */

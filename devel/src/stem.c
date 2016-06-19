@@ -125,14 +125,14 @@ void stem_cache_stem(struct stem_cache *cache, char *term) {
     if (chash_ptr_ptr_find(cache->lookup, term, &find) == CHASH_OK) {
         /* found it, copy term in and return */
         target = *find;
-        assert(str_len(target->dst) <= str_len(term));
+        assert(strvlen(target->dst) <= strvlen(term));
         str_cpy(term, target->dst);
         cache->cached++;
         return;
     } else {
         /* didn't find it, find a stem_entry to use */
         if (cache->size < cache->capacity) {
-            len = str_len(term) + 1;
+            len = strvlen(term) + 1;
 
             if ((target = malloc(sizeof(*target)))
               && (target->src = malloc(len))
@@ -175,7 +175,7 @@ void stem_cache_stem(struct stem_cache *cache, char *term) {
             target = clock_select(cache);
             assert(target);
 
-            len = str_len(term) + 1;
+            len = strvlen(term) + 1;
 
             /* obtained suitable entry, remove it under old string */
             if (chash_ptr_ptr_remove(cache->lookup, target->src, &ptr_one) 
@@ -220,7 +220,7 @@ void stem_cache_stem(struct stem_cache *cache, char *term) {
                 cache->stem(cache->opaque, target->dst);
                 target->count = LRU_DEFAULT;
 
-                assert(str_len(target->dst) < len);
+                assert(strvlen(target->dst) < len);
                 str_cpy(term, target->dst);
 
                 /* insert new entry back into hashtable */
@@ -615,7 +615,7 @@ static void step5(struct stemmer * z)
 void stem_porters(void *opaque, char *term) {
    struct stemmer z;
 
-   z.b = term; z.k = str_len(term) - 1; /* copy the parameters into z */
+   z.b = term; z.k = strvlen(term) - 1; /* copy the parameters into z */
    if (z.k <= 1) return; /*-DEPARTURE-*/
 
    /* With this line, strings of length 1 or 2 don't go through the

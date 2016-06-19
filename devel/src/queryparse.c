@@ -1143,7 +1143,7 @@ int main() {
         str_rtrim(buf);
         printf("query: %s\n", buf);
 
-        if (!(qp = queryparse_new(50, buf, str_len(buf)))) {
+        if (!(qp = queryparse_new(50, buf, strvlen(buf)))) {
             fprintf(stderr, "couldn't initialise parser\n");
             return EXIT_FAILURE;
         }
@@ -1160,17 +1160,17 @@ int main() {
                 break;
 
             case QUERYPARSE_WORD:
-                assert(len == str_len(word));
+                assert(len == strvlen(word));
                 printf("WORD: %s\n", word);
                 break;
 
             case QUERYPARSE_WORD_NOSTOP:
-                assert(len == str_len(word));
+                assert(len == strvlen(word));
                 printf("WORD_NS: %s\n", word);
                 break;
 
             case QUERYPARSE_WORD_EXCLUDE:
-                assert(len == str_len(word));
+                assert(len == strvlen(word));
                 printf("WORD_EX: %s\n", word);
                 break;
 
@@ -1191,7 +1191,7 @@ int main() {
                 break;
 
             case QUERYPARSE_START_MODIFIER:
-                assert(len == str_len(word));
+                assert(len == strvlen(word));
                 printf("MOD %s [\n", word);
                 break;
 

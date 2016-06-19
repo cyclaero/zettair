@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     total = 0;
     numfound = 0;
     end = fstr + construct_len;
-    while ((pos < end) && (len = str_len(pos))) {
+    while ((pos < end) && (len = strvlen(pos))) {
         chash_nstr_ptr_find_insert(hash, pos, len, &dummy, NULL, &found);
         pos += len + 1;
         numfound += found;
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
     pos = fstr;
     end = fstr + search_len;
-    while ((pos < end) && (len = str_len(pos))) {
+    while ((pos < end) && (len = strvlen(pos))) {
         chash_nstr_ptr_find(hash, pos, len, &dummy);
         pos += len + 1;
     }
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     pos = fstr;
     total = 0;
     numfound = 0;
-    while ((pos < end) && (len = str_len(pos))) {
+    while ((pos < end) && (len = strvlen(pos))) {
         enum chash_ret ret = chash_nstr_ptr_find(hash, pos, len, &dummy);
         assert(ret == CHASH_OK || ret == CHASH_ENOENT);
         pos += len + 1;

@@ -146,8 +146,8 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
   enum index_summary_type type, int highlight) {
     if (highlight && type == INDEX_SUMMARISE_TAG) {
         /* need to close the tag */
-        if (sent->buflen + str_len("</b>") >= sent->bufsize 
-          && !ensure_space(&sent, sent->buflen + str_len("</b>"))) {
+        if (sent->buflen + strvlen("</b>") >= sent->bufsize 
+          && !ensure_space(&sent, sent->buflen + strvlen("</b>"))) {
             unsigned int space = 0;
             /* ran out of memory (damn!) at an inconvenient time,
              * erase terms from the buffer until we can fit in an
@@ -156,14 +156,14 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
             while (!isspace(sent->buf[sent->buflen - 1]) 
               && (sent->buf[sent->buflen - 1] != '>')
               && sent->buflen
-              && (space < str_len("</b>"))) {
+              && (space < strvlen("</b>"))) {
                 sent->buflen--;
             }
         }
 
         /* end highlighting */
         str_cpy(sent->buf + sent->buflen, "</b>");
-        sent->buflen += str_len("</b>");
+        sent->buflen += strvlen("</b>");
     }
 
     /* trim overly-long sentence term-by-term */
@@ -284,11 +284,11 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
         case MLPARSE_COMMENT:
         case MLPARSE_COMMENT | MLPARSE_END:
             if (ret & MLPARSE_END) {
-                len = str_len("/sgmlcomment");
+                len = strvlen("/sgmlcomment");
                 assert(len < sum->max_termlen);
                 memcpy(ps->termbuf, "/sgmlcomment", len);
             } else {
-                len = str_len("sgmlcomment");
+                len = strvlen("sgmlcomment");
                 assert(len < sum->max_termlen);
                 memcpy(ps->termbuf, "sgmlcomment", len);
             }
@@ -471,7 +471,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
 
                 case INDEX_SUMMARISE_TAG:
                     if (!highlight) {
-                        taglen = str_len("<b>");
+                        taglen = strvlen("<b>");
                         if (sent->buflen + taglen >= sent->bufsize 
                           && !ensure_space(&sent, sent->buflen + taglen)) {
                             /* ran out of memory, just skip this term */
@@ -499,7 +499,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             } else {
                 /* it's not a query term */
                 if (highlight && type == INDEX_SUMMARISE_TAG) {
-                    unsigned int taglen = str_len("</b>");
+                    unsigned int taglen = strvlen("</b>");
                     if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
                         /* ran out of memory, just skip this term */
                         assert(sent->buflen);

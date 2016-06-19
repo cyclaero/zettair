@@ -65,7 +65,7 @@ size_t ref_strlcat(char *dst, const char *src, size_t siz) {
 	n = siz - dlen;
 
 	if (n == 0)
-		return(dlen + strlen(s));
+		return(dlen + strvlen(s));
 	while (*s != '\0') {
 		if (n != 1) {
 			*d++ = *s;
@@ -110,7 +110,7 @@ size_t ref_strlcpy(char *dst, const char *src, size_t siz) {
 #define STRMAX 30
 
 int str_len_test(const char *s) {
-    return str_len(s) == strlen(s);
+    return strvlen(s) == strvlen(s);
 }
 
 int str_cmp_test(const char *s1, const char *s2) {
@@ -126,8 +126,8 @@ int str_cmp_test(const char *s1, const char *s2) {
 }
 
 int str_nncmp_test(const char *s1, const char *s2) {
-    unsigned int size1 = str_len(s1),
-                 size2 = str_len(s2);
+    unsigned int size1 = strvlen(s1),
+                 size2 = strvlen(s2);
 
     int ret = str_nncmp(s1, size1, s2, size2);
     int cmp;
@@ -192,7 +192,7 @@ int str_dup_test(const char *s) {
     int ret;
     char *dup = str_dup(s);
 
-    ret = !memcmp(s, dup, strlen(s) + 1);
+    ret = !memcmp(s, dup, strvlen(s) + 1);
     free(dup);
     return ret;
 }
@@ -201,12 +201,12 @@ int str_ndup_test(const char *s, size_t size) {
     char *dup = str_ndup(s, size);
     char buf[STRMAX + 1];
 
-    if (str_len(s) > size) {
+    if (strvlen(s) > size) {
         memcpy(buf, s, size);
         buf[size] = '\0';
     } else {
-        memcpy(buf, s, str_len(s));
-        buf[str_len(s)] = '\0';
+        memcpy(buf, s, strvlen(s));
+        buf[strvlen(s)] = '\0';
     }
 
     if (str_cmp(dup, buf)) {
@@ -295,8 +295,8 @@ int str_ncat_test(const char *s1, const char *s2, size_t size) {
     rt_assert(strncat(buf2, s1, size) == &buf2[0]);
 
     /* adjust size argument */
-    if (size > strlen(s1)) {
-        size -= strlen(s1);
+    if (size > strvlen(s1)) {
+        size -= strvlen(s1);
     } else {
         size = 0;
     }
@@ -337,7 +337,7 @@ int str_ltrim_test(const char *s1) {
     unsigned int i;
 
     /* find first non-space char in s1 */
-    for (i = 0; i < str_len(s1); i++) {
+    for (i = 0; i < strvlen(s1); i++) {
         if (!isspace(s1[i])) {
             break;
         }
@@ -351,9 +351,9 @@ int str_ltrim_test(const char *s1) {
 int str_rtrim_test(const char *s1) {
     char buf[STRMAX + 1];
     unsigned int i,
-                 last = str_len(s1) - 1,
+                 last = strvlen(s1) - 1,
                  trimmed,
-                 len = str_len(s1);
+                 len = strvlen(s1);
 
     rt_assert(len < STRMAX);
     strcpy(buf, s1);
@@ -367,7 +367,7 @@ int str_rtrim_test(const char *s1) {
 
     trimmed = str_rtrim(buf);
 
-    return (buf[last + 1] == '\0') && (trimmed + str_len(buf) == len);
+    return (buf[last + 1] == '\0') && (trimmed + strvlen(buf) == len);
 }
 
 int str_chr_test(const char *s1, int c) {
@@ -482,7 +482,7 @@ int test_file(FILE *fp, int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    /* test str_len */
+    /* test strvlen */
     rt_assert(str_len_test(""));
     rt_assert(str_len_test("a"));
     rt_assert(str_len_test("ab"));
@@ -499,22 +499,22 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_cmp_test("a", "aa"));
 
     /* test str_ncmp */
-    rt_assert(str_ncmp_test("", "", strlen("")));
-    rt_assert(str_ncmp_test("", "", strlen("") + 1));
-    rt_assert(str_ncmp_test("a", "a", strlen("")));
-    rt_assert(str_ncmp_test("a", "a", strlen("") + 1));
-    rt_assert(str_ncmp_test("a", "a", strlen("") - 1));
-    rt_assert(str_ncmp_test("a", "b", strlen("")));
-    rt_assert(str_ncmp_test("a", "b", strlen("") + 1));
-    rt_assert(str_ncmp_test("a", "b", strlen("") - 1));
-    rt_assert(str_ncmp_test("b", "a", strlen("")));
-    rt_assert(str_ncmp_test("b", "a", strlen("") + 1));
-    rt_assert(str_ncmp_test("b", "a", strlen("") - 1));
-    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strlen("aaaaaa"))); 
-    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strlen("aaaaaa") + 1)); 
-    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strlen("aaaaaa") - 1)); 
-    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strlen("aaaaaa") + 2)); 
-    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strlen("aaaaaa") - 2)); 
+    rt_assert(str_ncmp_test("", "", strvlen("")));
+    rt_assert(str_ncmp_test("", "", strvlen("") + 1));
+    rt_assert(str_ncmp_test("a", "a", strvlen("")));
+    rt_assert(str_ncmp_test("a", "a", strvlen("") + 1));
+    rt_assert(str_ncmp_test("a", "a", strvlen("") - 1));
+    rt_assert(str_ncmp_test("a", "b", strvlen("")));
+    rt_assert(str_ncmp_test("a", "b", strvlen("") + 1));
+    rt_assert(str_ncmp_test("a", "b", strvlen("") - 1));
+    rt_assert(str_ncmp_test("b", "a", strvlen("")));
+    rt_assert(str_ncmp_test("b", "a", strvlen("") + 1));
+    rt_assert(str_ncmp_test("b", "a", strvlen("") - 1));
+    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strvlen("aaaaaa"))); 
+    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strvlen("aaaaaa") + 1)); 
+    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strvlen("aaaaaa") - 1)); 
+    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strvlen("aaaaaa") + 2)); 
+    rt_assert(str_ncmp_test("aaaaab", "aaaaaa", strvlen("aaaaaa") - 2)); 
     rt_assert(str_ncmp_test("aaaaab", "aaaaaa", 0)); 
     rt_assert(str_ncmp_test("aaaaab", "aaaaaa", STRMAX)); 
     rt_assert(str_ncmp_test("\xff", "aaaaaa", STRMAX)); 
@@ -561,41 +561,41 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_casecmp_test("aAa", "aaA"));
 
     /* test str_ncasecasecmp */
-    rt_assert(str_ncasecmp_test("", "", strlen("")));
-    rt_assert(str_ncasecmp_test("", "", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("a", "a", strlen("")));
-    rt_assert(str_ncasecmp_test("a", "a", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("a", "a", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("A", "a", strlen("")));
-    rt_assert(str_ncasecmp_test("A", "a", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("A", "a", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("a", "A", strlen("")));
-    rt_assert(str_ncasecmp_test("a", "A", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("a", "A", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("a", "B", strlen("")));
-    rt_assert(str_ncasecmp_test("a", "B", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("a", "B", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("a", "b", strlen("")));
-    rt_assert(str_ncasecmp_test("a", "b", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("a", "b", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("b", "A", strlen("")));
-    rt_assert(str_ncasecmp_test("b", "A", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("b", "A", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("b", "a", strlen("")));
-    rt_assert(str_ncasecmp_test("b", "a", strlen("") + 1));
-    rt_assert(str_ncasecmp_test("b", "a", strlen("") - 1));
-    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strlen("aaaaaa"))); 
-    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strlen("aaaaaa") + 1)); 
-    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strlen("aaaaaa") - 1)); 
-    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strlen("aaaaaa") + 2)); 
-    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strlen("aaaaaa") - 2)); 
+    rt_assert(str_ncasecmp_test("", "", strvlen("")));
+    rt_assert(str_ncasecmp_test("", "", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("a", "a", strvlen("")));
+    rt_assert(str_ncasecmp_test("a", "a", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("a", "a", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("A", "a", strvlen("")));
+    rt_assert(str_ncasecmp_test("A", "a", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("A", "a", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("a", "A", strvlen("")));
+    rt_assert(str_ncasecmp_test("a", "A", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("a", "A", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("a", "B", strvlen("")));
+    rt_assert(str_ncasecmp_test("a", "B", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("a", "B", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("a", "b", strvlen("")));
+    rt_assert(str_ncasecmp_test("a", "b", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("a", "b", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("b", "A", strvlen("")));
+    rt_assert(str_ncasecmp_test("b", "A", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("b", "A", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("b", "a", strvlen("")));
+    rt_assert(str_ncasecmp_test("b", "a", strvlen("") + 1));
+    rt_assert(str_ncasecmp_test("b", "a", strvlen("") - 1));
+    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strvlen("aaaaaa"))); 
+    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strvlen("aaaaaa") + 1)); 
+    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strvlen("aaaaaa") - 1)); 
+    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strvlen("aaaaaa") + 2)); 
+    rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", strvlen("aaaaaa") - 2)); 
     rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", 0)); 
     rt_assert(str_ncasecmp_test("aaaaaA", "aaaaaa", STRMAX)); 
-    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strlen("aaaaaa"))); 
-    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strlen("aaaaaa") + 1)); 
-    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strlen("aaaaaa") - 1)); 
-    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strlen("aaaaaa") + 2)); 
-    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strlen("aaaaaa") - 2)); 
+    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strvlen("aaaaaa"))); 
+    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strvlen("aaaaaa") + 1)); 
+    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strvlen("aaaaaa") - 1)); 
+    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strvlen("aaaaaa") + 2)); 
+    rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", strvlen("aaaaaa") - 2)); 
     rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", 0)); 
     rt_assert(str_ncasecmp_test("aaaaaB", "aaaaaa", STRMAX)); 
     rt_assert(str_ncasecmp_test("\xff", "aaaaaa", STRMAX)); 
@@ -634,21 +634,21 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_ncpy_test("", 1));
     rt_assert(str_ncpy_test("", STRMAX));
     rt_assert(str_ncpy_test("a", 0));
-    rt_assert(str_ncpy_test("a", strlen("a")));
-    rt_assert(str_ncpy_test("a", strlen("a") + 1));
-    rt_assert(str_ncpy_test("a", strlen("a") - 1));
+    rt_assert(str_ncpy_test("a", strvlen("a")));
+    rt_assert(str_ncpy_test("a", strvlen("a") + 1));
+    rt_assert(str_ncpy_test("a", strvlen("a") - 1));
     rt_assert(str_ncpy_test("a", STRMAX));
     rt_assert(str_ncpy_test("ab", 0));
-    rt_assert(str_ncpy_test("ab", strlen("ab")));
-    rt_assert(str_ncpy_test("ab", strlen("ab") + 1));
-    rt_assert(str_ncpy_test("ab", strlen("ab") - 1));
+    rt_assert(str_ncpy_test("ab", strvlen("ab")));
+    rt_assert(str_ncpy_test("ab", strvlen("ab") + 1));
+    rt_assert(str_ncpy_test("ab", strvlen("ab") - 1));
     rt_assert(str_ncpy_test("ab", STRMAX));
     rt_assert(str_ncpy_test(LONG_STR, 
-      strlen(LONG_STR)));
+      strvlen(LONG_STR)));
     rt_assert(str_ncpy_test(LONG_STR, 
-      strlen(LONG_STR) + 1));
+      strvlen(LONG_STR) + 1));
     rt_assert(str_ncpy_test(LONG_STR, 
-      strlen(LONG_STR) - 1));
+      strvlen(LONG_STR) - 1));
     rt_assert(str_ncpy_test(LONG_STR, STRMAX));
 
     /* test str_lcpy */
@@ -657,24 +657,24 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_lcpy_test("", STRMAX));
     rt_assert(str_lcpy_test("a", 0));
     rt_assert(str_lcpy_test("a", STRMAX));
-    rt_assert(str_lcpy_test("a", strlen("a")));
-    rt_assert(str_lcpy_test("a", strlen("a") + 1));
-    rt_assert(str_lcpy_test("a", strlen("a") + 2));
-    rt_assert(str_lcpy_test("a", strlen("a") - 1));
+    rt_assert(str_lcpy_test("a", strvlen("a")));
+    rt_assert(str_lcpy_test("a", strvlen("a") + 1));
+    rt_assert(str_lcpy_test("a", strvlen("a") + 2));
+    rt_assert(str_lcpy_test("a", strvlen("a") - 1));
     rt_assert(str_lcpy_test("ab", 0));
     rt_assert(str_lcpy_test("ab", STRMAX));
-    rt_assert(str_lcpy_test("ab", strlen("ab")));
-    rt_assert(str_lcpy_test("ab", strlen("ab") + 1));
-    rt_assert(str_lcpy_test("ab", strlen("ab") + 2));
-    rt_assert(str_lcpy_test("ab", strlen("ab") - 1));
+    rt_assert(str_lcpy_test("ab", strvlen("ab")));
+    rt_assert(str_lcpy_test("ab", strvlen("ab") + 1));
+    rt_assert(str_lcpy_test("ab", strvlen("ab") + 2));
+    rt_assert(str_lcpy_test("ab", strvlen("ab") - 1));
     rt_assert(str_lcpy_test(LONG_STR, 
-      strlen(LONG_STR)));
+      strvlen(LONG_STR)));
     rt_assert(str_lcpy_test(LONG_STR, 
-      strlen(LONG_STR) + 1));
+      strvlen(LONG_STR) + 1));
     rt_assert(str_lcpy_test(LONG_STR, 
-      strlen(LONG_STR) + 2));
+      strvlen(LONG_STR) + 2));
     rt_assert(str_lcpy_test(LONG_STR, 
-      strlen(LONG_STR) - 1));
+      strvlen(LONG_STR) - 1));
     rt_assert(str_lcpy_test(LONG_STR, STRMAX));
 
     /* test str_cat */
@@ -688,75 +688,75 @@ int test_file(FILE *fp, int argc, char **argv) {
     rt_assert(str_ncat_test("", "", 0));
     rt_assert(str_ncat_test("", "", 1));
     rt_assert(str_ncat_test("", "", STRMAX));
-    rt_assert(str_ncat_test("a", "", strlen("a")));
-    rt_assert(str_ncat_test("a", "", strlen("a") + 1));
-    rt_assert(str_ncat_test("a", "", strlen("a") - 1));
+    rt_assert(str_ncat_test("a", "", strvlen("a")));
+    rt_assert(str_ncat_test("a", "", strvlen("a") + 1));
+    rt_assert(str_ncat_test("a", "", strvlen("a") - 1));
     rt_assert(str_ncat_test("a", "", 0));
     rt_assert(str_ncat_test("a", "", STRMAX));
-    rt_assert(str_ncat_test("", "a", strlen("a")));
-    rt_assert(str_ncat_test("", "a", strlen("a") + 1));
-    rt_assert(str_ncat_test("", "a", strlen("a") - 1));
+    rt_assert(str_ncat_test("", "a", strvlen("a")));
+    rt_assert(str_ncat_test("", "a", strvlen("a") + 1));
+    rt_assert(str_ncat_test("", "a", strvlen("a") - 1));
     rt_assert(str_ncat_test("", "a", 0));
     rt_assert(str_ncat_test("", "a", STRMAX));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab")));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab") + 1));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab") - 1));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab")));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab") + 1));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab") - 1));
     rt_assert(str_ncat_test("aab", "aa", 0));
     rt_assert(str_ncat_test("aab", "aa", STRMAX));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab") + strlen("aa")));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab") + strlen("aa") + 1));
-    rt_assert(str_ncat_test("aab", "aa", strlen("aab") + strlen("aa") - 1));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab") + strvlen("aa")));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab") + strvlen("aa") + 1));
+    rt_assert(str_ncat_test("aab", "aa", strvlen("aab") + strvlen("aa") - 1));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf")));
+      strvlen("aabalskjf") + strvlen("aaalskjdf")));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf") - 1));
+      strvlen("aabalskjf") + strvlen("aaalskjdf") - 1));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf") + 1));
+      strvlen("aabalskjf") + strvlen("aaalskjdf") + 1));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", 0));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", 1));
     rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", STRMAX));
-    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf")));
-    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") + 1));
-    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") - 1));
-    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") / 2));
-    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") * 2));
+    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf")));
+    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") + 1));
+    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") - 1));
+    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") / 2));
+    rt_assert(str_ncat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") * 2));
 
     /* test str_lcat */
     rt_assert(str_lcat_test("", "", 0));
     rt_assert(str_lcat_test("", "", 1));
     rt_assert(str_lcat_test("", "", STRMAX));
-    rt_assert(str_lcat_test("a", "", strlen("a")));
-    rt_assert(str_lcat_test("a", "", strlen("a") + 1));
-    rt_assert(str_lcat_test("a", "", strlen("a") - 1));
+    rt_assert(str_lcat_test("a", "", strvlen("a")));
+    rt_assert(str_lcat_test("a", "", strvlen("a") + 1));
+    rt_assert(str_lcat_test("a", "", strvlen("a") - 1));
     rt_assert(str_lcat_test("a", "", 0));
     rt_assert(str_lcat_test("a", "", STRMAX));
-    rt_assert(str_lcat_test("", "a", strlen("a")));
-    rt_assert(str_lcat_test("", "a", strlen("a") + 1));
-    rt_assert(str_lcat_test("", "a", strlen("a") - 1));
+    rt_assert(str_lcat_test("", "a", strvlen("a")));
+    rt_assert(str_lcat_test("", "a", strvlen("a") + 1));
+    rt_assert(str_lcat_test("", "a", strvlen("a") - 1));
     rt_assert(str_lcat_test("", "a", 0));
     rt_assert(str_lcat_test("", "a", STRMAX));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab")));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab") + 1));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab") - 1));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab")));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab") + 1));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab") - 1));
     rt_assert(str_lcat_test("aab", "aa", 0));
     rt_assert(str_lcat_test("aab", "aa", STRMAX));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab") + strlen("aa")));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab") + strlen("aa") + 1));
-    rt_assert(str_lcat_test("aab", "aa", strlen("aab") + strlen("aa") - 1));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab") + strvlen("aa")));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab") + strvlen("aa") + 1));
+    rt_assert(str_lcat_test("aab", "aa", strvlen("aab") + strvlen("aa") - 1));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf")));
+      strvlen("aabalskjf") + strvlen("aaalskjdf")));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf") - 1));
+      strvlen("aabalskjf") + strvlen("aaalskjdf") - 1));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", 
-      strlen("aabalskjf") + strlen("aaalskjdf") + 1));
+      strvlen("aabalskjf") + strvlen("aaalskjdf") + 1));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", 0));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", 1));
     rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", STRMAX));
-    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf")));
-    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") + 1));
-    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") - 1));
-    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") / 2));
-    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strlen("aabalskjf") * 2));
+    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf")));
+    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") + 1));
+    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") - 1));
+    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") / 2));
+    rt_assert(str_lcat_test("aabalskjf", "aaalskjdf", strvlen("aabalskjf") * 2));
 
     /* test ltrim */
     rt_assert(str_ltrim_test(""));

@@ -1179,7 +1179,7 @@ int index_search(struct index *idx, const char *querystr,
 
     /* construct a query structure */
     query.terms = 0;
-    if (!(index_querybuild(idx, &query, querystr, str_len(querystr), 
+    if (!(index_querybuild(idx, &query, querystr, strvlen(querystr), 
         query_words, idx->storage.max_termlen, 
         opts & INDEX_SEARCH_ANH_IMPACT_RANK))) {
 

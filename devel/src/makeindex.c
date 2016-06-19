@@ -163,7 +163,7 @@ const char *makeindex_docno(const struct makeindex *mi) {
 }
 
 int makeindex_append_docno(struct makeindex *mi, const char *docno) {
-    unsigned int len = str_len(docno);
+    unsigned int len = strvlen(docno);
 
     // Zettair can't handle very large docnos (> pagesize).  This
     // is a hack to get around the fact.
@@ -317,12 +317,12 @@ assert(val != MAKEINDEX_ERR);\
     case MLPARSE_COMMENT:                                                     \
         if (ret & MLPARSE_END) {                                              \
             /* end of a comment, treat as special tag */                      \
-            termlen = str_len("/sgmlcomment");                                \
+            termlen = strvlen("/sgmlcomment");                                \
             assert(mi->state->maxtermlen > termlen);                          \
             str_cpy(mi->state->termpos, "/sgmlcomment");                         \
         } else if (1) {                                                       \
             /* start of a comment, treat as special tag */                    \
-            termlen = str_len("sgmlcomment");                                 \
+            termlen = strvlen("sgmlcomment");                                 \
             assert(mi->state->maxtermlen > termlen);                          \
             str_cpy(mi->state->termpos, "sgmlcomment");                          \
         } else

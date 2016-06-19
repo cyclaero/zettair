@@ -216,7 +216,7 @@ static void build(struct iobtree *btree, FILE *input, unsigned int limit,
             limit--;
 
             str_rtrim(buf);
-            len = str_len(buf);
+            len = strvlen(buf);
             if (iobtree_alloc(btree, buf, len, entrysize, &toobig)) {
                 bytes += len;
                 inserted++;
@@ -243,7 +243,7 @@ static void search(struct iobtree *btree, FILE *input, unsigned int limit) {
         if (buf[0]) {
             limit--;
             searches++;
-            if (iobtree_find(btree, buf, str_len(buf), 0, &datalen)) {
+            if (iobtree_find(btree, buf, strvlen(buf), 0, &datalen)) {
                 found++;
             }
         }
@@ -294,7 +294,7 @@ int main(int argc, char **argv) {
         /* create fdset and freemap */
         if ((fdset = fdset_new(0644, 0))
           && (fdset_set_type_name(fdset, 0, args.prefix, 
-              str_len(args.prefix), 1) == FDSET_OK)
+              strvlen(args.prefix), 1) == FDSET_OK)
           && (freemap = freemap_new(FREEMAP_STRATEGY_FIRST, 0, fdset, addfile))
           && freemap_malloc(freemap, &fileno, &offset, &overhead, 
               FREEMAP_OPT_LOCATION | FREEMAP_OPT_EXACT, 0, 0)) {

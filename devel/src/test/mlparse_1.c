@@ -59,12 +59,12 @@ Content-Length: 30812\r\n\
         enum mlparse_ret ret;
 
         parser.next_in = buf1;
-        parser.avail_in = str_len(buf1);
+        parser.avail_in = strvlen(buf1);
 
         ret = mlparse_parse(&parser, buf, &len, 1);
         assert((ret == MLPARSE_INPUT));
         parser.next_in = buf2;
-        parser.avail_in = str_len(buf2);
+        parser.avail_in = strvlen(buf2);
 
         ret = mlparse_parse(&parser, buf, &len, 1);
         assert((ret == MLPARSE_WORD));

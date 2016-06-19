@@ -591,7 +591,7 @@ struct gunzipfilter *gunzipfilter_new(unsigned int bufsize) {
         /* provide a fake header to fool zlib into thinking that its
          * decompressing zlib format data */
         state->zstate.next_in = header;
-        state->zstate.avail_in = str_len((char *) header);
+        state->zstate.avail_in = strvlen((char *) header);
         if (((ret = inflateInit(&state->zstate)) != Z_OK) 
           /* zlib must read the header now */
           || ((state->zstate.avail_in)

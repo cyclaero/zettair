@@ -1229,7 +1229,7 @@ select_inputs_label:
         smallest = *tmpinput;
 
         assert(smallest->termlen 
-          && (str_len(smallest->term) == smallest->termlen));
+          && (strvlen(smallest->term) == smallest->termlen));
 
         /* keep popping things off of stack until we get to an entry
          * that has a different term or run out of items */

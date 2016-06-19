@@ -64,7 +64,7 @@ int test_file(FILE *input, int argc, char **argv) {
         if (verbose) {
             printf("> %s\n", buf);
         }
-        if (!str_ncmp(buf, "option", str_len("option"))) {
+        if (!str_ncmp(buf, "option", strvlen("option"))) {
             /* add new option */
             if (opts >= cap) {
                 void *ptr;
@@ -77,7 +77,7 @@ int test_file(FILE *input, int argc, char **argv) {
                 }
             }
 
-            if ((sscanf(buf + str_len("option"), "%s %c %d %d", buf2, 
+            if ((sscanf(buf + strvlen("option"), "%s %c %d %d", buf2, 
                 &opt[opts].shortname, (int*) &opt[opts].argument, 
                 &opt[opts].id) == 4) 
               && (opt[opts].longname = str_dup(buf2))) {
@@ -92,7 +92,7 @@ int test_file(FILE *input, int argc, char **argv) {
                 }
                 opts++;
             } else {
-                buf[str_len(buf) - 1] = '\0';
+                buf[strvlen(buf) - 1] = '\0';
                 fprintf(stderr, "failed to parse '%s'\n", buf);
             }
         } else if (!str_cmp(buf, "print")) {
@@ -112,7 +112,7 @@ int test_file(FILE *input, int argc, char **argv) {
             if (verbose) {
                 printf("cleared\n");
             }
-        } else if (!str_ncmp(buf, "parse", str_len("parse"))) {
+        } else if (!str_ncmp(buf, "parse", strvlen("parse"))) {
             /* parse the line */
             unsigned int splitargs;
             char **splitarg;
@@ -120,7 +120,7 @@ int test_file(FILE *input, int argc, char **argv) {
             const char *arg;
 
             if ((splitarg 
-              = str_split(buf + str_len("parse"), " \t\n\f\r", &splitargs))
+              = str_split(buf + strvlen("parse"), " \t\n\f\r", &splitargs))
               && (parser = getlongopt_new(splitargs, (const char **) splitarg, 
                  opt, opts))) {
 
@@ -157,7 +157,7 @@ int test_file(FILE *input, int argc, char **argv) {
                 perror(*argv);
                 return 0;
             }
-        } else if (!str_ncmp(buf, "check", str_len("check"))) {
+        } else if (!str_ncmp(buf, "check", strvlen("check"))) {
             /* parse the line */
             unsigned int splitargs;
             char **splitarg;
@@ -166,7 +166,7 @@ int test_file(FILE *input, int argc, char **argv) {
             const char *arg;
 
             if ((splitarg 
-              = str_split(buf + str_len("check"), " \t\n\f\r", &splitargs))
+              = str_split(buf + strvlen("check"), " \t\n\f\r", &splitargs))
               && (parser = getlongopt_new(splitargs, (const char **) splitarg, 
                   opt, opts))) {
 
@@ -178,14 +178,14 @@ int test_file(FILE *input, int argc, char **argv) {
                   && (++line)
                   && (sscanf(buf3, "%s", buf2) == 1)) {
 
-                    if (!str_ncmp(buf2, "OK", str_len("OK"))) {
+                    if (!str_ncmp(buf2, "OK", strvlen("OK"))) {
 
                         if ((ret == GETLONGOPT_OK)
                           && (buf2[0] = '\0', 1)
                           && (sscanf(buf3, "%s %d %s", buf, &scan_id, buf2)
                             >= 2)) {
                             if ((scan_id == id) 
-                              && ((!arg && !str_len(buf2)) 
+                              && ((!arg && !strvlen(buf2)) 
                                 || (!str_cmp(arg, buf2)))) {
 
                                 /* matched */
@@ -252,7 +252,7 @@ int test_file(FILE *input, int argc, char **argv) {
                 perror(*argv);
                 return 0;
             }
-        } else if ((str_len(buf) > 0) && (*str_ltrim(buf) != '#')) {
+        } else if ((strvlen(buf) > 0) && (*str_ltrim(buf) != '#')) {
             printf("command '%s' not understood\n", buf);
         }
     }

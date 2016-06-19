@@ -83,7 +83,7 @@ int test_file(FILE *fp, int argc, char **argv) {
 
             free(arr);
 
-        } else if (str_len(ptr)) {
+        } else if (strvlen(ptr)) {
             fprintf(stderr, "couldn't understand '%s'\n", (char *) ptr);
             return 0;
         }

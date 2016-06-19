@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    for (i = 0; i < strlen(argv[1]); i++) {
+    for (i = 0; i < strvlen(argv[1]); i++) {
         if ((argv[1][i] == 'r') || (argv[1][i] == 'R')) {
             if (flags & O_WRONLY) {
                 flags = O_RDWR;

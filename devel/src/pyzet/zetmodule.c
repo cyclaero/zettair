@@ -132,7 +132,7 @@ static int MLParser_init(zet_MLParserObject * self, PyObject * args,
     }
     self->toklen = 0;
     self->parser.next_in = self->buf;
-    self->parser.avail_in = strlen(self->buf);
+    self->parser.avail_in = strvlen(self->buf);
     return 0;
 }
 
@@ -1378,7 +1378,7 @@ static PyObject * Index_term_info(PyObject * self, PyObject * args) {
 
     if (!PyArg_ParseTuple(args, "s", &term))
         return NULL;
-    termlen = strlen(term);
+    termlen = strvlen(term);
     term_data = iobtree_find(vocab, term, termlen, 0, &veclen);
     if (term_data == NULL) {
         Py_INCREF(Py_None);
@@ -1419,7 +1419,7 @@ static PyObject * Index_term_postings(PyObject * self, PyObject * args) {
     /* FIXME copy of above */
     if (!PyArg_ParseTuple(args, "s", &term))
         return NULL;
-    termlen = strlen(term);
+    termlen = strvlen(term);
     term_data = iobtree_find(vocab, term, termlen, 0, &veclen);
     if (term_data == NULL) {
         Py_INCREF(Py_None);
