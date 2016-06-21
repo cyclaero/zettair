@@ -116,7 +116,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "_docmap.h"
 #include "docmap.h"
@@ -130,7 +130,7 @@
 #include "str.h"
 #include "timings.h"
 #include "vec.h"
-#include "zstdint.h"
+#include "stdint.h"
 #include "zvalgrind.h"
 
 #include <assert.h>

@@ -126,14 +126,14 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "heap.h"
 
 #include "bit.h"
 #include "def.h"  /* for DEBUG */
 
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <stdlib.h>
 

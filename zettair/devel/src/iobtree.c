@@ -27,7 +27,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "iobtree.h"
 
@@ -41,7 +41,7 @@
 #include "fdset.h"
 #include "def.h"
 #include "str.h"
-#include "zstdint.h"
+#include "stdint.h"
 #include "zvalgrind.h"
 
 #include <assert.h>

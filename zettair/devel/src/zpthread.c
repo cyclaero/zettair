@@ -5,11 +5,11 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "zpthread.h"
 
-#if defined(HAVE_PTHREAD_H) && defined(ZET_MT)
+#if defined(ZET_MT)
 
 int zpthread_concurrent(void) {
     return 1;

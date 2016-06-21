@@ -44,7 +44,7 @@
          - remove (or refactor) debugging junk
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "insitu.h"
 
@@ -60,7 +60,7 @@
 #include "str.h"
 #include "vec.h"
 #include "vocab.h"
-#include "zstdint.h"
+#include "stdint.h"
 #include "zvalgrind.h"
 
 #include <assert.h>

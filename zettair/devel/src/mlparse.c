@@ -155,7 +155,7 @@
 /* test: */
 /* XXX: vary buffer size and compare outputs */
 
-#include "firstinclude.h" 
+#include "zettair.h" 
 
 #include "mlparse.h"
 

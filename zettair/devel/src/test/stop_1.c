@@ -5,7 +5,7 @@
  *  test creating then destroy this file.
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 #include "test.h"
 #include "error.h"
 #include "stop.h"

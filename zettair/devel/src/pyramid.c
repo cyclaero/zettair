@@ -4,7 +4,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "pyramid.h"
 

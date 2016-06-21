@@ -27,7 +27,7 @@
  *  access to the index  currently under construction (if any).
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include <stdlib.h>
 #include <stdio.h>

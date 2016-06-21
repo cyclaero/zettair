@@ -4,7 +4,6 @@
  *
  */
 
-#include "config.h"
 
 #ifndef PRIVATE_MEM_H
 #define PRIVATE_MEM_H

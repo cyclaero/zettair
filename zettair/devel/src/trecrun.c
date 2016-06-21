@@ -9,9 +9,8 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
-#include "config.h"
 #include "def.h"
 #include "getlongopt.h"
 #include "mlparse_wrap.h"

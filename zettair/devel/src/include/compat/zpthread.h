@@ -9,17 +9,15 @@
 #define ZPTHREAD_H
 
 #include "def.h"
-#include "config.h"
 
 enum {
     ZPTHREAD_OK = 0
 };
 
-/* ZPTHREAD_CONCURRENT, which is specific to zpthread, indicates whether 
- * threads actually run concurrently, or whether the dummy, serial versions 
- * are used. */
+/* ZPTHREAD_CONCURRENT, which is specific to zpthread, indicates whether threads
+ * actually run concurrently, or whether the dummy, serial versions are used. */
 
-#if defined(HAVE_PTHREAD_H) && defined(ZET_MT)
+#if defined(ZET_MT)
 
 /* include real pthread operations */
 #include <pthread.h>

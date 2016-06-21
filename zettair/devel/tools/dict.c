@@ -22,7 +22,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include <ctype.h>
 #include <unistd.h>

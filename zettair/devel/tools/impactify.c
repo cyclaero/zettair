@@ -3,7 +3,7 @@
  * written wew 2005-01-19
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include <stdio.h>
 #include <stdlib.h>

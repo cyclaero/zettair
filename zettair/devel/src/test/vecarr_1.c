@@ -27,7 +27,7 @@
  *         Maximum length of in-memory vectors
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 #include "test.h"
 #include "testutils.h"
 #include "vecarr.h"

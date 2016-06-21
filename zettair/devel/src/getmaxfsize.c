@@ -7,7 +7,7 @@
  *
  */
 
-#include "firstinclude.h" 
+#include "zettair.h" 
 
 #include "getmaxfsize.h"
 

@@ -17,7 +17,7 @@ extern "C" {
 
 #include "docmap.h"
 #include "vec.h"
-#include "zstdint.h"
+#include "stdint.h"
 
 /* macros/fns for fast access to loaded entries */
 #define DOCMAP_GET_WORDS(docmap, docno) docmap->cache.words[docno] 

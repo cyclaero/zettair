@@ -13,7 +13,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "trec_eval.h"
 

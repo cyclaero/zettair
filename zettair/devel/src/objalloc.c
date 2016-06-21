@@ -18,7 +18,7 @@
      - ptr arg to _memsize? (something to do with alloc interface?)
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "objalloc.h"
 

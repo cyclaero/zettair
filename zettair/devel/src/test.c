@@ -5,7 +5,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "test.h"
 #include "getlongopt.h"
