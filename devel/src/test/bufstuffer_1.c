@@ -66,7 +66,7 @@
  *     -- turn verbose mode off
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 #include "test.h"
 #include "str.h"
 #include "lcrand.h"

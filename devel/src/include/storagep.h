@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#include "zstdint.h"
+#include "stdint.h"
 
 struct storagep {
     unsigned int pagesize;           /* size of one 'disk block' */

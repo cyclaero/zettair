@@ -8,7 +8,6 @@
 #ifndef ZVALGRIND_H
 #define ZVALGRIND_H
 
-#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

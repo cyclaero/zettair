@@ -7,7 +7,7 @@
 
 #include "lcrand.h"
 
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <stdlib.h>
 

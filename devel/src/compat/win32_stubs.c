@@ -5,10 +5,9 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "def.h"
-#include "config.h"
 
 #include <time.h>
 

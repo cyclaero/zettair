@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#include "zstdint.h"
+#include "stdint.h"
 
 struct btbucket {
     union {

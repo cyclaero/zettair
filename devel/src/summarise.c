@@ -15,7 +15,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "summarise.h"
 
@@ -114,7 +114,7 @@ struct sentence {
     unsigned int start_term;      /* ordinal number of initial term */
     unsigned int terms;           /* number of terms in sentence */
     unsigned int qterms;          /* number of query terms in sentence */
-    double score;                  /* sentence score */
+    double score;                 /* sentence score */
     struct sentence *next;        /* next sentence */
     struct sentence *prev;        /* previous sentence */
 };
@@ -122,11 +122,11 @@ struct sentence {
 /* internal function to handle reallocation of sentence buffers */
 static int ensure_space(struct sentence **sent, unsigned int space) {
     while ((*sent)->buflen + space >= (*sent)->bufsize) {
-        void *ptr = realloc(*sent, sizeof(**sent) + (*sent)->bufsize * 2);
+        void *ptr = realloc(*sent, sizeof(**sent) + (*sent)->bufsize*2);
 
         if (ptr) {
             *sent = ptr;
-            (*sent)->buf = (void *) (*sent + 1);
+            (*sent)->buf = (void *)(*sent + 1);
 
             if (DEBUG) {
                 memset((*sent)->buf + (*sent)->bufsize, 0, (*sent)->bufsize);
@@ -142,32 +142,32 @@ static int ensure_space(struct sentence **sent, unsigned int space) {
 }
 
 /* internal function to finish up extraction of a sentence */
-static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
-  enum index_summary_type type, int highlight) {
+static struct sentence *extract_finish(struct sentence *sent, struct persum *ps, enum index_summary_type type, int highlight) {
     if (highlight && type == INDEX_SUMMARISE_TAG) {
         /* need to close the tag */
-        if (sent->buflen + strvlen("</b>") >= sent->bufsize 
-          && !ensure_space(&sent, sent->buflen + strvlen("</b>"))) {
+        int taglen = strlen("</b>");
+        if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
             unsigned int space = 0;
             /* ran out of memory (damn!) at an inconvenient time,
-             * erase terms from the buffer until we can fit in an
-             * ending tag */
+             * erase terms from the buffer until we can fit in an ending tag */
 
-            while (!isspace(sent->buf[sent->buflen - 1]) 
-              && (sent->buf[sent->buflen - 1] != '>')
-              && sent->buflen
-              && (space < strvlen("</b>"))) {
+            while (sent->buflen
+                && !isspace(sent->buf[sent->buflen - 1])
+                && sent->buf[sent->buflen - 1] != '>'
+                && space < taglen) {
                 sent->buflen--;
             }
         }
 
         /* end highlighting */
         str_cpy(sent->buf + sent->buflen, "</b>");
-        sent->buflen += strvlen("</b>");
+        sent->buflen += taglen;
     }
 
     /* trim overly-long sentence term-by-term */
-    while (sent->buflen > ps->summary_len) {
+    char trim = (sent->buflen > ps->summary_len - 4);
+
+    while (sent->buflen > ps->summary_len - 4) {
         sent->buflen--;
         while (sent->buflen && sent->buf[sent->buflen - 1] != ' ') {
             sent->buflen--;
@@ -178,6 +178,9 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
     while (sent->buflen && sent->buf[sent->buflen - 1] == ' ') {
         sent->buflen--;
     }
+
+    if (trim)
+        *(uint32_t *)&sent->buf[sent->buflen] = *(uint32_t *)" ...", sent->buflen += 4;
 
     sent->buf[sent->buflen] = '\0';
     return sent;
@@ -266,8 +269,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
      * modify it or else risk leaking memory */
 
     /* note that we try to replicate the parsing here
-     * (actually we should refactor it somewhere else so that we can reuse 
-     * it) */
+     * (actually we should refactor it somewhere else so that we can reuse it) */
  
     /* zero out occurrance table */
     for (i = 0; i < q->terms; i++) {
@@ -278,8 +280,12 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
     sent->terms = 0;
     sent->qterms = 0;
 
+    char fullstop = 0;
+
     do {
         ret = mlparse_parse(&sum->parser, ps->termbuf, &len, 0);
+        fullstop = (len && ps->termbuf[len-1] == '.');
+
         switch (ret) {
         case MLPARSE_COMMENT:
         case MLPARSE_COMMENT | MLPARSE_END:
@@ -368,8 +374,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                                     ps->bytes_left = 0;
                                 }
                             } else {
-                                return extract_finish(sent, ps, type, 
-                                    highlight);
+                                return extract_finish(sent, ps, type, highlight);
                             }
                             break;
 
@@ -456,37 +461,34 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                sum->stem(sum->stemmer, ps->termbuf);
 
             if (chash_str_ptr_find(ps->terms, ps->termbuf, &found) == CHASH_OK) {
-                unsigned int taglen;
+                int taglen;
 
-                /* it's a query term, retroactively highlight it in the 
-                 * sentence buffer */
+                /* it's a query term, retroactively highlight it in the sentence buffer */
                 switch (type) {
                 case INDEX_SUMMARISE_PLAIN: /* do nothing */ break;
                 case INDEX_SUMMARISE_CAPITALISE:
                     for (i = 0; i < len; i++) {
-                        sent->buf[sent->buflen + i] 
-                          = toupper(sent->buf[sent->buflen + i]);
+                        sent->buf[sent->buflen + i] = toupper(sent->buf[sent->buflen + i]);
                     }
                     break;
 
                 case INDEX_SUMMARISE_TAG:
                     if (!highlight) {
-                        taglen = strvlen("<b>");
-                        if (sent->buflen + taglen >= sent->bufsize 
-                          && !ensure_space(&sent, sent->buflen + taglen)) {
+                        taglen = strlen("<b>");
+                        if (sent->buflen + taglen >= sent->bufsize  && !ensure_space(&sent, sent->buflen + taglen)) {
                             /* ran out of memory, just skip this term */
                             assert(sent->buflen);
                             return extract_finish(sent, ps, type, highlight);
                         }
 
-                        memmove(sent->buf + sent->buflen + taglen, 
-                          sent->buf + sent->buflen, len);
+                        memmove(sent->buf + sent->buflen + taglen, sent->buf + sent->buflen, len);
                         memcpy(sent->buf + sent->buflen, "<b>", taglen);
                         sent->buflen += taglen;
                     }
                     break;
 
-                default: assert("can't get here" && 0);
+                default:
+                    assert("can't get here" && 0);
                 }
                 highlight = 1;
 
@@ -499,7 +501,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             } else {
                 /* it's not a query term */
                 if (highlight && type == INDEX_SUMMARISE_TAG) {
-                    unsigned int taglen = strvlen("</b>");
+                    int taglen = strlen("</b>");
                     if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
                         /* ran out of memory, just skip this term */
                         assert(sent->buflen);
@@ -515,7 +517,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             }
             sent->buflen += len;
 
-            if (ret & MLPARSE_END) {
+            if (ret & MLPARSE_END && !fullstop) {
                 return extract_finish(sent, ps, type, highlight);
             } else if (!(ret & MLPARSE_CONT)) {
                 sent->buf[sent->buflen++] = ' ';
@@ -556,7 +558,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             /* ignore */
             break;
         }
-    } while ((ret != (MLPARSE_WORD | MLPARSE_END) || title) && sent->buflen < ps->summary_len);
+    } while ((ret != (MLPARSE_WORD | MLPARSE_END) || fullstop) && sent->buflen < ps->summary_len);
 
     return extract_finish(sent, ps, type, highlight);
 }

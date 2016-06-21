@@ -5,7 +5,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "staticalloc.h"
 
@@ -13,7 +13,7 @@
 #include "mem.h"
 #include "_mem.h"
 #include "zvalgrind.h"
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <assert.h>
 #include <stdlib.h>

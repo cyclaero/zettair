@@ -4,9 +4,8 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
-#include "config.h"
 #include "def.h"
 #include "docmap.h"         /* needed to set cache values on index load */
 #include "getlongopt.h"

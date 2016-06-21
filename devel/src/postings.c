@@ -34,7 +34,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "postings.h"
 #include "_postings.h"

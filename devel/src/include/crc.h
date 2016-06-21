@@ -8,7 +8,7 @@
 #ifndef CRC_H
 #define CRC_H
 
-#include <zstdint.h>
+#include <stdint.h>
 
 struct crc;
 

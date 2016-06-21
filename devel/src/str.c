@@ -6,7 +6,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "ascii.h"
 #include "str.h"
@@ -42,12 +42,6 @@ int str_cmp(const char *s1, const char *s2) {
         s1++;
         s2++;
     }
-
-    /* UTF8 prefix match */
-    if (*s1 == 0 && *s2 < 0)
-        return (char)*s2;
-    else if (*s1 < 0 && *s2 == 0)
-        return -(char)*s1;
 
     return (unsigned char) *s1 - (unsigned char) *s2;
 }
@@ -612,7 +606,7 @@ in_delim_label:
     return arr;
 }
 
-int str_signed_char(void) {
+int str_signed_char() {
     return STR_SIGNED_CHAR;
 }
 

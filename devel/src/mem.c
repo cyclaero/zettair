@@ -4,12 +4,12 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "_mem.h"
 #include "mem.h"
 #include "bit.h"
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <assert.h>
 

@@ -8,7 +8,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "fdset.h"
 
@@ -530,8 +530,7 @@ int fdset_create(struct fdset *set, unsigned int typeno, unsigned int fileno) {
 
         return retval;
     }
-    flags = (write * O_RDWR) | (!write * O_RDONLY) | O_CREAT | O_EXCL
-      | O_BINARY;
+    flags = (write * O_RDWR) | (!write * O_RDONLY) | O_CREAT | O_EXCL;
 
     /* make sure we're not over the limit */
     if (set->fds >= set->limit) {
@@ -653,7 +652,7 @@ static int fdset_pin_locked(struct fdset *set, unsigned int typeno,
               <= FILENAME_MAX)
             && ((write = type->write), (filename = buf)))) {
             void **find = NULL;
-            int flags = (write * O_RDWR) | (!write * O_RDONLY) | O_BINARY;
+            int flags = (write * O_RDWR) | (!write * O_RDONLY);
 
             if ((set->fds < set->limit)
               && ((set->fd[set->fds]->fd

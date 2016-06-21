@@ -1,7 +1,6 @@
 #ifndef ZSTDINT_H
 #define ZSTDINT_H
 
-#include "config.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

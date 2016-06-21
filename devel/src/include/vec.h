@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 #include <limits.h>
-#include "zstdint.h"
+#include "stdint.h"
 
 struct vec {
     char *pos;            /* next read/write memory location */

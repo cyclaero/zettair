@@ -8,7 +8,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "chash.h"
 #include "def.h"

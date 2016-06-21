@@ -34,7 +34,7 @@
  *          Limit files to a maxmimum size of <bytes>
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 #include "test.h"
 #include "testutils.h"
 #include "docmap.h"

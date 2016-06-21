@@ -13,7 +13,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "freemap.h"
 
@@ -24,7 +24,7 @@
 #include "lcrand.h"
 #include "objalloc.h"
 
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <assert.h>
 #include <errno.h>

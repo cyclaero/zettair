@@ -12,7 +12,7 @@
  *  whether the test succeeded or failed.
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "test.h"
 #include "ioutil.h"

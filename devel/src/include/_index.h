@@ -4,8 +4,7 @@
  *
  */
 
-/* can't use _INDEX_H because names with underscore are reserved for 
- * compiler */
+/* can't use _INDEX_H because names with underscore are reserved for compiler */
 #ifndef PRIVATE_INDEX_H
 #define PRIVATE_INDEX_H
 
@@ -13,7 +12,7 @@
 extern "C" {
 #endif
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "index.h"
 #include "storagep.h"
@@ -23,14 +22,10 @@ extern "C" {
 
 enum index_flags {
     INDEX_BUILT = (1 << 0),             /* the index has been constructed */
-    INDEX_STEMMED = (3 << 3),           /* mask to tell whether index is 
-                                         * stemmed */
-    INDEX_STEMMED_PORTERS = (1 << 3),   /* whether its stemmed with porter's 
-                                         * stemmer */
-    INDEX_STEMMED_EDS = (1 << 4),       /* whether its stemmed with eds 
-                                         * stemmer */
-    INDEX_STEMMED_LIGHT = (3 << 3)      /* whether its stemmed with the light 
-                                         * stemmer */
+    INDEX_STEMMED = (3 << 3),           /* mask to tell whether index is stemmed */
+    INDEX_STEMMED_PORTERS = (1 << 3),   /* whether its stemmed with porter's stemmer */
+    INDEX_STEMMED_EDS = (1 << 4),       /* whether its stemmed with eds stemmer */
+    INDEX_STEMMED_LIGHT = (3 << 3)      /* whether its stemmed with the light stemmer */
 };
 
 /* structure holding all members that are required on a per-query basis.
@@ -69,16 +64,11 @@ struct index {
      * internal locks, but they should play nicely with this scheme, so long 
      * as locks are acquired before any accesses to them are attempted */
 
-    struct mrwlock *biglock;            /* big lock, which controls 
-                                         * multi-threaded access (though not 
-                                         * necessarily exclusive access) to 
-                                         * the index */
-    zpthread_mutex_t vocab_mutex;       /* mutex which controls access to the 
-                                         * vocabulary structure */
-    zpthread_mutex_t docmap_mutex;      /* mutex which controls access to the 
-                                         * docmap structure */
-    zpthread_mutex_t perquery_mutex;    /* mutex controlling access to the 
-                                         * perquery list */
+    struct mrwlock *biglock;            /* big lock, which controls multi-threaded access
+                                           (though not necessarily exclusive access) to the index */
+    zpthread_mutex_t vocab_mutex;       /* mutex which controls access to the vocabulary structure */
+    zpthread_mutex_t docmap_mutex;      /* mutex which controls access to the docmap structure */
+    zpthread_mutex_t perquery_mutex;    /* mutex controlling access to the perquery list */
 
     /* construction stuff */
     struct postings *post;              /* accumulated in-memory postings */
@@ -98,8 +88,7 @@ struct index {
         unsigned int parsebuf;          /* size of parse buffer */
         unsigned int tblsize;           /* size of postings hashtable */
         unsigned int memory;            /* how much memory we can use */
-        char *config;                   /* configuration file location (or 
-                                         * NULL for built-in configuration) */
+        char *config;                   /* configuration file location (or NULL for built-in configuration) */
     } params;
 
     struct {
@@ -119,16 +108,13 @@ struct index {
         unsigned int quant_bits;        /* used in quantising */
         double w_qt_min;
         double w_qt_max;
-    } impact_stats;                     /* statistics required at query time 
-                                         * for impact ordered vectors */
+    } impact_stats;                     /* statistics required at query time for impact ordered vectors */
 
-    enum vocab_vtype vector_types;      /* types of vectors available in 
-                                           this index */
+    enum vocab_vtype vector_types;      /* types of vectors available in this index */
 };
 
 /* internal function to merge the current postings into the index */
-int index_remerge(struct index *idx, unsigned int commitopts, 
-  struct index_commit_opt *commitopt);
+int index_remerge(struct index *idx, unsigned int commitopts, struct index_commit_opt *commitopt);
 
 /* internal function to atomically perform a read */
 ssize_t index_atomic_read(int fd, void *buf, unsigned int size);
@@ -141,16 +127,13 @@ int index_commit_superblock(struct index *idx);
 
 /* exactly the same as index_commit, except doesn't bugger around with restoring
  * indexes to exact on-disk representation */
-int index_commit_internal(struct index *idx, unsigned int opts, 
-  struct index_commit_opt *opt,
-  unsigned int addopts, struct index_add_opt *addopt);
+int index_commit_internal(struct index *idx, unsigned int opts, struct index_commit_opt *opt, unsigned int addopts, struct index_add_opt *addopt);
 
 /* function to return the stemming function used by an index */
 void (*index_stemmer(struct index *idx))(void *, char *);
 
 /* utility function to read into a stream from a file/buffer */
-enum stream_ret index_stream_read(struct stream *instream, int fd, 
-  char *buf, unsigned int bufsize);
+enum stream_ret index_stream_read(struct stream *instream, int fd, char *buf, unsigned int bufsize);
 
 /* functions to allocate and delete perquery objects */
 struct index_perquery *index_perquery_new(struct index *idx);

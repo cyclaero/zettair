@@ -39,7 +39,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "bucket.h"
 
@@ -49,7 +49,7 @@
 #include "mem.h"
 #include "str.h"      /* for str_ncmp use in assert */
 #include "vec.h"
-#include "zstdint.h"
+#include "stdint.h"
 
 #include <assert.h>
 #include <errno.h>

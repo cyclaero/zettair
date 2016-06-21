@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <structmember.h>  /* for PyMemberDef */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include <stdlib.h>
 #include <string.h>

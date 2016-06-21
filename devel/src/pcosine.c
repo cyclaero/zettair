@@ -36,7 +36,7 @@
  *
  */
 
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "search.h"
 #include "str.h"
