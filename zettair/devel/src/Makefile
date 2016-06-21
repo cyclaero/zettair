@@ -20,7 +20,7 @@ SVNREV != cat svnrev.xcconfig
 
 CC      = clang
 CFLAGS  = $(CDEFS) -D$(SVNREV) -Iinclude -Iinclude/compat -std=c11 -g0 -Ofast -mssse3 -Wno-parentheses -Wno-switch
-LDFLAGS = -L/usr/local/lib -lpthread -licuuc -lz
+LDFLAGS = -L/usr/local/lib -lm -lpthread -licuuc -lz
 SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c vec.c dirichlet.c bit.c impact.c search.c \
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
           pyramid.c heap.c hawkapi.c mlparse_wrap.c postings.c mlparse.c cosine.c reposset.c chash.c getmaxfsize.c lcrand.c \

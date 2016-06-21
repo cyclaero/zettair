@@ -5,6 +5,7 @@
 //  Copyright © 2016 projectworld.net. All rights reserved.
 
 
+#include <stdint.h>
 #include <tmmintrin.h>
 
 typedef unsigned char uchar;
