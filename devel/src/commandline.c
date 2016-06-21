@@ -785,7 +785,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
             break;
 
         case OPT_VERSION: 
-            printf("version %s\n", PACKAGE_VERSION);
+            printf("%s %s\n", PACKAGE, PACKAGE_VERSION);
             err = 1;
             if (argc == 2) {
                 quiet = 1;
@@ -1297,7 +1297,7 @@ int build(struct args *args, FILE *output) {
     TIMINGS_DECL();
     TIMINGS_START();
 
-    fprintf(output, "%s version %s", PACKAGE, PACKAGE_VERSION);
+    fprintf(output, "%s %s", PACKAGE, PACKAGE_VERSION);
 
     if (!isdigit(PACKAGE_VERSION[0])) {
         /* its not a release, print a little more info */
