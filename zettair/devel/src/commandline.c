@@ -311,7 +311,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
 
     /* null out the others */
     args->results = 0;
-    args->type = INDEX_DOCTYPE_ERR;
+    args->type = (char *)INDEX_DOCTYPE_ERR;
     args->prefix = NULL;
     args->config_file = NULL;
     args->stop_file = NULL;
