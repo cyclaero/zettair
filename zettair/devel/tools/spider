@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# spider script for synchronizing a reomte site with a local store for indexing with zettair
+# requirements:
+#  clone     -- for hard linking the store to a temperary directory
+#  wget      -- for synchronizing the remote site with the local store
+#  pdftotext -- for converting PDF to bare HTML files (tool in the poppler package)
+#  iconv     -- for converting UTF-8 to ISO-8859-1
+#  zet       -- for indexing (tool in the zettair package)
+
+LANG="en_US.UTF-8"
+
+host="localhost:8"
+base="projectstore.net"
+temp="temp"
+
+idxlist=""
+xcllist=""
+
+if [ -d "$base" ]; then
+   /usr/local/bin/clone -ydlv0 "$base" "$temp"
+   xcllist=`/usr/local/bin/wget --spider -r -l inf -N -e robots=off -P "$temp" -nH --cut-dirs=1 "http://$host/$base/" 2>&1 >/dev/null \
+            | /usr/bin/sed -n "/^Server file no newer than local file ‘"$temp"/{s//$base/;s/’ \-\- not retrieving\.$//;p;}"`
+   isolist=`/usr/bin/find $base -links 2 -and \! -type d -and \! -name "*.iso.html" -print0 | xargs -0 rm -v`
+   while read fname ; do
+      # this won't delete mid=X.iso.html files
+      rm -fv "$fname.iso.html"
+   done <<< "$isolist"
+   rm -rf "$temp"
+fi
+
+/usr/local/bin/wget -q -r -l inf -N -e robots=off -nH "http://$host/$base/"
+
+htmlist=`/usr/bin/find "$base" -name "*.html" -and \! -name "*.iso.html"`
+while read fname ; do
+   echo "$xcllist" | /usr/bin/grep -q "$fname"
+   if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
+      /usr/bin/iconv -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$fname.iso.html"
+   fi
+
+   if [ "$idxlist" != "" ] ; then
+      idxlist="$idxlist"'\n'"$fname.iso.html"
+   else
+      idxlist="$fname.iso.html"
+   fi
+done <<< "$htmlist"
+
+pdflist=`/usr/bin/find "$base" -name "*.pdf"`
+while read fname ; do
+   echo "$xcllist" | /usr/bin/grep -q "$fname"
+   if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
+      /usr/local/bin/pdftotext -htmlmeta "$fname" - | /usr/bin/iconv -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "$fname.iso.html"
+   fi
+
+   if [ "$idxlist" != "" ] ; then
+      idxlist="$idxlist"'\n'"$fname.iso.html"
+   else
+      idxlist="$fname.iso.html"
+   fi
+done <<< "$pdflist"
+
+msglist=`/usr/bin/find "$base" -name "message.php?mid*"`
+while read fname ; do
+   iname="$base/"`echo "$fname" | /usr/bin/sed "s|$base/message.php?||"`".iso.html"
+   echo "$xcllist" | /usr/bin/grep -q "$fname"
+   if [ $? -gt 0 ] || ! [ -e "$iname" ]; then
+      /usr/bin/iconv -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$iname"
+   fi
+
+   if [ "$idxlist" != "" ] ; then
+      idxlist="$idxlist"'\n'"$iname"
+   else
+      idxlist="$iname"
+   fi
+done <<< "$msglist"
+
+rm -f index*
+echo "$idxlist" | /usr/local/bin/zet -i &>/dev/null
+

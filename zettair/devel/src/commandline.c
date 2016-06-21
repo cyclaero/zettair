@@ -274,8 +274,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
         {"stem", '\0', GETLONGOPT_ARG_REQUIRED, OPT_STEM},    
         {"build-stop", '\0', GETLONGOPT_ARG_REQUIRED, OPT_BUILD_STOP},
         {"query-stop", '\0', GETLONGOPT_ARG_OPTIONAL, OPT_QUERY_STOP},
-        {"accumulator-limit", 'A', GETLONGOPT_ARG_REQUIRED,
-            OPT_ACCUMULATOR_LIMIT},
+        {"accumulator-limit", 'A', GETLONGOPT_ARG_REQUIRED, OPT_ACCUMULATOR_LIMIT},
         {"ignore-version", '\0', GETLONGOPT_ARG_NONE, OPT_IGNORE_VERSION},
 
         /* metrics */
@@ -289,13 +288,9 @@ static struct args *parse_args(unsigned int argc, char **argv,
         {"anh-impact", '\0', GETLONGOPT_ARG_NONE, OPT_ANH_IMPACT},
         {"dirichlet", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DIRICHLET},
         {"metric", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DYNAMIC},
-        {"metric-parameters", '\0', GETLONGOPT_ARG_REQUIRED, 
-          OPT_DYNAMIC_PARAMS},
-
-        {"accumulation-memory", '\0', GETLONGOPT_ARG_REQUIRED, 
-          OPT_ACCUMULATION_MEMORY},
-        {"accumulation-docs", '\0', GETLONGOPT_ARG_REQUIRED, 
-          OPT_ACCUMULATION_DOCS},
+        {"metric-parameters", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DYNAMIC_PARAMS},
+        {"accumulation-memory", '\0', GETLONGOPT_ARG_REQUIRED, OPT_ACCUMULATION_MEMORY},
+        {"accumulation-docs", '\0', GETLONGOPT_ARG_REQUIRED, OPT_ACCUMULATION_DOCS},
         {"dump-memory", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DUMP_MEMORY},
         {"dump-vecs", '\0', GETLONGOPT_ARG_REQUIRED, OPT_DUMP_VECS},
         {"max-file-size", '\0', GETLONGOPT_ARG_REQUIRED, OPT_MAXFILESIZE},
@@ -1455,32 +1450,7 @@ int build(struct args *args, FILE *output) {
 }
 
 
-#include <iconv.h>
-
 int main(int argc, char **argv) {
-/*
-    for (int k = 0; k < argc; k++)
-       printf("%s\n", argv[k]);
-
-    int enableFlag = 1;
-    int disableFlag = 0;
-
-    int   len = strvlen(argv[4]);
-    char *arg = malloc(len+1);
-    char *p = argv[4];
-    char *q = arg;
-    size_t pl = len,
-           ql = len;
-    iconv_t cd = iconv_open("ISO-8859-1", "UTF-8");
-    iconvctl(cd, ICONV_SET_TRANSLITERATE, &disableFlag);
-    iconvctl(cd, ICONV_SET_DISCARD_ILSEQ, &enableFlag);
-    iconv(cd, &p, &pl, &q, &ql);
-
-    char medic[] = {0x6D, 0x65, 0x64, 0x69, 0xE7, 0xE3, 0x6F, 0x00};
-    strcpy(argv[4], medic);
-    printf("%s\n", argv[4]);
-*/
-
     struct args argspace, *args;
     FILE *output;
     struct index *idx;
