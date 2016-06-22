@@ -119,8 +119,15 @@ struct sentence {
     struct sentence *prev;        /* previous sentence */
 };
 
+
+#define HIGHLIGHT_START_TAG      "[SPAN]"
+#define HIGHLIGHT_START_TAG_LEN  6
+#define HIGHLIGHT_CLOSE_TAG      "[/SPAN]"
+#define HIGHLIGHT_CLOSE_TAG_LEN  7
+
 /* internal function to handle reallocation of sentence buffers */
 static int ensure_space(struct sentence **sent, unsigned int space) {
+    int cnt = 1;    // assume success
     while ((*sent)->buflen + space >= (*sent)->bufsize) {
         void *ptr = realloc(*sent, sizeof(**sent) + (*sent)->bufsize*2);
 
@@ -133,20 +140,21 @@ static int ensure_space(struct sentence **sent, unsigned int space) {
             }
 
             (*sent)->bufsize *= 2;
+
+            cnt++;
         } else {
             return 0;
         }
     }
 
-    return 1;
+    return cnt;
 }
 
 /* internal function to finish up extraction of a sentence */
 static struct sentence *extract_finish(struct sentence *sent, struct persum *ps, enum index_summary_type type, int highlight) {
     if (highlight && type == INDEX_SUMMARISE_TAG) {
         /* need to close the tag */
-        int taglen = strlen("</b>");
-        if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
+        if (sent->buflen + HIGHLIGHT_CLOSE_TAG_LEN >= sent->bufsize && !ensure_space(&sent, sent->buflen + HIGHLIGHT_CLOSE_TAG_LEN)) {
             unsigned int space = 0;
             /* ran out of memory (damn!) at an inconvenient time,
              * erase terms from the buffer until we can fit in an ending tag */
@@ -154,14 +162,14 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
             while (sent->buflen
                 && !isspace(sent->buf[sent->buflen - 1])
                 && sent->buf[sent->buflen - 1] != '>'
-                && space < taglen) {
+                && space < HIGHLIGHT_CLOSE_TAG_LEN) {
                 sent->buflen--;
             }
         }
 
         /* end highlighting */
-        str_cpy(sent->buf + sent->buflen, "</b>");
-        sent->buflen += taglen;
+        str_cpy(sent->buf + sent->buflen, HIGHLIGHT_CLOSE_TAG);
+        sent->buflen += HIGHLIGHT_CLOSE_TAG_LEN;
     }
 
     /* trim overly-long sentence term-by-term */
@@ -186,13 +194,68 @@ static struct sentence *extract_finish(struct sentence *sent, struct persum *ps,
     return sent;
 }
 
+
+/* maximum length of an escape sequence that we insert (max &quot; &#123; &#xHH;) */
+#define MAX_ESCAPE 6
+
+unsigned int entityEncode(struct sentence **sent, const char *term, unsigned int len)
+{
+    if (term)
+    {
+        char *o = &(*sent)->buf[(*sent)->buflen];
+        char *p = (char *)term;
+        char *q = o;
+        char *s = p + len;
+        char *t = o + (*sent)->bufsize - MAX_ESCAPE;
+
+        if (q)
+        {
+            char c, h;
+
+            while (p < s)
+            {
+                int cnt = ensure_space(sent, (q-o) + (s-p)*2);
+                if (cnt == 0)       // insufficient memory ?
+                    return q - o;
+
+                else if (cnt == 2)  // reallocation occurred ?
+                {
+                    int l = q - o;
+                    o = &(*sent)->buf[(*sent)->buflen];
+                    q = o + l;
+                    t = o + (*sent)->bufsize - MAX_ESCAPE;
+                }
+
+                switch (c = *p++)
+                {
+                    case '0' ... '9':
+                    case 'A' ... 'Z':
+                    case 'a' ... 'z':
+                        *q++ = c;
+                        break;
+
+                    default:
+                        *(uint32_t *)q = *(uint32_t *)"&#x", q += 3;
+                        h = (c >> 4) & 0xF;
+                        *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
+                        h = c & 0xF;
+                        *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
+                        *q++ = ';';
+                        break;
+                }
+            }
+
+            return q - o;
+        }
+    }
+
+    return 0;
+}
+
 unsigned int html_cpy(struct sentence **sent, const char *term, unsigned int len) {
     unsigned int extra = 0,
                  orig_len = len;
     const char *name = NULL;
-
-/* maximum length of an escape sequence that we insert (max &quot; or &#123;) */
-#define MAX_ESCAPE 6
 
     while (len) {
         while (len && ((*sent)->buflen + MAX_ESCAPE < (*sent)->bufsize)) {
@@ -246,7 +309,7 @@ unsigned int html_cpy(struct sentence **sent, const char *term, unsigned int len
             len--;
         }
 
-        if (len && !ensure_space(sent, (*sent)->bufsize + len)) {
+        if (len && !ensure_space(sent, len*2)) {
             return orig_len - len + extra;
         }
     }
@@ -443,7 +506,7 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                 unsigned int tmp = sent->buflen;
 
                 /* need to escape HTML entities in the term */
-                len = html_cpy(&sent, ps->termbuf, len);
+                len = entityEncode(&sent, ps->termbuf, len);
                 sent->buflen = tmp;
             } else {
                 memcpy(sent->buf + sent->buflen, ps->termbuf, len);
@@ -461,8 +524,6 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
                sum->stem(sum->stemmer, ps->termbuf);
 
             if (chash_str_ptr_find(ps->terms, ps->termbuf, &found) == CHASH_OK) {
-                int taglen;
-
                 /* it's a query term, retroactively highlight it in the sentence buffer */
                 switch (type) {
                 case INDEX_SUMMARISE_PLAIN: /* do nothing */ break;
@@ -474,16 +535,15 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
 
                 case INDEX_SUMMARISE_TAG:
                     if (!highlight) {
-                        taglen = strlen("<b>");
-                        if (sent->buflen + taglen >= sent->bufsize  && !ensure_space(&sent, sent->buflen + taglen)) {
+                        if (sent->buflen + HIGHLIGHT_START_TAG_LEN >= sent->bufsize  && !ensure_space(&sent, sent->buflen + HIGHLIGHT_START_TAG_LEN)) {
                             /* ran out of memory, just skip this term */
                             assert(sent->buflen);
                             return extract_finish(sent, ps, type, highlight);
                         }
 
-                        memmove(sent->buf + sent->buflen + taglen, sent->buf + sent->buflen, len);
-                        memcpy(sent->buf + sent->buflen, "<b>", taglen);
-                        sent->buflen += taglen;
+                        memmove(sent->buf + sent->buflen + HIGHLIGHT_START_TAG_LEN, sent->buf + sent->buflen, len);
+                        memcpy(sent->buf + sent->buflen, HIGHLIGHT_START_TAG, HIGHLIGHT_START_TAG_LEN);
+                        sent->buflen += HIGHLIGHT_START_TAG_LEN;
                     }
                     break;
 
@@ -501,17 +561,16 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
             } else {
                 /* it's not a query term */
                 if (highlight && type == INDEX_SUMMARISE_TAG) {
-                    int taglen = strlen("</b>");
-                    if (sent->buflen + taglen >= sent->bufsize && !ensure_space(&sent, sent->buflen + taglen)) {
+                    if (sent->buflen + HIGHLIGHT_CLOSE_TAG_LEN >= sent->bufsize && !ensure_space(&sent, sent->buflen + HIGHLIGHT_CLOSE_TAG_LEN)) {
                         /* ran out of memory, just skip this term */
                         assert(sent->buflen);
                         return extract_finish(sent, ps, type, highlight);
                     }
 
                     /* end highlighting */
-                    memmove(sent->buf + sent->buflen + taglen, sent->buf + sent->buflen, len);
-                    memcpy(sent->buf + sent->buflen, "</b>", taglen);
-                    sent->buflen += taglen;
+                    memmove(sent->buf + sent->buflen + HIGHLIGHT_CLOSE_TAG_LEN, sent->buf + sent->buflen, len);
+                    memcpy(sent->buf + sent->buflen, HIGHLIGHT_CLOSE_TAG, HIGHLIGHT_CLOSE_TAG_LEN);
+                    sent->buflen += HIGHLIGHT_CLOSE_TAG_LEN;
                 }
                 highlight = 0;
             }

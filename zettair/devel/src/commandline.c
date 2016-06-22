@@ -38,7 +38,7 @@ void print_usage(const char *progname, FILE *output, int verbose) {
     fprintf(output, "usage to query: '%s'\n", name);
     fprintf(output, "  query options:\n");
     fprintf(output, "    -f,--filename: specify index to load (default 'index')\n");
-    fprintf(output, "    -n,--number-results: provide this many results per query (default: 20)\n");
+    fprintf(output, "    -n,--number-results: provide this many results per query (default: 25)\n");
     fprintf(output, "    -b,--begin-results: provide results after this offset (default 0)\n");
     fprintf(output, "    --summary=[value]: create textual summary of this type\n"
                     "                       (where value is capitalise, plain, or tag)\n");
@@ -228,8 +228,7 @@ enum {
     OPT_DYNAMIC, OPT_DYNAMIC_PARAMS
 };
 
-static struct args *parse_args(unsigned int argc, char **argv, 
-  struct args *args, FILE *output, const char *path) {
+static struct args *parse_args(unsigned int argc, char **argv, struct args *args, FILE *output, const char *path) {
     int quiet = 0,               /* an internal error occurred */
         err = 0,                 /* whether an error has occurred */
         must_index = 0,          /* whether arguments have to be for build */
@@ -718,15 +717,13 @@ static struct args *parse_args(unsigned int argc, char **argv,
                     err = 1;
                 }
             } else if (args->results) {
-                fprintf(output, 
-                  "results already specified (%d)\n", args->results);
+                fprintf(output, "results already specified (%d)\n", args->results);
                 verbose = 0;
                 err = 1;
             } else {
                 verbose = 0;
                 err = 1;
-                fprintf(output, 
-                  "n option cannot be used with indexing options\n");
+                fprintf(output, "n option cannot be used with indexing options\n");
             }
             break;
 
@@ -1093,7 +1090,7 @@ static struct args *parse_args(unsigned int argc, char **argv,
     }
 
     if (!err && !args->results) {
-        args->results = 20;
+        args->results = 25;
     }
 
     /* use light stemming by default */

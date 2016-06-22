@@ -1002,8 +1002,7 @@ unsigned int mlparse_err_line(struct mlparse *parser) {
     trans.endbuf.limit = (limit_);                                            \
     goto trans_endbuf_label;
 
-int mlparse_parse(struct mlparse *parser, char *word, unsigned int *length, 
-  int strip) {
+int mlparse_parse(struct mlparse *parser, char *word, unsigned int *length, int strip) {
     struct mlparse_state *st = parser->state;
     const char *pos = parser->next_in,
                *end = parser->next_in + parser->avail_in,
@@ -1027,6 +1026,7 @@ int mlparse_parse(struct mlparse *parser, char *word, unsigned int *length,
         } endbuf;
     } trans;
 
+    *length = 0;
     strip = !!strip * FLAG_STRIP;
 
     /* some of the code relies on strip being 1 for stripping (i.e. *length =
@@ -1550,8 +1550,7 @@ acronym_letter_label:
             } else {
                 PUSH(*pos++, MLPARSE_WORD, STATE_ACRONYM_LETTER);  
             }
-            /* note that the acronym continues even if we have to return a 
-             * chunk of it */
+            /* note that the acronym continues even if we have to return a chunk of it */
             goto acronym_label;
 
         case ASCII_CASE_LOWER:
@@ -2031,7 +2030,6 @@ pval_first_label:
         case '>':
             /* tag and parameter (empty) ended */
             pos++;
-            *length = 0;
             RETURN(MLPARSE_PARAMVAL, STATE_TOPLEVEL);
 
         case '\'':
@@ -3551,7 +3549,6 @@ comment_entry_label:
             st->count++;
             /* pass two hyphens and then return a start comment */
             if (st->count >= 2) {
-                *length = 0;
                 RETURN(MLPARSE_COMMENT, STATE_TOPLEVEL);
             }
             break;
@@ -3782,7 +3779,6 @@ ccdata_end_comment_label:
                 /* otherwise (nothing stored) */
                 st->flags &= ~FLAG_COMMENT;
                 pos++;
-                *length = 0;
                 RETURN(MLPARSE_END | MLPARSE_COMMENT, STATE_TOPLEVEL);
             } else {
                 /* was a comment ending in a cdata section */
@@ -3832,7 +3828,6 @@ ccdata_end_cdata_label:
                 /* otherwise (nothing stored) */
                 st->flags &= ~FLAG_CDATA;
                 pos++;
-                *length = 0;
                 RETURN(MLPARSE_END | MLPARSE_CDATA, STATE_TOPLEVEL);
             } else {
                 /* was a comment ending in a cdata section */
@@ -4101,7 +4096,6 @@ cdata_entry_label:
             pos++;
             st->count++;
             if (st->count >= 2) {
-                *length = 0;
                 RETURN(MLPARSE_CDATA, STATE_TOPLEVEL);
             }
             break;
@@ -4174,13 +4168,11 @@ eof_label:
         goto err_label;
     }
 
-    *length = 0;
     RETURN(MLPARSE_EOF, STATE_EOF);
    
 /* the parser has hit an error */
 err_label:
     st->flags = FLAG_NONE;
-    *length = 0;
     RETURN(MLPARSE_ERR, STATE_ERR);
 }
 
@@ -4222,8 +4214,7 @@ void mlparse_eof(struct mlparse *parser) {
     case STATE_MARKSEC_PEEK:
     case STATE_MARKSEC_PEEK_END_FIRST:
     case STATE_MARKSEC_PEEK_END:
-    case STATE_CCDATA_RECOVERY: /* FIXME: need to alter current word for 
-                                 * proper recovery */
+    case STATE_CCDATA_RECOVERY: /* FIXME: need to alter current word for proper recovery */
         /* break out of peek state */
         parser->state->state = parser->state->next_state;
         parser->state->next_state = STATE_EOF;
