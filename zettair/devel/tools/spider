@@ -71,5 +71,5 @@ msglist=$(
 )
 
 rm -f index*
-echo "$htmlist$pdflist$msglist" | /usr/local/bin/zet -i &>/dev/null
+echo "$htmlist$pdflist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
 
