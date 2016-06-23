@@ -210,15 +210,16 @@ unsigned int entityEncode(struct sentence **sent, const char *term, unsigned int
 
         if (q)
         {
+            int  l;
             char c, h;
 
             while (p < s)
             {
                 int cnt = ensure_space(sent, (q-o) + (s-p)*2);
-                if (cnt == 0)       // insufficient memory ?
+                if (cnt == 0)           // insufficient memory ?
                     return q - o;
 
-                else if (cnt == 2)  // reallocation occurred ?
+                else if (cnt == 2)      // reallocation occurred ?
                 {
                     int l = q - o;
                     o = &(*sent)->buf[(*sent)->buflen];
@@ -235,17 +236,24 @@ unsigned int entityEncode(struct sentence **sent, const char *term, unsigned int
                         break;
 
                     default:
-                        *(uint32_t *)q = *(uint32_t *)"&#x", q += 3;
-                        h = (c >> 4) & 0xF;
-                        *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
-                        h = c & 0xF;
-                        *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
-                        *q++ = ';';
+                        if (c < 0)
+                            *q++ = c;   // there are no HTML special chars in the upper ASCII range
+                        else
+                        {
+                            *(uint32_t *)q = *(uint32_t *)"&#x", q += 3;
+                            h = (c >> 4) & 0xF;
+                            *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
+                            h = c & 0xF;
+                            *q++ = (h <= 9) ? (h + '0') : (h + 'A' - 10);
+                            *q++ = ';';
+                        }
                         break;
                 }
             }
 
-            return q - o;
+            l = q - o;
+            (*sent)->buflen += l;
+            return l;
         }
     }
 
