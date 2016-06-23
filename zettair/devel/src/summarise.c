@@ -120,9 +120,9 @@ struct sentence {
 };
 
 
-#define HIGHLIGHT_START_TAG      "[SPAN]"
+#define HIGHLIGHT_START_TAG      "<SPAN>"
 #define HIGHLIGHT_START_TAG_LEN  6
-#define HIGHLIGHT_CLOSE_TAG      "[/SPAN]"
+#define HIGHLIGHT_CLOSE_TAG      "</SPAN>"
 #define HIGHLIGHT_CLOSE_TAG_LEN  7
 
 /* internal function to handle reallocation of sentence buffers */
