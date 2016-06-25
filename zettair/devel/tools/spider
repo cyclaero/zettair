@@ -10,28 +10,28 @@
 
 LANG="en_US.UTF-8"
 
-host="localhost:8"
-base="projectstore.net"
-temp="temp"
+URI="http://localhost:8/forums.php"
+DIR="projectstore.net"
+TMP="temp"
 
-if [ -d "$base" ]; then
-   /usr/local/bin/clone -ydlv0 "$base" "$temp"
-   xcllist=`/usr/local/bin/wget --spider -r -l inf -N -e robots=off -P "$temp" -nH --cut-dirs=1 "http://$host/$base/" 2>&1 >/dev/null \
-            | /usr/bin/sed -n "/^Server file no newer than local file ‘"$temp"/{s//"$base"/;s/’ \-\- not retrieving\.$//;p;}"`
-   /usr/bin/find "$base" -links 2 -and \! -type d -and \! -name "*.iso.html" -print0 | xargs -0 rm -v \
+if [ -d "$DIR" ]; then
+   /usr/local/bin/clone -ydlv0 "$DIR" "$TMP"
+   xcllist=`/usr/local/bin/wget --spider -r -l inf -N -e robots=off -P "$TMP" -nH "$URI" 2>&1 >/dev/null \
+            | /usr/bin/sed -n "/^Server file no newer than local file ‘"$TMP"/{s//"$DIR"/;s/’ \-\- not retrieving\.$//;p;}"`
+   /usr/bin/find "$DIR" -links 2 -and \! -type d -and \! -name "*.iso.html" -print0 | xargs -0 rm -v \
    | while read fname ; do
       # this won't delete mid=X.iso.html files
       rm -f "$fname.iso.html"
    done
-   rm -rf "$temp"
+   rm -rf "$TMP"
 else
    xcllist=""
 fi
 
-/usr/local/bin/wget -q -r -l inf -N -e robots=off -nH "http://$host/$base/"
+/usr/local/bin/wget -q -r -l inf -N -e robots=off -P "$DIR" -nH "$URI"
 
 htmlist=$(
-   /usr/bin/find "$base" -name "*.html" -and \! -name "*.iso.html" \
+   /usr/bin/find "$DIR" -name "*.html" -and \! -name "*.iso.html" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
@@ -45,7 +45,7 @@ if [ "$htmlist" != "" ] ; then
 fi
 
 pdflist=$(
-   /usr/bin/find "$base" -name "*.pdf" \
+   /usr/bin/find "$DIR" -name "*.pdf" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
@@ -59,9 +59,9 @@ if [ "$pdflist" != "" ] ; then
 fi
 
 msglist=$(
-   /usr/bin/find "$base" -name "message.php?mid*" \
+   /usr/bin/find "$DIR" -name "message.php?mid*" \
    | while read fname ; do
-      iname="$base/"`echo "$fname" | /usr/bin/sed "s|$base/message.php?||"`".iso.html"
+      iname="$DIR/"`echo "$fname" | /usr/bin/sed "s|$DIR/message.php?||"`".iso.html"
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || ! [ -e "$iname" ]; then
          /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$iname"
