@@ -49,7 +49,7 @@ pdflist=$(
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
-         /usr/local/bin/pdftotext -htmlmeta "$fname" - | /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "$fname.iso.html"
+         /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$fname" "$fname.iso.html"
       fi
       echo "$fname.iso.html"
    done
