@@ -10,7 +10,7 @@
 
 cd /var/db/psindex
 
-if ! [ -e token ] || [-e running ]; then
+if [ ! -e token ] || [-e running ]; then
    exit
 else
    touch running
@@ -43,7 +43,7 @@ htmlist=$(
    /usr/bin/find "$DIR" -name "*.html" -and \! -name "*.iso.html" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
          /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$fname.iso.html"
       fi
       echo "$fname.iso.html"
@@ -57,7 +57,7 @@ pdflist=$(
    /usr/bin/find "$DIR" -name "*.pdf" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || ! [ -e "$fname.iso.html" ]; then
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
          /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$fname" "$fname.iso.html"
       fi
       echo "$fname.iso.html"
@@ -72,7 +72,7 @@ msglist=$(
    | while read fname ; do
       iname="$DIR/"`echo "$fname" | /usr/bin/sed "s|$DIR/message.php?||"`".iso.html"
       echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || ! [ -e "$iname" ]; then
+      if [ $? -gt 0 ] || [ ! -e "$iname" ]; then
          /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$iname"
       fi
       echo "$iname"
