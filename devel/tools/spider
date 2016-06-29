@@ -10,7 +10,7 @@
 
 cd /var/db/psindex
 
-if ! [ -e token ]; then
+if ! [ -e token ] || [-e running ]; then
    exit
 else
    touch running
