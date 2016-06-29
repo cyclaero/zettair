@@ -13,6 +13,7 @@ cd /var/db/psindex
 if ! [ -e token ]; then
    exit
 else
+   touch running
    rm -f token
 fi
 
@@ -81,3 +82,4 @@ msglist=$(
 rm -f index*
 echo "$htmlist$pdflist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
 
+rm -f running
