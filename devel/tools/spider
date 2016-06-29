@@ -8,6 +8,14 @@
 #  iconv     -- for converting UTF-8 to ISO-8859-1
 #  zet       -- for indexing (tool in the zettair package)
 
+cd /var/db/psindex
+
+if ! [ -e token ]; then
+   exit
+else
+   rm -f token
+fi
+
 LANG="en_US.UTF-8"
 
 URI="http://localhost:8/forums.php"
