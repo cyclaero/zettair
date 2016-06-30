@@ -10,8 +10,12 @@
 
 cd /var/db/psindex
 
-if [ ! -e token ] || [ -e running ]; then
-   exit
+if [ ! -e token ] && [ "$1" != "force" ] || [ -e running ]; then
+   if [ "$1" == "force" ]; then
+      echo "$0 is running already."
+   else
+      exit
+   fi
 else
    touch running
    rm -f token
