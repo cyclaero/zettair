@@ -71,19 +71,33 @@ if [ "$pdflist" != "" ] ; then
    pdflist="$pdflist"$'\n'
 fi
 
+doclist=$(
+   /usr/bin/find "$DIR" -name "*.docx" \
+   | while read -r fname ; do
+      echo "$xcllist" | /usr/bin/grep -q "$fname"
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
+         /usr/local/bin/docxtotext.py "$fname" > "$fname.iso.html"
+      fi
+      echo "$fname.iso.html"
+   done
+)
+if [ "$doclist" != "" ] ; then
+   doclist="$doclist"$'\n'
+fi
+
 msglist=$(
    /usr/bin/find "$DIR" -name "message.php?mid*" \
    | while read fname ; do
-      iname="$DIR/"`echo "$fname" | /usr/bin/sed "s|$DIR/message.php?||"`".iso.html"
+      isoname="$DIR/"`echo "$fname" | /usr/bin/sed "s|$DIR/message.php?||"`".iso.html"
       echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$iname" ]; then
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$iname"
+      if [ $? -gt 0 ] || [ ! -e "$isoname" ]; then
+         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$isoname"
       fi
-      echo "$iname"
+      echo "$isoname"
    done
 )
 
 rm -f index*
-echo "$htmlist$pdflist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
+echo "$htmlist$pdflist$doclist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
 
 rm -f running
