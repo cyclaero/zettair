@@ -1,13 +1,11 @@
 #!/usr/local/bin/python
 
-import sys
+import sys, zipfile
 
 try:
     from xml.etree.cElementTree import XML
 except ImportError:
     from xml.etree.ElementTree import XML
-
-import zipfile
 
 WORD_NAMESPACE = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 PARA = WORD_NAMESPACE + 'p'
@@ -25,7 +23,7 @@ def docx2text(path):
                  for node in paragraph.getiterator(TEXT)
                  if node.text]
         if texts:
-            paragraphs.append(''.join(texts))
+            paragraphs.append(' '.join(texts))
 
     return '\n\n'.join(paragraphs)
 

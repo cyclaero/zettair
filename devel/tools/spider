@@ -85,6 +85,20 @@ if [ "$doclist" != "" ] ; then
    doclist="$doclist"$'\n'
 fi
 
+pptlist=$(
+   /usr/bin/find "$DIR" -name "*.pptx" \
+   | while read -r fname ; do
+      echo "$xcllist" | /usr/bin/grep -q "$fname"
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
+         /usr/local/bin/pptxtotext.py "$fname" > "$fname.iso.html"
+      fi
+      echo "$fname.iso.html"
+   done
+)
+if [ "$pptlist" != "" ] ; then
+   pptlist="$pptlist"$'\n'
+fi
+
 msglist=$(
    /usr/bin/find "$DIR" -name "message.php?mid*" \
    | while read fname ; do
@@ -98,6 +112,6 @@ msglist=$(
 )
 
 rm -f index*
-echo "$htmlist$pdflist$doclist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
+echo "$htmlist$pdflist$doclist$pptlist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
 
 rm -f running
