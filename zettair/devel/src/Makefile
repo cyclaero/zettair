@@ -47,6 +47,6 @@ update: clean all
 
 install: $(PRODUCT)
 	strip -o /usr/local/bin/$(PRODUCT) $(PRODUCT)
-    cp ../tools/spider /usr/local/bin/spider
-    cp ../tools/docxtotext.py /usr/local/bin/docxtotext.py
-    cp ../tools/pptxtotext.py /usr/local/bin/pptxtotext.py
+	cp ../tools/spider /usr/local/bin/spider
+	cp ../tools/docxtotext.py /usr/local/bin/docxtotext.py
+	cp ../tools/pptxtotext.py /usr/local/bin/pptxtotext.py
