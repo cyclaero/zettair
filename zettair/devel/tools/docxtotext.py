@@ -1,11 +1,7 @@
 #!/usr/local/bin/python
 
 import sys, zipfile
-
-try:
-    from xml.etree.cElementTree import XML
-except ImportError:
-    from xml.etree.ElementTree import XML
+from xml.etree.ElementTree import XML
 
 WORD_NAMESPACE = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 PARA = WORD_NAMESPACE + 'p'
@@ -18,14 +14,15 @@ def docx2text(path):
     tree = XML(xml_content)
 
     paragraphs = []
-    for paragraph in tree.getiterator(PARA):
+    for paragraph in tree.iter(PARA):
         texts = [node.text
-                 for node in paragraph.getiterator(TEXT)
+                 for node in paragraph.iter(TEXT)
                  if node.text]
         if texts:
             paragraphs.append(''.join(texts))
 
     return '\n\n'.join(paragraphs)
+
 
 try:
     print '<HTML><BODY>'
