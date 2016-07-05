@@ -23,7 +23,7 @@ def docx2text(path):
                  for node in paragraph.getiterator(TEXT)
                  if node.text]
         if texts:
-            paragraphs.append(' '.join(texts))
+            paragraphs.append(''.join(texts))
 
     return '\n\n'.join(paragraphs)
 
@@ -32,6 +32,6 @@ try:
     print docx2text(str(sys.argv[1])).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').encode('ISO-8859-1', 'ignore')
     print '</BODY></HTML>'
 except:
-  sys.exit(1)
+    sys.exit(1)
 
 sys.exit(0)
