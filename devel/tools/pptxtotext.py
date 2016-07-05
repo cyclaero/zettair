@@ -1,11 +1,7 @@
 #!/usr/local/bin/python
 
 import sys, os, zipfile
-
-try:
-    from xml.etree.cElementTree import XML
-except ImportError:
-    from xml.etree.ElementTree import XML
+from xml.etree.ElementTree import XML
 
 PPTX_NAMESPACE = '{http://schemas.openxmlformats.org/drawingml/2006/main}'
 PARA = PPTX_NAMESPACE + 'p'
@@ -16,22 +12,24 @@ def pptx2text(path):
     document = zipfile.ZipFile(path)
 
     idx = 1
-    while idx < 1000:
+    while idx > 0:
         slide = 'ppt/slides/slide'+str(idx)+'.xml'
-        if slide in document.namelist():
-            tree = XML(document.read(slide))
+        if slide not in document.namelist():
+            break
 
-            for paragraph in tree.getiterator(PARA):
-                texts = [node.text
-                         for node in paragraph.getiterator(TEXT)
-                         if node.text]
-                if texts:
-                    paragraphs.append(''.join(texts))
+        tree = XML(document.read(slide))
+        for paragraph in tree.iter(PARA):
+            texts = [node.text
+                     for node in paragraph.iter(TEXT)
+                     if node.text]
+            if texts:
+                paragraphs.append(''.join(texts))
 
         idx = idx + 1
 
     document.close()
     return '\n\n'.join(paragraphs)
+
 
 try:
     print '<HTML><BODY>'
