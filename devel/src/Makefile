@@ -50,3 +50,4 @@ install: $(PRODUCT)
 	cp ../tools/spider /usr/local/bin/spider
 	cp ../tools/docxtotext.py /usr/local/bin/docxtotext.py
 	cp ../tools/pptxtotext.py /usr/local/bin/pptxtotext.py
+	cp ../tools/xlsxtotext.py /usr/local/bin/xlsxtotext.py
