@@ -24,8 +24,8 @@ SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c 
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
           pyramid.c heap.c hawkapi.c mlparse_wrap.c postings.c mlparse.c cosine.c reposset.c chash.c getmaxfsize.c lcrand.c \
           storagep.c pcosine.c rbtree.c mime.c staticalloc.c stop.c trec_eval.c error.c binsearch.c stop_default.c freemap.c \
-          merge.c index.c signals.c btbucket.c str.c vocab.c btbulk.c remerge.c ioutil.c bucket.c makeindex.c iobtree.c utf8.c \
-          fdset.c zpthread.c crc.c detectfilter.c gunzipfilter.c stream.c commandline.c
+          merge.c index.c signals.c btbucket.c str.c vocab.c btbulk.c remerge.c ioutil.c bucket.c makeindex.c iobtree.c crc.c \
+          fdset.c zpthread.c detectfilter.c gunzipfilter.c stream.c utf8.c commandline.c
 OBJECTS = $(SOURCES:.c=.o)
 PRODUCT = zet
 
@@ -48,6 +48,7 @@ update: clean all
 install: $(PRODUCT)
 	strip -o /usr/local/bin/$(PRODUCT) $(PRODUCT)
 	cp ../tools/spider /usr/local/bin/spider
+	cp ../tools/rtftotext.py /usr/local/bin/rtftotext.py
 	cp ../tools/docxtotext.py /usr/local/bin/docxtotext.py
 	cp ../tools/pptxtotext.py /usr/local/bin/pptxtotext.py
 	cp ../tools/xlsxtotext.py /usr/local/bin/xlsxtotext.py
