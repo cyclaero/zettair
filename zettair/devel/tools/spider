@@ -58,7 +58,7 @@ if [ "$htmlist" != "" ] ; then
 fi
 
 pdflist=$(
-   /usr/bin/find "$DIR" -name "*.pdf" \
+   /usr/bin/find "$DIR" -iname "*.pdf" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
@@ -71,8 +71,38 @@ if [ "$pdflist" != "" ] ; then
    pdflist="$pdflist"$'\n'
 fi
 
+txtlist=$(
+   /usr/bin/find "$DIR" -iname "*.txt" \
+   | while read -r fname ; do
+      echo "$xcllist" | /usr/bin/grep -q "$fname"
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
+         echo "<HTML><BODY>" > "$fname.iso.html"
+         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" >> "$fname.iso.html"
+         echo "</BODY></HTML>" >> "$fname.iso.html"
+      fi
+      echo "$fname.iso.html"
+   done
+)
+if [ "$txtlist" != "" ] ; then
+   txtlist="$txtlist"$'\n'
+fi
+
+rtflist=$(
+   /usr/bin/find "$DIR" -iname "*.rtf" -or -iname "*.rtfd.zip" \
+   | while read -r fname ; do
+      echo "$xcllist" | /usr/bin/grep -q "$fname"
+      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
+         /usr/local/bin/rtftotext.py "$fname" > "$fname.iso.html"
+      fi
+      echo "$fname.iso.html"
+   done
+)
+if [ "$rtflist" != "" ] ; then
+   rtflist="$rtflist"$'\n'
+fi
+
 doclist=$(
-   /usr/bin/find "$DIR" -name "*.docx" \
+   /usr/bin/find "$DIR" -iname "*.docx" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
@@ -86,7 +116,7 @@ if [ "$doclist" != "" ] ; then
 fi
 
 pptlist=$(
-   /usr/bin/find "$DIR" -name "*.pptx" \
+   /usr/bin/find "$DIR" -iname "*.pptx" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
@@ -100,7 +130,7 @@ if [ "$pptlist" != "" ] ; then
 fi
 
 xlslist=$(
-   /usr/bin/find "$DIR" -name "*.xlsx" \
+   /usr/bin/find "$DIR" -iname "*.xlsx" \
    | while read -r fname ; do
       echo "$xcllist" | /usr/bin/grep -q "$fname"
       if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
@@ -126,6 +156,6 @@ msglist=$(
 )
 
 rm -f index*
-echo "$htmlist$pdflist$doclist$pptlist$xlslist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
+echo "$htmlist$pdflist$txtlist$rtflist$doclist$pptlist$xlslist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
 
 rm -f running
