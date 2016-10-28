@@ -7,13 +7,6 @@
 #include "utf8.h"
 
 
-#ifdef __FreeBSD__
-
-   #define u_foldCase u_foldCase_55
-
-#endif
-
-
 utf32 u_foldCase(utf32 u, uint32_t options);
 
 static const uchar trailingBytesForUTF8[256] =
