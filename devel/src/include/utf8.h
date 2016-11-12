@@ -6,7 +6,6 @@
 
 
 #include <stdint.h>
-#include <tmmintrin.h>
 
 typedef unsigned char uchar;
 typedef unsigned int  utf8;
@@ -171,6 +170,8 @@ typedef unsigned int  utf32;
 
 #if defined(__x86_64__)
 
+   #include <x86intrin.h>
+
    static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
    static const __m128i lfd16 = {0x0A0A0A0A0A0A0A0AULL, 0x0A0A0A0A0A0A0A0AULL};  // 16 bytes with line feed
    static const __m128i vtl16 = {0x7C7C7C7C7C7C7C7CULL, 0x7C7C7C7C7C7C7C7CULL};  // 16 bytes with vertical line '|' limit
@@ -179,7 +180,7 @@ typedef unsigned int  utf32;
    // Drop-in replacement for strlen(), utilizing some builtin SSSE3 instructions
    static inline int strvlen(const char *str)
    {
-      if (!*str)
+      if (!str || !*str)
          return 0;
 
       unsigned bmask;
@@ -194,7 +195,7 @@ typedef unsigned int  utf32;
 
    static inline int linelen(const char *line)
    {
-      if (!*line)
+      if (!line || !*line)
          return 0;
 
       unsigned bmask;
@@ -211,7 +212,7 @@ typedef unsigned int  utf32;
 
    static inline int fieldlen(const char *field)
    {
-      if (!*field)
+      if (!field || !*field)
          return 0;
 
       unsigned bmask;
@@ -228,7 +229,7 @@ typedef unsigned int  utf32;
 
    static inline int wordlen(const char *word)
    {
-      if (!*word)
+      if (!word || !*word)
          return 0;
 
       unsigned bmask;
@@ -247,7 +248,7 @@ typedef unsigned int  utf32;
 
    static inline int linelen(const char *line)
    {
-      if (!*line)
+      if (!line || !*line)
          return 0;
 
       int l;
@@ -258,7 +259,7 @@ typedef unsigned int  utf32;
 
    static inline int fieldlen(const char *field)
    {
-      if (!*field)
+      if (!field || !*field)
          return 0;
 
       int l;
@@ -269,11 +270,11 @@ typedef unsigned int  utf32;
 
    static inline int wordlen(const char *word)
    {
-      if (!*word)
+      if (!word || !*word)
          return 0;
 
       int l;
-      for (l = 0; word[l] > ' '; l++)
+      for (l = 0; (uchar)word[l] > ' '; l++)
          ;
       return l;
    }
