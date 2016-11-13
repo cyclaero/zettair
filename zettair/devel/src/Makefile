@@ -18,7 +18,7 @@ REVNUM != cut -d= -f2 svnrev.xcconfig
 .endif
 
 CC      = clang
-CFLAGS  = $(CDEFS) -DSVNREV=\"$(REVNUM)\" -Iinclude -Iinclude/compat -std=c11 -g0 -Ofast -mssse3 -Wno-parentheses -Wno-switch
+CFLAGS  = $(CDEFS) -DSVNREV=\"$(REVNUM)\" -Iinclude -Iinclude/compat -std=c11 -g0 -Ofast -march=native -mssse3 -fstrict-aliasing -ffast-math -Wno-parentheses -Wno-switch
 LDFLAGS = -L/usr/local/lib -lm -lpthread -licuuc -lz
 SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c vec.c dirichlet.c bit.c impact.c search.c \
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
