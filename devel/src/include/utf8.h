@@ -167,15 +167,15 @@ typedef unsigned int  utf32;
 
 #endif
 
-
 #if defined(__x86_64__)
 
    #include <x86intrin.h>
 
    static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
    static const __m128i lfd16 = {0x0A0A0A0A0A0A0A0AULL, 0x0A0A0A0A0A0A0A0AULL};  // 16 bytes with line feed
+   static const __m128i col16 = {0x3A3A3A3A3A3A3A3AULL, 0x3A3A3A3A3A3A3A3AULL};  // 16 bytes with colon ':' limit
    static const __m128i vtl16 = {0x7C7C7C7C7C7C7C7CULL, 0x7C7C7C7C7C7C7C7CULL};  // 16 bytes with vertical line '|' limit
-   static const __m128i obl16 = {0x2121212121212121ULL, 0x2121212121212121ULL};  // 16 bytes with outer blank limit
+   static const __m128i blk16 = {0x2020202020202020ULL, 0x2020202020202020ULL};  // 16 bytes with inner blank limit
 
    // Drop-in replacement for strlen(), utilizing some builtin SSSE3 instructions
    static inline int strvlen(const char *str)
@@ -185,7 +185,7 @@ typedef unsigned int  utf32;
 
       unsigned bmask;
 
-      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_lddqu_si128((__m128i *)str), nul16)))
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)str), nul16)))
          return __builtin_ctz(bmask);
 
       for (int len = 16 - (intptr_t)str%16;; len += 16)
@@ -200,13 +200,30 @@ typedef unsigned int  utf32;
 
       unsigned bmask;
 
-      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_lddqu_si128((__m128i *)line), nul16))
-                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_lddqu_si128((__m128i *)line), lfd16)))
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)line), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)line), lfd16)))
          return __builtin_ctz(bmask);
 
       for (int len = 16 - (intptr_t)line%16;; len += 16)
          if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&line[len]), nul16))
                    | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&line[len]), lfd16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+   static inline int taglen(const char *tag)
+   {
+      if (!tag || !*tag)
+         return 0;
+
+      unsigned bmask;
+
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)tag), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)tag), col16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)tag%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&tag[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&tag[len]), col16)))
             return len + __builtin_ctz(bmask);
    }
 
@@ -217,8 +234,8 @@ typedef unsigned int  utf32;
 
       unsigned bmask;
 
-      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_lddqu_si128((__m128i *)field), nul16))
-                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_lddqu_si128((__m128i *)field), vtl16)))
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)field), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)field), vtl16)))
          return __builtin_ctz(bmask);
 
       for (int len = 16 - (intptr_t)field%16;; len += 16)
@@ -234,12 +251,81 @@ typedef unsigned int  utf32;
 
       unsigned bmask;
 
-      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmplt_epi8(_mm_abs_epi8(_mm_lddqu_si128((__m128i *)word)), obl16)))
+                                           // unsigned comparison (a >= b) is identical to a == maxu(a, b)
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(blk16, _mm_max_epu8(blk16, _mm_loadu_si128((__m128i *)word)))))
          return __builtin_ctz(bmask);
 
       for (int len = 16 - (intptr_t)word%16;; len += 16)
-         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmplt_epi8(_mm_abs_epi8(_mm_load_si128((__m128i *)&word[len])), obl16)))
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(blk16, _mm_max_epu8(blk16, _mm_load_si128((__m128i *)&word[len])))))
             return len + __builtin_ctz(bmask);
+   }
+
+   static inline int blanklen(const char *blank)
+   {
+      if (!blank || !*blank)
+         return 0;
+
+      unsigned bmask;
+                                           // unsigned comparison (a <= b) is identical to a == minu(a, b)
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(blk16, _mm_min_epu8(blk16, _mm_loadu_si128((__m128i *)blank)))))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)blank%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(blk16, _mm_min_epu8(blk16, _mm_load_si128((__m128i *)&blank[len])))))
+            return len + __builtin_ctz(bmask);
+   }
+
+
+   // String copying from src to dst.
+   // m: Max. capacity of dst, including the final nul.
+   //    A value of 0 would indicate that the capacity of dst matches the size of src (including nul)
+   // l: On entry, src length or 0, on exit, the length of src, maybe NULL
+   // Returns the length of the resulting string in dst.
+   static inline int strmlcpy(char *dst, const char *src, int m, int *l)
+   {
+      int k, n;
+
+      if (l)
+      {
+         if (!*l)
+            *l = strvlen(src);
+         k = *l;
+      }
+      else
+         k = strvlen(src);
+
+      if (!m)
+         n = k;
+      else
+         n = (k < m) ? k : m-1;
+
+      switch (n)
+      {
+         default:
+            if ((intptr_t)dst&0xF || (intptr_t)src&0xF)
+               for (k = 0; k  < n>>4<<1; k += 2)
+                  ((uint64_t *)dst)[k] = ((uint64_t *)src)[k], ((uint64_t *)dst)[k+1] = ((uint64_t *)src)[k+1];
+            else
+               for (k = 0; k  < n>>4; k++)
+                  _mm_store_si128(&((__m128i *)dst)[k], _mm_load_si128(&((__m128i *)src)[k]));
+         case 8 ... 15:
+            if ((k = n>>4<<1) < n>>3)
+               ((uint64_t *)dst)[k] = ((uint64_t *)src)[k];
+         case 4 ... 7:
+            if ((k = n>>3<<1) < n>>2)
+               ((uint32_t *)dst)[k] = ((uint32_t *)src)[k];
+         case 2 ... 3:
+            if ((k = n>>2<<1) < n>>1)
+               ((uint16_t *)dst)[k] = ((uint16_t *)src)[k];
+         case 1:
+            if ((k = n>>1<<1) < n)
+               dst[k] = src[k];
+         case 0:
+            ;
+      }
+
+      dst[n] = '\0';
+      return n;
    }
 
 #else
@@ -253,6 +339,17 @@ typedef unsigned int  utf32;
 
       int l;
       for (l = 0; line[l] && line[l] != '\n'; l++)
+         ;
+      return l;
+   }
+
+   static inline int taglen(const char *tag)
+   {
+      if (!tag || !*tag)
+         return 0;
+
+      int l;
+      for (l = 0; tag[l] && tag[l] != ':'; l++)
          ;
       return l;
    }
@@ -279,60 +376,47 @@ typedef unsigned int  utf32;
       return l;
    }
 
+   static inline int blanklen(const char *blank)
+   {
+      if (!blank || !*blank)
+         return 0;
+
+      int l;
+      for (l = 0; (uchar)blank[l] <= ' '; l++)
+         ;
+      return l;
+   }
+
+
+   // String copying from src to dst.
+   // m: Max. capacity of dst, including the final nul.
+   //    A value of 0 would indicate that the capacity of dst matches the size of src (including nul)
+   // l: On entry, src length or 0, on exit, the length of src, maybe NULL
+   // Returns the length of the resulting string in dst.
+   static inline int strmlcpy(char *dst, const char *src, int m, int *l)
+   {
+      int k, n;
+
+      if (l)
+      {
+         if (!*l)
+            *l = (int)strlen(src);
+         k = *l;
+      }
+      else
+         k = (int)strlen(src);
+
+      if (!m)
+         n = k;
+      else
+         n = (k < m) ? k : m-1;
+
+      strlcpy(dst, src, m);
+      return n;
+   }
+
 #endif
 
-
-// String copying from src to dst.
-// m: Max. capacity of dst, including the final nul.
-//    A value of 0 would indicate that the capacity of dst matches the size of src (including nul)
-// l: On entry, src length or 0, on exit, the length of src, maybe NULL
-// Returns the length of the resulting string in dst.
-static inline int strmlcpy(char *dst, const char *src, int m, int *l)
-{
-   int k, n;
-
-   if (l)
-   {
-      if (!*l)
-         *l = strvlen(src);
-      k = *l;
-   }
-   else
-      k = strvlen(src);
-
-   if (!m)
-      n = k;
-   else
-      n = (k < m) ? k : m-1;
-
-   switch (n)
-   {
-      default:
-         if ((intptr_t)dst&0xF || (intptr_t)src&0xF)
-            for (k = 0; k  < n>>4<<1; k += 2)
-               ((uint64_t *)dst)[k] = ((uint64_t *)src)[k], ((uint64_t *)dst)[k+1] = ((uint64_t *)src)[k+1];
-         else
-            for (k = 0; k  < n>>4; k++)
-               _mm_store_si128(&((__m128i *)dst)[k], _mm_load_si128(&((__m128i *)src)[k]));
-      case 8 ... 15:
-         if ((k = n>>4<<1) < n>>3)
-            ((uint64_t *)dst)[k] = ((uint64_t *)src)[k];
-      case 4 ... 7:
-         if ((k = n>>3<<1) < n>>2)
-            ((uint32_t *)dst)[k] = ((uint32_t *)src)[k];
-      case 2 ... 3:
-         if ((k = n>>2<<1) < n>>1)
-            ((uint16_t *)dst)[k] = ((uint16_t *)src)[k];
-      case 1:
-         if ((k = n>>1<<1) < n)
-            dst[k] = src[k];
-      case 0:
-         ;
-   }
-
-   dst[n] = '\0';
-   return n;
-}
 
 // String concat to dst with variable number of src/len pairs, whereby each len
 // serves as the l parameter in strmlcpy(), i.e. strmlcpy(dst, src, ml, &len)
