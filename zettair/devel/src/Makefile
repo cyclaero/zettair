@@ -7,6 +7,8 @@
 #   make install clean
 #   make clean install CDEFS="-DDEBUG"
 
+CC = clang
+
 .if exists(.svn) || exists(../.svn) || exists(../../.svn) || exists(../../../.svn)
 .ifmake update
 REVNUM != svn update > /dev/null; svnversion
@@ -17,8 +19,15 @@ REVNUM != svnversion
 REVNUM != cut -d= -f2 svnrev.xcconfig
 .endif
 
-CC      = clang
-CFLAGS  = $(CDEFS) -DSVNREV=\"$(REVNUM)\" -Iinclude -Iinclude/compat -std=c11 -g0 -Ofast -march=native -mssse3 -fstrict-aliasing -ffast-math -Wno-parentheses -Wno-switch
+.if $(MACHINE) == "i386" || $(MACHINE) == "amd64" || $(MACHINE) == "x86_64"
+CFLAGS = $(CDEFS) -march=native -mssse3 -ffast-math
+.elif $(MACHINE) == "arm"
+CFLAGS = $(CDEFS) -fsigned-char
+.else
+CFLAGS = $(CDEFS)
+.endif
+
+CFLAGS += -DSVNREV=\"$(REVNUM)\" -std=c11 -g0 -Ofast -fstrict-aliasing -Wno-parentheses -Wno-switch -Iinclude -Iinclude/compat
 LDFLAGS = -L/usr/local/lib -lm -lpthread -licuuc -lz
 SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c vec.c dirichlet.c bit.c impact.c search.c \
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
@@ -35,7 +44,7 @@ depend:
 	$(CC) $(CFLAGS) -E -MM $(SOURCES) > .depend
 
 $(PRODUCT): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 
 .o:
 	$(CC) $(CFLAGS) $< -o $@
