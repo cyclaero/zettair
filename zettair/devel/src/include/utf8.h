@@ -403,7 +403,7 @@ typedef unsigned int  utf32;
          k = (int)strlen(src);
 
       if (!m)
-         n = k;
+         n = m = k;
       else
          n = (k < m) ? k : m-1;
 
