@@ -7,9 +7,18 @@
 
 #include <stdint.h>
 
-typedef unsigned char uchar;
+#ifndef false
+#define false ((boolean)0)
+#endif
+
+#ifndef true
+#define true  ((boolean)1)
+#endif
+
+typedef unsigned int  boolean;
 typedef unsigned int  utf8;
 typedef unsigned int  utf32;
+typedef unsigned char uchar;
 
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -27,23 +36,54 @@ typedef unsigned int  utf32;
    #define MapInt(x)     SwapInt32(x)
    #define MapInt64(x)   SwapInt64(x)
    #define MapDouble(x)  SwapDouble(x)
-   #define MapPixel(x)   SwapLittlePixel(x)
 
    #define TwoChars(x)   (uint16_t)SwapInt16(*(uint16_t *)(x))
    #define ThreeChars(x) (uint32_t)SwapTri24(*(uint32_t *)(x))
    #define FourChars(x)  (uint32_t)SwapInt32(*(uint32_t *)(x))
 
-   static inline uint16_t SwapInt16(uint16_t x)
-   {
-      __asm__("rolw $8,%0" : "+q" (x));
-      return x;
-   }
+   #if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
 
-   static inline uint32_t SwapInt32(uint32_t x)
-   {
-      __asm__("bswapl %0" : "+q" (x));
-      return x;
-   }
+      static inline uint16_t SwapInt16(uint16_t x)
+      {
+         __asm__("rolw $8,%0" : "+q" (x));
+         return x;
+      }
+
+      static inline uint32_t SwapInt32(uint32_t x)
+      {
+         __asm__("bswapl %0" : "+q" (x));
+         return x;
+      }
+
+   #else
+
+      static inline uint16_t SwapInt16(uint16_t x)
+      {
+         uint16_t z;
+         char *p = (char *)&x;
+         char *q = (char *)&z;
+
+         q[0] = p[1];
+         q[1] = p[0];
+
+         return z;
+      }
+
+      static inline uint32_t SwapInt32(uint32_t x)
+      {
+         uint32_t z;
+         char *p = (char *)&x;
+         char *q = (char *)&z;
+
+         q[0] = p[3];
+         q[1] = p[2];
+         q[2] = p[1];
+         q[3] = p[0];
+
+         return z;
+      }
+
+   #endif
 
    static inline uint32_t SwapTri24(uint32_t x)
    {
@@ -59,36 +99,35 @@ typedef unsigned int  utf32;
       return z;
    }
 
+   #if defined(__x86_64__) && defined(__GNUC__)
 
-#if defined(__x86_64__)
+      static inline uint64_t SwapInt64(uint64_t x)
+      {
+         __asm__("bswapq %0" : "+q" (x));
+         return x;
+      }
 
-   static inline uint64_t SwapInt64(uint64_t x)
-   {
-      __asm__("bswapq %0" : "+q" (x));
-      return x;
-   }
+   #else
 
-#else
+      static inline uint64_t SwapInt64(uint64_t x)
+      {
+         uint64_t z;
+         char *p = (char *)&x;
+         char *q = (char *)&z;
 
-   static inline uint64_t SwapInt64(uint64_t x)
-   {
-      uint64_t z;
-      char *p = (char *)&x;
-      char *q = (char *)&z;
+         q[0] = p[7];
+         q[1] = p[6];
+         q[2] = p[5];
+         q[3] = p[4];
+         q[4] = p[3];
+         q[5] = p[2];
+         q[6] = p[1];
+         q[7] = p[0];
 
-      q[0] = p[7];
-      q[1] = p[6];
-      q[2] = p[5];
-      q[3] = p[4];
-      q[4] = p[3];
-      q[5] = p[2];
-      q[6] = p[1];
-      q[7] = p[0];
+         return z;
+      }
 
-      return z;
-   }
-
-#endif
+   #endif
 
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 
@@ -98,40 +137,39 @@ typedef unsigned int  utf32;
    #define PickInt64(x)  *(int64_t *)(x)
    #define PickDouble(x) *(double *)(x)
 
-   #define MapShort(x)   x
-   #define MapInt(x)     x
-   #define MapInt64(x)   x
-   #define MapDouble(x)  x
-   #define MapPixel(x)   SwapBigPixel(x)
+   #define MapShort(x)   (x)
+   #define MapInt(x)     (x)
+   #define MapInt64(x)   (x)
+   #define MapDouble(x)  (x)
 
    #define TwoChars(x)   *(uint16_t *)(x)
    #define ThreeChars(x) *(uint32_t *)(x) >> 8
    #define FourChars(x)  *(uint32_t *)(x)
 
-#if defined(__ppc__) && defined(__GNUC__)
+   #if defined(__ppc__) && defined(__GNUC__)
 
-   static inline uint16_t SwapInt16(uint16_t x)
-   {
-      uint16_t z;
-      __asm__("lhbrx %0,0,%1" : "=r" (z) : "r" (&x), "m" (x));
-      return z;
-   }
+      static inline uint16_t SwapInt16(uint16_t x)
+      {
+         uint16_t z;
+         __asm__("lhbrx %0,0,%1" : "=r" (z) : "r" (&x), "m" (x));
+         return z;
+      }
 
-#else
+   #else
 
-   static inline uint16_t SwapInt16(uint16_t x)
-   {
-      uint16_t z;
-      char *p = (char *)&x;
-      char *q = (char *)&z;
+      static inline uint16_t SwapInt16(uint16_t x)
+      {
+         uint16_t z;
+         char *p = (char *)&x;
+         char *q = (char *)&z;
 
-      q[0] = p[1];
-      q[1] = p[0];
+         q[0] = p[1];
+         q[1] = p[0];
 
-      return z;
-   }
+         return z;
+      }
 
-#endif
+   #endif
 
    static inline uint32_t SwapInt32(uint32_t x)
    {
@@ -167,13 +205,92 @@ typedef unsigned int  utf32;
 
 #endif
 
-#if defined(__x86_64__)
+static inline double SwapDouble(double x)
+{
+   double z;
+   char *p = (char *)&x;
+   char *q = (char *)&z;
+
+   q[0] = p[7];
+   q[1] = p[6];
+   q[2] = p[5];
+   q[3] = p[4];
+   q[4] = p[3];
+   q[5] = p[2];
+   q[6] = p[1];
+   q[7] = p[0];
+
+   return z;
+}
+
+
+static inline char LowChar(char c)
+{
+   return ('A' <= c && c <= 'Z') ? c + 0x20 : c;
+}
+
+static inline char UpChar(char c)
+{
+   return ('a' <= c && c <= 'z') ? c - 0x20 : c;
+}
+
+static inline uint16_t TwoLowChars(char *s)
+{
+   uint16_t z = TwoChars(s);
+   char *p = (char *)&z;
+   p[0] = LowChar(p[0]);
+   p[1] = LowChar(p[1]);
+   return z;
+}
+
+static inline uint32_t FourLowChars(char *s)
+{
+   uint32_t z = FourChars(s);
+   char *p = (char *)&z;
+   p[0] = LowChar(p[0]);
+   p[1] = LowChar(p[1]);
+   p[2] = LowChar(p[2]);
+   p[3] = LowChar(p[3]);
+   return z;
+}
+
+static inline char *lowercase(char *s)
+{
+   if (s)
+   {
+      char c, *p = s;
+      while (c = *p)
+         if ('A' <= c && c <= 'Z')
+            *p++ = c + 0x20;
+         else
+            p++;
+   }
+   return s;
+}
+
+static inline char *uppercase(char *s)
+{
+   if (s)
+   {
+      char c, *p = s;
+      while (c = *p)
+         if ('a' <= c && c <= 'z')
+            *p++ = c - 0x20;
+         else
+            p++;
+   }
+   return s;
+}
+
+
+#if defined(__x86_64__)  && defined(__GNUC__)
 
    #include <x86intrin.h>
 
    static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
    static const __m128i lfd16 = {0x0A0A0A0A0A0A0A0AULL, 0x0A0A0A0A0A0A0A0AULL};  // 16 bytes with line feed
    static const __m128i col16 = {0x3A3A3A3A3A3A3A3AULL, 0x3A3A3A3A3A3A3A3AULL};  // 16 bytes with colon ':' limit
+   static const __m128i sls16 = {0x2F2F2F2F2F2F2F2FULL, 0x2F2F2F2F2F2F2F2FULL};  // 16 bytes with slashes '/'
    static const __m128i vtl16 = {0x7C7C7C7C7C7C7C7CULL, 0x7C7C7C7C7C7C7C7CULL};  // 16 bytes with vertical line '|' limit
    static const __m128i blk16 = {0x2020202020202020ULL, 0x2020202020202020ULL};  // 16 bytes with inner blank limit
    static const __m128i obl16 = {0x2121212121212121ULL, 0x2121212121212121ULL};  // 16 bytes with outer blank limit
@@ -238,6 +355,22 @@ typedef unsigned int  utf32;
       for (int len = 16 - (intptr_t)field%16;; len += 16)
          if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&field[len]), nul16))
                    | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&field[len]), vtl16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+   static inline int segmlen(const char *segm)
+   {
+      if (!segm || !*segm)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)segm), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)segm), sls16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)segm%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&segm[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&segm[len]), sls16)))
             return len + __builtin_ctz(bmask);
    }
 
@@ -361,13 +494,24 @@ typedef unsigned int  utf32;
       return l;
    }
 
+   static inline int segmlen(const char *segm)
+   {
+      if (!segm || !*segm)
+         return 0;
+
+      int l;
+      for (l = 0; segm[l] && segm[l] != '/'; l++)
+         ;
+      return l;
+   }
+
    static inline int wordlen(const char *word)
    {
       if (!word || !*word)
          return 0;
 
       int l;
-      for (l = 0; (uchar)word[l] > ' '; l++)
+      for (l = 0; (uint8_t)word[l] > ' '; l++)
          ;
       return l;
    }
@@ -378,7 +522,7 @@ typedef unsigned int  utf32;
          return 0;
 
       int l;
-      for (l = 0; blank[l] && (uchar)blank[l] <= ' '; l++)
+      for (l = 0; blank[l] && (uint8_t)blank[l] <= ' '; l++)
          ;
       return l;
    }
@@ -403,11 +547,11 @@ typedef unsigned int  utf32;
          k = (int)strlen(src);
 
       if (!m)
-         n = m = k;
+         n = k;
       else
          n = (k < m) ? k : m-1;
 
-      strlcpy(dst, src, m);
+      strlcpy(dst, src, n+1);
       return n;
    }
 
@@ -424,12 +568,206 @@ typedef unsigned int  utf32;
 int strmlcat(char *dst, int m, int *l, ...);
 
 
+static inline boolean cmp2(void *a, void *b)
+{
+   return *(uint16_t *)a == *(uint16_t *)b;
+}
+
+static inline boolean cmp3(void *a, void *b)
+{
+   return *(uint8_t *)a == *(uint8_t *)b && cmp2((uint8_t *)a+1, (uint8_t *)b+1);
+}
+
+static inline boolean cmp4(void *a, void *b)
+{
+   return *(uint32_t *)a == *(uint32_t *)b;
+}
+
+static inline boolean cmp5(void *a, void *b)
+{
+   return *(uint8_t *)a == *(uint8_t *)b && cmp4((uint8_t *)a+1, (uint8_t *)b+1);
+}
+
+static inline boolean cmp6(void *a, void *b)
+{
+   return cmp2(a, b) && cmp4((uint8_t *)a+2, (uint8_t *)b+2);
+}
+
+static inline boolean cmp7(void *a, void *b)
+{
+   return cmp3(a, b) && cmp4((uint8_t *)a+3, (uint8_t *)b+3);
+}
+
+static inline boolean cmp8(void *a, void *b)
+{
+#if !defined(__arm__)
+   return *(uint64_t *)a == *(uint64_t *)b;
+#else
+   return cmp4(a, b) && cmp4((uint8_t *)a+4, (uint8_t *)b+4);
+#endif
+}
+
+static inline boolean cmp9(void *a, void *b)
+{
+   return *(uint8_t *)a == *(uint8_t *)b && cmp8((uint8_t *)a+1, (uint8_t *)b+1);
+}
+
+static inline boolean cmp10(void *a, void *b)
+{
+   return cmp2(a, b) && cmp8((uint8_t *)a+2, (uint8_t *)b+2);
+}
+
+static inline boolean cmp11(void *a, void *b)
+{
+   return cmp3(a, b) && cmp8((uint8_t *)a+3, (uint8_t *)b+3);
+}
+
+static inline boolean cmp12(void *a, void *b)
+{
+   return cmp4(a, b) && cmp8((uint8_t *)a+4, (uint8_t *)b+4);
+}
+
+static inline boolean cmp13(void *a, void *b)
+{
+   return cmp5(a, b) && cmp8((uint8_t *)a+5, (uint8_t *)b+5);
+}
+
+static inline boolean cmp16(void *a, void *b)
+{
+   return cmp8(a, b) && cmp8((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+
+static inline void cpy2(void *a, void *b)
+{
+  *(uint16_t *)a = *(uint16_t *)b;
+}
+
+static inline void cpy3(void *a, void *b)
+{
+   cpy2(a, b), *(uint8_t *)((uint8_t *)a+2) = *(uint8_t *)((uint8_t *)b+2);
+}
+
+static inline void cpy4(void *a, void *b)
+{
+   *(uint32_t *)a = *(uint32_t *)b;
+}
+
+static inline void cpy5(void *a, void *b)
+{
+   cpy4(a, b), *(uint8_t *)((uint8_t *)a+4) = *(uint8_t *)((uint8_t *)b+4);
+}
+
+static inline void cpy6(void *a, void *b)
+{
+   cpy4(a, b), cpy2((uint8_t *)a+4, (uint8_t *)b+4);
+}
+
+static inline void cpy7(void *a, void *b)
+{
+   cpy4(a, b), cpy3((uint8_t *)a+4, (uint8_t *)b+4);
+}
+
+static inline void cpy8(void *a, void *b)
+{
+#if !defined(__arm__)
+   *(uint64_t *)a = *(uint64_t *)b;
+#else
+   cpy4(a, b), cpy4((uint8_t *)a+4, (uint8_t *)b+4);
+#endif
+}
+
+static inline void cpy9(void *a, void *b)
+{
+   cpy8(a, b), *(uint8_t *)((uint8_t *)a+8) = *(uint8_t *)((uint8_t *)b+8);
+}
+
+static inline void cpy10(void *a, void *b)
+{
+   cpy8(a, b), cpy2((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+static inline void cpy11(void *a, void *b)
+{
+   cpy8(a, b), cpy3((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+static inline void cpy12(void *a, void *b)
+{
+   cpy8(a, b), cpy4((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+static inline void cpy13(void *a, void *b)
+{
+   cpy8(a, b), cpy5((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+static inline void cpy16(void *a, void *b)
+{
+   cpy8(a, b), cpy8((uint8_t *)a+8, (uint8_t *)b+8);
+}
+
+
+// forward skip white space  !!! s MUST NOT be NULL !!!
+static inline char *skip(char *s)
+{
+   for (;;)
+      switch (*s)
+      {
+         case '\t'...'\r':
+         case ' ':
+            s++;
+            break;
+
+         default:
+            return s;
+      }
+}
+
+// backward skip white space  !!! s MUST NOT be NULL !!!
+static inline char *bskip(char *s)
+{
+   for (;;)
+      switch (*--s)
+      {
+         case '\t'...'\r':
+         case ' ':
+            break;
+
+         default:
+            return s+1;
+      }
+}
+
+static inline char *trim(char *s)
+{
+   *bskip(s+strvlen(s)) = '\0';
+   return skip(s);
+}
+
+
+// jump to the stop mark  !!! s MUST NOT be NULL !!!
+static inline char *jump(char *s, char stop)
+{
+   boolean q, sq, dq;
+   char    c;
+
+   for (q = sq = dq = false; (c = *s) && (c != stop || q); s++)
+      if (c == '\'' && !dq)
+         q = sq = !sq;
+      else if (c == '"' && !sq)
+         q = dq = !dq;
+
+   return s;
+}
+
+
 static inline utf8 getu(char **s)
 {
    utf8 u = 0;
    char c = **s;
 
-   if (c >= 0)
+   if ((uint8_t)c < 0x80)
       u = c;
 
    else if ((*s)[1] != '\0')
@@ -448,27 +786,29 @@ static inline utf8 getu(char **s)
    return u;
 }
 
-static inline utf8 putu(utf8 u, char **t)
+static inline int putu(utf8 u, char *t)
 {
+   int l;
+
    if (u <= 0x7F)
-      **t = (char)u,                           *t += 1;
+      *t = (char)u,                           l = 1;
 
    else if (u <= 0xFFFF)
-      *(uint16_t *)*t = MapShort((uint16_t)u), *t += 2;
+      *(uint16_t *)t = MapShort((uint16_t)u), l = 2;
 
    else if (u <= 0xFFFFFF)
    {
-      char v[4];
+      char v[4] = {};
       *(uint32_t *)v = MapInt(u);
-      (*t)[0] = v[1];
-      (*t)[1] = v[2];
-      (*t)[2] = v[3],                          *t += 3;
+      t[0] = v[1];
+      t[1] = v[2];
+      t[2] = v[3],                            l = 3;
    }
 
    else
-      *(uint32_t *)*t = MapInt(u),             *t += 4;
+      *(uint32_t *)t = MapInt(u),             l = 4;
 
-   return u;
+   return l;
 }
 
 char *casefold(char *p);
