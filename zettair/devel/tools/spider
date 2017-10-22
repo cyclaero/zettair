@@ -8,6 +8,9 @@
 #  iconv     -- for converting UTF-8 to ISO-8859-1
 #  zet       -- for indexing (tool in the zettair package)
 
+export LANG="en_US.UTF-8"
+export MM_CHARSET="UTF-8"
+
 cd /var/db/psindex
 
 if [ ! -e token ] && [ "$1" != "force" ] || [ -e running ]; then
@@ -20,8 +23,6 @@ else
    touch running
    rm -f token
 fi
-
-LANG="en_US.UTF-8"
 
 URI="http://localhost:8/forums.php"
 DIR="projectstore.net"
