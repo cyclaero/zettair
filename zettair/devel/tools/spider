@@ -3,10 +3,20 @@
 # spider script for synchronizing a reomte site with a local store for indexing with zettair
 # requirements:
 #  clone     -- for hard linking the store to a temperary directory
-#  wget      -- for synchronizing the remote site with the local store
+#  wget 1.18 -- for synchronizing the remote site with the local store
 #  pdftotext -- for converting PDF to bare HTML files (tool in the poppler package)
 #  iconv     -- for converting UTF-8 to ISO-8859-1
 #  zet       -- for indexing (tool in the zettair package)
+
+#  Installation of wget 1.18 -- the spider mode of wget 1.19 and above is incompatible beyond repair
+#  cd ~/install
+#  fetch https://ftp.gnu.org/gnu/wget/wget-1.18.tar.gz
+#  tar -oxzf wget-1.18.tar.gz
+#  cd wget-1.18
+#  ./configure --enable-threads=posix --with-ssl=openssl --with-libssl-prefix=/usr/lib
+#  make install clean
+#  cd ..; rm -r wget-1.18
+
 
 export LANG="en_US.UTF-8"
 export MM_CHARSET="UTF-8"
