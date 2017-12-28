@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# spider script for synchronizing a reomte site with a local store for indexing with zettair
+# spider script for synchronizing a remote site with a local store for indexing with zettair
 # requirements:
 #  clone     -- for hard linking the store to a temperary directory
 #  wget 1.18 -- for synchronizing the remote site with the local store
