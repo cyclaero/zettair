@@ -8,7 +8,7 @@ Installation instructions can be found in the file named INSTALL. Zettair was
 written in C and has been tested on Solaris and Linux. It is available for 
 download from http://www.seg.rmit.edu.au.
 
-[The Zettair License as it was informed in the doc folder of the original source packages.](http://htmlpreview.github.io/?https://github.com/cyclaero/zettair/blob/master/origin/doc/copying.html)
+[The Zettair License as it was informed in the doc folder of the original source packages:](http://htmlpreview.github.io/?https://github.com/cyclaero/zettair/blob/master/origin/doc/copying.html)
 
 Copyright (c) 2004, Search Engine Group
 All rights reserved.
