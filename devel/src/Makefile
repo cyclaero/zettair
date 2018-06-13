@@ -1,33 +1,20 @@
 # Makefile for FreeBSD using LLVM/clang
-#
-# Usage examples:
-#   make
-#   make clean
-#   make update
-#   make install clean
-#   make clean install CDEFS="-DDEBUG"
 
 CC = clang
 
-.if exists(.svn) || exists(../.svn) || exists(../../.svn) || exists(../../../.svn)
-.ifmake update
-REVNUM != svn update > /dev/null; svnversion
+.ifmake debug
+CFLAGS = $(CDEFS) -g -O0
 .else
-REVNUM != svnversion
-.endif
-.else
-REVNUM != cut -d= -f2 svnrev.xcconfig
+CFLAGS = $(CDEFS) -g0 -O3
 .endif
 
 .if $(MACHINE) == "i386" || $(MACHINE) == "amd64" || $(MACHINE) == "x86_64"
-CFLAGS = $(CDEFS) -march=native -mssse3
+CFLAGS += -march=native -mssse3
 .elif $(MACHINE) == "arm"
-CFLAGS = $(CDEFS) -fsigned-char
-.else
-CFLAGS = $(CDEFS)
+CFLAGS += -fsigned-char
 .endif
 
-CFLAGS += -DSVNREV=\"$(REVNUM)\" -std=c11 -g0 -O3 -fstrict-aliasing -Wno-parentheses -Wno-switch -Iinclude -Iinclude/compat
+CFLAGS += -std=c11 -fstrict-aliasing -Wno-parentheses -Wno-switch -Iinclude -Iinclude/compat
 LDFLAGS = -L/usr/local/lib -lm -lpthread -licuuc -lz
 SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c vec.c dirichlet.c bit.c impact.c search.c \
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
@@ -56,8 +43,8 @@ update: clean all
 
 install: $(PRODUCT)
 	strip -o /usr/local/bin/$(PRODUCT) $(PRODUCT)
-	cp ../tools/spider /usr/local/bin/spider
-	cp ../tools/rtftotext.py /usr/local/bin/rtftotext.py
-	cp ../tools/docxtotext.py /usr/local/bin/docxtotext.py
-	cp ../tools/pptxtotext.py /usr/local/bin/pptxtotext.py
-	cp ../tools/xlsxtotext.py /usr/local/bin/xlsxtotext.py
+	cp Spider/spider /usr/local/bin/spider
+	cp Spider/rtftotext.py /usr/local/bin/rtftotext.py
+	cp Spider/docxtotext.py /usr/local/bin/docxtotext.py
+	cp Spider/pptxtotext.py /usr/local/bin/pptxtotext.py
+	cp Spider/xlsxtotext.py /usr/local/bin/xlsxtotext.py

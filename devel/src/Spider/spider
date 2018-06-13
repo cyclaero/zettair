@@ -1,67 +1,60 @@
 #!/bin/sh
 #
-# spider script for synchronizing a remote site with a local store for indexing with zettair
+# spider script for synchronizing a documents directoy with text/html-file store for indexing with zettair
 # requirements:
 #  clone     -- for hard linking the store to a temperary directory
-#  wget 1.18 -- for synchronizing the remote site with the local store
 #  pdftotext -- for converting PDF to bare HTML files (tool in the poppler package)
 #  iconv     -- for converting UTF-8 to ISO-8859-1
 #  zet       -- for indexing (tool in the zettair package)
-
-#  Installation of wget 1.18 -- the spider mode of wget 1.19 and above is incompatible beyond repair
-#  cd ~/install
-#  fetch https://ftp.gnu.org/gnu/wget/wget-1.18.tar.gz
-#  tar -oxzf wget-1.18.tar.gz
-#  cd wget-1.18
-#  ./configure --enable-threads=posix --with-ssl=openssl --with-libssl-prefix=/usr/lib
-#  make install clean
-#  cd ..; rm -r wget-1.18
 
 
 export LANG="en_US.UTF-8"
 export MM_CHARSET="UTF-8"
 
-cd /var/db/psindex
+DOCUMENTS_DIR="$1"
+if [ ! -d "$DOCUMENTS_DIR" ]; then
+   echo "The documents directory does not exist"
+   exit
+fi
 
-if [ ! -e token ] && [ "$1" != "force" ] || [ -e running ]; then
-   if [ "$1" == "force" ]; then
+ZETTAIR_DIR="/var/db/zettair"
+if [ ! -d "$ZETTAIR_DIR" ]; then
+   echo "The directory which holds the Zettair search index does not exist"
+   exit
+fi
+
+cd "$ZETTAIR_DIR"
+
+if [ ! -e "token" ] && [ "$2" != "force" ] || [ -e "running" ]; then
+   if [ "$2" == "force" ]; then
       echo "$0 is running already."
    else
       exit
    fi
 else
-   touch running
-   rm -f token
+   touch "running"
+   rm -f "token"
 fi
 
-URI="http://localhost:8/forums.php"
-DIR="projectstore.net"
-TMP="temp"
-
-if [ -d "$DIR" ]; then
-   /usr/local/bin/clone -ydlv0 "$DIR" "$TMP"
-   xcllist=`/usr/local/bin/wget --spider -r -l inf -N -e robots=off -P "$TMP" -nH "$URI" 2>&1 >/dev/null \
-            | /usr/bin/sed -n "/^Server file no newer than local file ‘"$TMP"/{s//"$DIR"/;s/’ \-\- not retrieving\.$//;p;}"`
-   /usr/bin/find "$DIR" -links 2 -and \! -type d -and \! -name "*.iso.html" -print0 | xargs -0 rm -v \
-   | while read fname ; do
-      # this won't delete mid=X.iso.html files
-      rm -f "$fname.iso.html"
-   done
-   rm -rf "$TMP"
+if [ -d "changes" ] && [ -d "texthtml" ]; then
+   /usr/bin/find "changes" -links 2 -and \! -type d -print0 | xargs -0 rm -v >/dev/null 2>&1
 else
-   xcllist=""
+   rm -rf "changes" "texthtml"
+   /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "changes"
+   mkdir -p "texthtml"
 fi
 
-/usr/local/bin/wget -q -r -l inf -N -e robots=off -P "$DIR" -nH "$URI"
+cd "changes"
 
 htmlist=$(
-   /usr/bin/find "$DIR" -name "*.html" -and \! -name "*.iso.html" \
+   /usr/bin/find . -name "*.html" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$htmlist" != "" ] ; then
@@ -69,13 +62,14 @@ if [ "$htmlist" != "" ] ; then
 fi
 
 pdflist=$(
-   /usr/bin/find "$DIR" -iname "*.pdf" \
+   /usr/bin/find . -iname "*.pdf" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$fname" "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$DOCUMENTS_DIR/$fname" "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$pdflist" != "" ] ; then
@@ -83,15 +77,16 @@ if [ "$pdflist" != "" ] ; then
 fi
 
 txtlist=$(
-   /usr/bin/find "$DIR" -iname "*.txt" \
+   /usr/bin/find . -iname "*.txt" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         echo "<HTML><BODY>" > "$fname.iso.html"
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" >> "$fname.iso.html"
-         echo "</BODY></HTML>" >> "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         echo "<HTML><BODY>" > "../texthtml/$fname.iso.html"
+         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../texthtml/$fname.iso.html"
+         echo "</BODY></HTML>" >> "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$txtlist" != "" ] ; then
@@ -99,13 +94,14 @@ if [ "$txtlist" != "" ] ; then
 fi
 
 rtflist=$(
-   /usr/bin/find "$DIR" -iname "*.rtf" -or -iname "*.rtfd.zip" \
+   /usr/bin/find . -iname "*.rtf" -or -iname "*.rtfd.zip" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/local/bin/rtftotext.py "$fname" > "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/local/bin/rtftotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$rtflist" != "" ] ; then
@@ -113,13 +109,14 @@ if [ "$rtflist" != "" ] ; then
 fi
 
 doclist=$(
-   /usr/bin/find "$DIR" -iname "*.docx" \
+   /usr/bin/find . -iname "*.docx" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/local/bin/docxtotext.py "$fname" > "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/local/bin/docxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$doclist" != "" ] ; then
@@ -127,13 +124,14 @@ if [ "$doclist" != "" ] ; then
 fi
 
 pptlist=$(
-   /usr/bin/find "$DIR" -iname "*.pptx" \
+   /usr/bin/find . -iname "*.pptx" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/local/bin/pptxtotext.py "$fname" > "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/local/bin/pptxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$pptlist" != "" ] ; then
@@ -141,32 +139,24 @@ if [ "$pptlist" != "" ] ; then
 fi
 
 xlslist=$(
-   /usr/bin/find "$DIR" -iname "*.xlsx" \
+   /usr/bin/find . -iname "*.xlsx" \
    | while read -r fname ; do
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$fname.iso.html" ]; then
-         /usr/local/bin/xlsxtotext.py "$fname" > "$fname.iso.html"
+      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
+         /usr/local/bin/xlsxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
+         echo "texthtml/$fname.iso.html"
+      else
+         rm -f "../texthtml/$fname.iso.html"
       fi
-      echo "$fname.iso.html"
    done
 )
 if [ "$xlslist" != "" ] ; then
    xlslist="$xlslist"$'\n'
 fi
 
-msglist=$(
-   /usr/bin/find "$DIR" -name "message.php?mid*" \
-   | while read fname ; do
-      isoname="$DIR/"`echo "$fname" | /usr/bin/sed "s|$DIR/message.php?||"`".iso.html"
-      echo "$xcllist" | /usr/bin/grep -q "$fname"
-      if [ $? -gt 0 ] || [ ! -e "$isoname" ]; then
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$fname" > "$isoname"
-      fi
-      echo "$isoname"
-   done
-)
+cd ..
+rm -rf changes
+/usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "changes"
 
 rm -f index*
-echo "$htmlist$pdflist$txtlist$rtflist$doclist$pptlist$xlslist$msglist" | /usr/local/bin/zet -i >/dev/null 2>&1
-
+echo "$htmlist$pdflist$txtlist$rtflist$doclist$pptlist$xlslist" | /usr/local/bin/zet -i >/dev/null 2>&1
 rm -f running
