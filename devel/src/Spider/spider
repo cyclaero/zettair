@@ -36,127 +36,85 @@ else
    rm -f "token"
 fi
 
-if [ -d "changes" ] && [ -d "texthtml" ]; then
+if [ -d "changes" ] && [ -d "isohtml" ]; then
    /usr/bin/find "changes" -links 2 -and \! -type d -print0 | xargs -0 rm -v >/dev/null 2>&1
 else
-   rm -rf "changes" "texthtml"
+   rm -rf "changes" "isohtml"
    /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "changes"
-   mkdir -p "texthtml"
 fi
+
+/usr/bin/find changes -type d | while read -r dname ; do
+   /bin/mkdir -p `echo "$dname" | /usr/bin/sed "s|changes|isohtml|"`
+done
+
 
 cd "changes"
 
-htmlist=$(
-   /usr/bin/find . -name "*.html" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$htmlist" != "" ] ; then
-   htmlist="$htmlist"$'\n'
-fi
+/usr/bin/find . -iname "*.html" -or -iname "*.htm" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" > "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-pdflist=$(
-   /usr/bin/find . -iname "*.pdf" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$DOCUMENTS_DIR/$fname" "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$pdflist" != "" ] ; then
-   pdflist="$pdflist"$'\n'
-fi
+/usr/bin/find . -iname "*.pdf" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$DOCUMENTS_DIR/$fname" "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-txtlist=$(
-   /usr/bin/find . -iname "*.txt" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         echo "<HTML><BODY>" > "../texthtml/$fname.iso.html"
-         /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../texthtml/$fname.iso.html"
-         echo "</BODY></HTML>" >> "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$txtlist" != "" ] ; then
-   txtlist="$txtlist"$'\n'
-fi
+/usr/bin/find . -iname "*.txt" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      echo "<HTML><BODY>" > "../isohtml/$fname.iso.html"
+      /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../isohtml/$fname.iso.html"
+      echo "</BODY></HTML>" >> "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-rtflist=$(
-   /usr/bin/find . -iname "*.rtf" -or -iname "*.rtfd.zip" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/local/bin/rtftotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$rtflist" != "" ] ; then
-   rtflist="$rtflist"$'\n'
-fi
+/usr/bin/find . -iname "*.rtf" -or -iname "*.rtfd.zip" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/local/bin/rtftotext.py "$DOCUMENTS_DIR/$fname" > "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-doclist=$(
-   /usr/bin/find . -iname "*.docx" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/local/bin/docxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$doclist" != "" ] ; then
-   doclist="$doclist"$'\n'
-fi
+/usr/bin/find . -iname "*.docx" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/local/bin/docxtotext.py "$DOCUMENTS_DIR/$fname" > "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-pptlist=$(
-   /usr/bin/find . -iname "*.pptx" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/local/bin/pptxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$pptlist" != "" ] ; then
-   pptlist="$pptlist"$'\n'
-fi
+/usr/bin/find . -iname "*.pptx" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/local/bin/pptxtotext.py "$DOCUMENTS_DIR/$fname" > "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
-xlslist=$(
-   /usr/bin/find . -iname "*.xlsx" \
-   | while read -r fname ; do
-      if [ -e "$DOCUMENTS_DIR/$fname" ] ; then
-         /usr/local/bin/xlsxtotext.py "$DOCUMENTS_DIR/$fname" > "../texthtml/$fname.iso.html"
-         echo "texthtml/$fname.iso.html"
-      else
-         rm -f "../texthtml/$fname.iso.html"
-      fi
-   done
-)
-if [ "$xlslist" != "" ] ; then
-   xlslist="$xlslist"$'\n'
-fi
+/usr/bin/find . -iname "*.xlsx" | while read -r fname ; do
+   if [ -e "$DOCUMENTS_DIR/$fname" ]; then
+      /usr/local/bin/xlsxtotext.py "$DOCUMENTS_DIR/$fname" > "../isohtml/$fname.iso.html"
+   else
+      rm -f "../isohtml/$fname.iso.html"
+   fi
+done
 
 cd ..
+
+
 rm -rf changes
 /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "changes"
 
 rm -f index*
-echo "$htmlist$pdflist$txtlist$rtflist$doclist$pptlist$xlslist" | /usr/local/bin/zet -i >/dev/null 2>&1
+/usr/bin/find isohtml -name "*.iso.html" | /usr/local/bin/zet -i >/dev/null 2>&1
+
 rm -f running

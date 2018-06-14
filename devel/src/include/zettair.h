@@ -19,7 +19,7 @@
 #define ZET_MT
 
 #define PACKAGE "zettair"
-#define PACKAGE_VERSION "0.9.4 - projectstore.net ("SVNREV")"
+#define PACKAGE_VERSION "0.9.4 - cyclaero/zettair (GitHub)"
 
 #endif
 
