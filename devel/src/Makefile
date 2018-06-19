@@ -4,8 +4,10 @@ CC = clang
 
 .ifmake debug
 CFLAGS = $(CDEFS) -g -O0
+STRIP  =
 .else
 CFLAGS = $(CDEFS) -g0 -O3
+STRIP  = -s
 .endif
 
 .if $(MACHINE) == "i386" || $(MACHINE) == "amd64" || $(MACHINE) == "x86_64"
@@ -39,10 +41,12 @@ $(PRODUCT): $(OBJECTS)
 clean:
 	rm -rf *.o *.core $(PRODUCT)
 
+debug: all
+
 update: clean all
 
 install: $(PRODUCT)
-	strip -o /usr/local/bin/$(PRODUCT) $(PRODUCT)
+	install $(STRIP) $(PRODUCT) /usr/local/bin/
 	cp Spider/spider /usr/local/bin/spider
 	cp Spider/rtftotext.py /usr/local/bin/rtftotext.py
 	cp Spider/docxtotext.py /usr/local/bin/docxtotext.py
