@@ -1253,7 +1253,6 @@ void index_delete(struct index *idx) {
 
         /* first, save the docmap */
         if (idx->map) {
-            docmap_save(idx->map);  /* XXX: should be in index_commit()? */
             docmap_delete(idx->map);
             idx->map = NULL;
         }
