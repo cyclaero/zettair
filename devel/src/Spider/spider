@@ -40,8 +40,8 @@ SYNCHRON="synchron"
 ARTICLES="articles"
 
 if [ -d "$SYNCHRON" ] && [ -d "$ARTICLES" ]; then
-   /usr/local/bin/clone -i "$DOCUMENTS_DIR" "$SYNCHRON"
-   /usr/bin/find "$SYNCHRON" -links 2 -and \! -type d -print0 | xargs -0 rm -v >/dev/null 2>&1
+   /usr/local/bin/clone -iv0 "$DOCUMENTS_DIR" "$SYNCHRON"
+   /usr/bin/find "$SYNCHRON" -links 2 -and \! -type d -delete >/dev/null 2>&1
 else
    rm -rf "$SYNCHRON" "$ARTICLES"
    /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
