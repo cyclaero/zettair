@@ -283,19 +283,24 @@ static inline char *uppercase(char *s)
 }
 
 
-#if defined(__x86_64__)  && defined(__GNUC__)
+#if defined(__x86_64__)
 
    #include <x86intrin.h>
 
    static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
-   static const __m128i lfd16 = {0x0A0A0A0A0A0A0A0AULL, 0x0A0A0A0A0A0A0A0AULL};  // 16 bytes with line feed
-   static const __m128i col16 = {0x3A3A3A3A3A3A3A3AULL, 0x3A3A3A3A3A3A3A3AULL};  // 16 bytes with colon ':' limit
+   static const __m128i lfd16 = {0x0A0A0A0A0A0A0A0AULL, 0x0A0A0A0A0A0A0A0AULL};  // 16 bytes with line feed '\n'
+   static const __m128i vtt16 = {0x0B0B0B0B0B0B0B0BULL, 0x0B0B0B0B0B0B0B0BULL};  // 16 bytes with vertical tabs '\v'
+   static const __m128i col16 = {0x3A3A3A3A3A3A3A3AULL, 0x3A3A3A3A3A3A3A3AULL};  // 16 bytes with colon ':'
+   static const __m128i grt16 = {0x3E3E3E3E3E3E3E3EULL, 0x3E3E3E3E3E3E3E3EULL};  // 16 bytes with greater sign '>'
+   static const __m128i vtl16 = {0x7C7C7C7C7C7C7C7CULL, 0x7C7C7C7C7C7C7C7CULL};  // 16 bytes with vertical line '|'
+   static const __m128i dot16 = {0x2E2E2E2E2E2E2E2EULL, 0x2E2E2E2E2E2E2E2EULL};  // 16 bytes with dots '.'
    static const __m128i sls16 = {0x2F2F2F2F2F2F2F2FULL, 0x2F2F2F2F2F2F2F2FULL};  // 16 bytes with slashes '/'
-   static const __m128i vtl16 = {0x7C7C7C7C7C7C7C7CULL, 0x7C7C7C7C7C7C7C7CULL};  // 16 bytes with vertical line '|' limit
+   static const __m128i amp16 = {0x2626262626262626ULL, 0x2626262626262626ULL};  // 16 bytes with ampersand '&'
+   static const __m128i equ16 = {0x3D3D3D3D3D3D3D3DULL, 0x3D3D3D3D3D3D3D3DULL};  // 16 bytes with equal signs '='
    static const __m128i blk16 = {0x2020202020202020ULL, 0x2020202020202020ULL};  // 16 bytes with inner blank limit
    static const __m128i obl16 = {0x2121212121212121ULL, 0x2121212121212121ULL};  // 16 bytes with outer blank limit
 
-   // Drop-in replacement for strlen(), utilizing some builtin SSSE3 instructions
+   // Drop-in replacement for strlen() and memvcpy(), utilizing some builtin SSSE3 instructions
    static inline int strvlen(const char *str)
    {
       if (!str || !*str)
@@ -309,6 +314,37 @@ static inline char *uppercase(char *s)
          if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&str[len]), nul16)))
             return len + __builtin_ctz(bmask);
    }
+
+   static inline void memvcpy(void *dst, const void *src, size_t n)
+   {
+      size_t k;
+
+      switch (n)
+      {
+         default:
+            if ((intptr_t)dst&0xF || (intptr_t)src&0xF)
+               for (k = 0; k  < n>>4<<1; k += 2)
+                  ((uint64_t *)dst)[k] = ((uint64_t *)src)[k], ((uint64_t *)dst)[k+1] = ((uint64_t *)src)[k+1];
+            else
+               for (k = 0; k  < n>>4; k++)
+                  _mm_store_si128(&((__m128i *)dst)[k], _mm_load_si128(&((__m128i *)src)[k]));
+         case 8 ... 15:
+            if ((k = n>>4<<1) < n>>3)
+               ((uint64_t *)dst)[k] = ((uint64_t *)src)[k];
+         case 4 ... 7:
+            if ((k = n>>3<<1) < n>>2)
+               ((uint32_t *)dst)[k] = ((uint32_t *)src)[k];
+         case 2 ... 3:
+            if ((k = n>>2<<1) < n>>1)
+               ((uint16_t *)dst)[k] = ((uint16_t *)src)[k];
+         case 1:
+            if ((k = n>>1<<1) < n)
+               (( uint8_t *)dst)[k] = (( uint8_t *)src)[k];
+         case 0:
+            ;
+      }
+   }
+
 
    static inline int linelen(const char *line)
    {
@@ -326,6 +362,38 @@ static inline char *uppercase(char *s)
             return len + __builtin_ctz(bmask);
    }
 
+   static inline int sectlen(const char *sect)
+   {
+      if (!sect || !*sect)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)sect), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)sect), vtt16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)sect%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&sect[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&sect[len]), vtt16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+   static inline int collen(const char *col)
+   {
+      if (!col || !*col)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)col), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)col), col16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)col%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&col[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&col[len]), col16)))
+            return len + __builtin_ctz(bmask);
+   }
+
    static inline int taglen(const char *tag)
    {
       if (!tag || !*tag)
@@ -333,12 +401,12 @@ static inline char *uppercase(char *s)
 
       unsigned bmask;
       if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)tag), nul16))
-                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)tag), col16)))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)tag), grt16)))
          return __builtin_ctz(bmask);
 
       for (int len = 16 - (intptr_t)tag%16;; len += 16)
          if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&tag[len]), nul16))
-                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&tag[len]), col16)))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&tag[len]), grt16)))
             return len + __builtin_ctz(bmask);
    }
 
@@ -358,6 +426,22 @@ static inline char *uppercase(char *s)
             return len + __builtin_ctz(bmask);
    }
 
+   static inline int domlen(const char *domain)
+   {
+      if (!domain || !*domain)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)domain), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)domain), dot16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)domain%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&domain[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&domain[len]), dot16)))
+            return len + __builtin_ctz(bmask);
+   }
+
    static inline int segmlen(const char *segm)
    {
       if (!segm || !*segm)
@@ -371,6 +455,38 @@ static inline char *uppercase(char *s)
       for (int len = 16 - (intptr_t)segm%16;; len += 16)
          if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&segm[len]), nul16))
                    | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&segm[len]), sls16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+   static inline int vdeflen(const char *vardef)
+   {
+      if (!vardef || !*vardef)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)vardef), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)vardef), amp16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)vardef%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&vardef[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&vardef[len]), amp16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+   static inline int vnamlen(const char *varname)
+   {
+      if (!varname || !*varname)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)varname), nul16))
+                | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)varname), equ16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)varname%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&varname[len]), nul16))
+                   | (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&varname[len]), equ16)))
             return len + __builtin_ctz(bmask);
    }
 
@@ -459,7 +575,8 @@ static inline char *uppercase(char *s)
 
 #else
 
-   #define strvlen(s) strlen(s)
+   #define strvlen(s) (int)strlen(s)
+   #define memvcpy(d,s,n)  memcpy(d,s,n)
 
    static inline int linelen(const char *line)
    {
@@ -472,13 +589,35 @@ static inline char *uppercase(char *s)
       return l;
    }
 
+   static inline int sectlen(const char *sect)
+   {
+      if (!sect || !*sect)
+         return 0;
+
+      int l;
+      for (l = 0; sect[l] && sect[l] != '\v'; l++)
+         ;
+      return l;
+   }
+
+   static inline int collen(const char *col)
+   {
+      if (!col || !*col)
+         return 0;
+
+      int l;
+      for (l = 0; col[l] && col[l] != ':'; l++)
+         ;
+      return l;
+   }
+
    static inline int taglen(const char *tag)
    {
       if (!tag || !*tag)
          return 0;
 
       int l;
-      for (l = 0; tag[l] && tag[l] != ':'; l++)
+      for (l = 0; tag[l] && tag[l] != '>'; l++)
          ;
       return l;
    }
@@ -494,6 +633,17 @@ static inline char *uppercase(char *s)
       return l;
    }
 
+   static inline int domlen(const char *domain)
+   {
+      if (!domain || !*domain)
+         return 0;
+
+      int l;
+      for (l = 0; domain[l] && domain[l] != '.'; l++)
+         ;
+      return l;
+   }
+
    static inline int segmlen(const char *segm)
    {
       if (!segm || !*segm)
@@ -501,6 +651,28 @@ static inline char *uppercase(char *s)
 
       int l;
       for (l = 0; segm[l] && segm[l] != '/'; l++)
+         ;
+      return l;
+   }
+
+   static inline int vdeflen(const char *vardef)
+   {
+      if (!vardef || !*vardef)
+         return 0;
+
+      int l;
+      for (l = 0; vardef[l] && vardef[l] != '&'; l++)
+         ;
+      return l;
+   }
+
+   static inline int vnamlen(const char *varname)
+   {
+      if (!varname || !*varname)
+         return 0;
+
+      int l;
+      for (l = 0; varname[l] && varname[l] != '='; l++)
          ;
       return l;
    }
