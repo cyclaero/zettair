@@ -351,11 +351,11 @@ static struct sentence *extract(struct summarise *sum, struct persum *ps, enum i
     sent->terms = 0;
     sent->qterms = 0;
 
-    char fullstop = 0;
+    char termfin, fullstop = 0;
 
     do {
         ret = mlparse_parse(&sum->parser, ps->termbuf, &len, 0);
-        fullstop = (len && ps->termbuf[len-1] == '.');
+        fullstop = (len && ((termfin = ps->termbuf[len-1]) == '.' || termfin == '!' || termfin == '?'));
 
         switch (ret) {
         case MLPARSE_COMMENT:
