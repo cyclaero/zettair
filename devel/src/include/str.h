@@ -29,7 +29,33 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include "utf8.h"
+
+#if defined(__x86_64__)
+
+   #include <x86intrin.h>
+
+   static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
+
+   // Drop-in replacement for strlen() and memcpy(), utilizing some builtin SSSE3 instructions
+   static inline int strvlen(const char *str)
+   {
+      if (!str || !*str)
+         return 0;
+
+      unsigned bmask;
+      if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i *)str), nul16)))
+         return __builtin_ctz(bmask);
+
+      for (int len = 16 - (intptr_t)str%16;; len += 16)
+         if (bmask = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128((__m128i *)&str[len]), nul16)))
+            return len + __builtin_ctz(bmask);
+   }
+
+#else
+
+   #define strvlen(s) (int)strlen(s)
+
+#endif
 
 /* version of strlen.  calculates the length of the string s *not*
  * including the terminating '\0' */
