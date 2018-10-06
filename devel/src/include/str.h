@@ -32,6 +32,7 @@ extern "C" {
 
 #if defined(__x86_64__)
 
+   #include <unistd.h>
    #include <x86intrin.h>
 
    static const __m128i nul16 = {0x0000000000000000ULL, 0x0000000000000000ULL};  // 16 bytes with nul
