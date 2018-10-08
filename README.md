@@ -6,7 +6,7 @@ efficiently. It was previously named lucy, and was renamed around May, 2004.
 
 Installation instructions can be found in the file named INSTALL. Zettair was
 written in C and has been tested on Solaris and Linux. It is available for 
-download from http://www.seg.rmit.edu.au.
+download from http://www.seg.rmit.edu.au/zettair/.
 
 [Zettair documentation](http://htmlpreview.github.io/?https://github.com/cyclaero/zettair/blob/master/origin/doc/index.html)
 
