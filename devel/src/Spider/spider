@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# spider script for synchronizing a documents directoy with text/html-file store for indexing with zettair
+# spider script for synchronizing a documents directoy with a text/html-file store for indexing with zettair
 # requirements:
 #  clone     -- for hard linking the store to a temperary directory
 #  pdftotext -- for converting PDF to bare HTML files (tool in the poppler package)
