@@ -39,7 +39,7 @@ CFLAGS += -march=native -mssse3
 CFLAGS += -fsigned-char
 .endif
 
-CFLAGS += -std=gnu11 -fstrict-aliasing -Wno-parentheses -Wno-switch -I../include -I../include/compat
+CFLAGS += -std=gnu11 -fstrict-aliasing -fstack-protector -Wno-parentheses -Wno-switch -I../include -I../include/compat
 LDFLAGS = -L/usr/local/lib -lm -lpthread -lz
 SOURCES = mrwlock.c summarise.c queryparse.c impact_build.c psettings_default.c vec.c dirichlet.c bit.c impact.c search.c \
           getlongopt.c poolalloc.c alloc.c objalloc.c okapi.c stem.c docmap.c index_querybuild.c mem.c psettings.c stack.c \
