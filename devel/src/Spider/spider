@@ -43,20 +43,21 @@ else
 fi
 
 SYNCHRON="synchron"
-ARTICLES="articles"
+SITEROOT="siteroot"
 
-if [ -d "$SYNCHRON" ] && [ -d "$ARTICLES" ]; then
+
+if [ -d "$SYNCHRON" ] && [ -d "$SITEROOT" ]; then
    /usr/local/bin/clone -iv0 "$DOCUMENTS_DIR" "$SYNCHRON"
    /usr/bin/find "$SYNCHRON" \( -links 2 -and \! -type d \) -delete >/dev/null 2>&1
 else
-   rm -rf "$SYNCHRON" "$ARTICLES"
+   rm -rf "$SYNCHRON" "$SITEROOT"
    /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
 fi
 
 /usr/bin/find "$SYNCHRON" \( -name "index.html" -or -name "toc.html" \) -delete >/dev/null 2>&1
 
 /usr/bin/find "$SYNCHRON" -type d | while read -r dname ; do
-   /bin/mkdir -p `echo "$dname" | /usr/bin/sed "s|$SYNCHRON|$ARTICLES|"`
+   /bin/mkdir -p `echo "$dname" | /usr/bin/sed "s|$SYNCHRON|$SITEROOT|"`
 done
 
 
@@ -64,60 +65,60 @@ cd "$SYNCHRON"
 
 /usr/bin/find . \( -iname "*.html" -or -iname "*.htm" \) | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /bin/cat "$DOCUMENTS_DIR/$fname" | /usr/bin/sed -n 's/.*\(<[Tt][Ii][Tt][Ll][Ee]>.*<\/[Tt][Ii][Tt][Ll][Ee]>\).*/<HTML>\1<BODY>/p;/<\!--e-->/,/<\!--E-->/{/<\!--e-->/d;/<\!--E-->/d;p;}' | /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "../$ARTICLES/$fname.iso.html"
-      echo "</BODY></HTML>" >> "../$ARTICLES/$fname.iso.html"
+      /bin/cat "$DOCUMENTS_DIR/$fname" | /usr/bin/sed -n 's/.*\(<[Tt][Ii][Tt][Ll][Ee]>.*<\/[Tt][Ii][Tt][Ll][Ee]>\).*/<HTML>\1<BODY>/p;/<\!--e-->/,/<\!--E-->/{/<\!--e-->/d;/<\!--E-->/d;p;}' | /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "../$SITEROOT/$fname.iso.html"
+      echo "</BODY></HTML>" >> "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . -iname "*.pdf" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$DOCUMENTS_DIR/$fname" "../$ARTICLES/$fname.iso.html"
+      /usr/local/bin/pdftotext -enc Latin1 -htmlmeta "$DOCUMENTS_DIR/$fname" "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . -iname "*.txt" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      echo "<HTML><TITLE>$fanme</TITLE><BODY>" > "../$ARTICLES/$fname.iso.html"
-      /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../$ARTICLES/$fname.iso.html"
-      echo "</BODY></HTML>" >> "../$ARTICLES/$fname.iso.html"
+      echo "<HTML><TITLE>$fanme</TITLE><BODY>" > "../$SITEROOT/$fname.iso.html"
+      /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../$SITEROOT/$fname.iso.html"
+      echo "</BODY></HTML>" >> "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . \( -iname "*.rtf" -or -iname "*.rtfd.zip" \) | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /usr/local/bin/rtftotext.py "$DOCUMENTS_DIR/$fname" > "../$ARTICLES/$fname.iso.html"
+      /usr/local/bin/rtftotext.py "$DOCUMENTS_DIR/$fname" > "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . -iname "*.docx" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /usr/local/bin/docxtotext.py "$DOCUMENTS_DIR/$fname" > "../$ARTICLES/$fname.iso.html"
+      /usr/local/bin/docxtotext.py "$DOCUMENTS_DIR/$fname" > "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . -iname "*.pptx" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /usr/local/bin/pptxtotext.py "$DOCUMENTS_DIR/$fname" > "../$ARTICLES/$fname.iso.html"
+      /usr/local/bin/pptxtotext.py "$DOCUMENTS_DIR/$fname" > "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
 /usr/bin/find . -iname "*.xlsx" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /usr/local/bin/xlsxtotext.py "$DOCUMENTS_DIR/$fname" > "../$ARTICLES/$fname.iso.html"
+      /usr/local/bin/xlsxtotext.py "$DOCUMENTS_DIR/$fname" > "../$SITEROOT/$fname.iso.html"
    else
-      rm -f "../$ARTICLES/$fname.iso.html"
+      rm -f "../$SITEROOT/$fname.iso.html"
    fi
 done
 
@@ -128,6 +129,6 @@ rm -rf "$SYNCHRON"
 /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
 
 rm -f index*
-/usr/bin/find "$ARTICLES" -name "*.iso.html" | /usr/local/bin/zet -i >/dev/null 2>&1
+/usr/bin/find "$SITEROOT" -name "*.iso.html" | /usr/local/bin/zet -i >/dev/null 2>&1
 
 rm -f running
