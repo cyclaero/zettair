@@ -65,7 +65,7 @@ cd "$SYNCHRON"
 
 /usr/bin/find . \( -iname "*.html" -or -iname "*.htm" \) | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
-      /bin/cat "$DOCUMENTS_DIR/$fname" | /usr/bin/sed -n 's/.*\(<[Tt][Ii][Tt][Ll][Ee]>.*<\/[Tt][Ii][Tt][Ll][Ee]>\).*/<HTML>\1<BODY>/p;/<\!--e-->/,/<\!--E-->/{/<\!--e-->/d;/<\!--E-->/d;p;}' | /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "../$SITEROOT/$fname.iso.html"
+      /bin/cat "$DOCUMENTS_DIR/$fname" | /usr/bin/sed -n 's/.*\(<[Tt][Ii][Tt][Ll][Ee]>.*<\/[Tt][Ii][Tt][Ll][Ee]>\).*/<HTML>\1<BODY>/p;/<\!--e-->/,/<\!--E-->/{/<\!--e-->/d;/<\!--E-->/d;p;}' | tr '–' '-' | /usr/bin/iconv -c -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE > "../$SITEROOT/$fname.iso.html"
       echo "</BODY></HTML>" >> "../$SITEROOT/$fname.iso.html"
    else
       rm -f "../$SITEROOT/$fname.iso.html"
@@ -83,7 +83,7 @@ done
 /usr/bin/find . -iname "*.txt" | while read -r fname ; do
    if [ -e "$DOCUMENTS_DIR/$fname" ]; then
       echo "<HTML><TITLE>$fanme</TITLE><BODY>" > "../$SITEROOT/$fname.iso.html"
-      /usr/bin/iconv -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../$SITEROOT/$fname.iso.html"
+      /usr/bin/iconv -c -s -f UTF-8 -t ISO-8859-1//TRANSLIT//IGNORE "$DOCUMENTS_DIR/$fname" >> "../$SITEROOT/$fname.iso.html"
       echo "</BODY></HTML>" >> "../$SITEROOT/$fname.iso.html"
    else
       rm -f "../$SITEROOT/$fname.iso.html"
