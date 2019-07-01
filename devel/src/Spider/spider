@@ -54,7 +54,7 @@ else
    /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
 fi
 
-/usr/bin/find "$SYNCHRON" \( -name "index.html" -or -name "toc.html" \) -delete >/dev/null 2>&1
+/usr/bin/find "$SYNCHRON" -not -path "*/Downloads/*" \( -name "index.html" -or -name "toc.html" \) -delete >/dev/null 2>&1
 
 /usr/bin/find "$SYNCHRON" -type d | while read -r dname ; do
    /bin/mkdir -p `echo "$dname" | /usr/bin/sed "s|$SYNCHRON|$SITEROOT|"`
