@@ -32,9 +32,9 @@ def pptx2text(path):
 
 
 try:
-    print '<HTML><BODY>'
-    print pptx2text(str(sys.argv[1])).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').encode('ISO-8859-1', 'ignore')
-    print '</BODY></HTML>'
+    print('<HTML><BODY>')
+    print(pptx2text(str(sys.argv[1])).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').encode('ISO-8859-1', 'ignore'))
+    print('</BODY></HTML>')
 except:
     sys.exit(1)
 
