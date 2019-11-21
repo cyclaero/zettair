@@ -9,12 +9,12 @@
  * although scripts/mime.py will accept multiple files (in the same format), 
  * allowing you to define your own MIME types as convenient.
  *
- * This file was generated on Thu, 16 Jun 2016 13:58:40 +0000 
+ * This file was generated on Mon, 02 Mar 2009 06:33:29 +0000 
  * by scripts/mime.py
  *
  */
                
-#include "zettair.h"
+#include "firstinclude.h"
 
 #include "mime.h"
 
@@ -34,7 +34,6 @@ static const struct mime_lookup lookup[] = {
     {"application/x-trec", MIME_TOP_TYPE_APPLICATION},
     {"text/css", MIME_TOP_TYPE_TEXT},
     {"text/rtf", MIME_TOP_TYPE_TEXT},
-    {"text/xml", MIME_TOP_TYPE_TEXT},
     {"image/gif", MIME_TOP_TYPE_IMAGE},
     {"image/png", MIME_TOP_TYPE_IMAGE},
     {"audio/mpeg", MIME_TOP_TYPE_AUDIO},
@@ -61,27 +60,20 @@ static const struct mime_lookup lookup[] = {
     {"application/postscript", MIME_TOP_TYPE_APPLICATION},
     {"application/mathematica", MIME_TOP_TYPE_APPLICATION},
     {"application/octet-stream", MIME_TOP_TYPE_APPLICATION},
+    {"text/xml", MIME_TOP_TYPE_TEXT},
     {"application/x-tar", MIME_TOP_TYPE_APPLICATION},
-    {"application/x-gzip", MIME_TOP_TYPE_APPLICATION},
-    {"application/x-bzip2", MIME_TOP_TYPE_APPLICATION},
-    {"audio/L16", MIME_TOP_TYPE_AUDIO},
-    {"audio/L20", MIME_TOP_TYPE_AUDIO},
-    {"audio/L24", MIME_TOP_TYPE_AUDIO},
     {"image/cgm", MIME_TOP_TYPE_IMAGE},
     {"image/ief", MIME_TOP_TYPE_IMAGE},
-    {"text/sgml", MIME_TOP_TYPE_TEXT},
     {"text/t140", MIME_TOP_TYPE_TEXT},
     {"audio/tone", MIME_TOP_TYPE_AUDIO},
     {"model/iges", MIME_TOP_TYPE_MODEL},
     {"model/mesh", MIME_TOP_TYPE_MODEL},
     {"model/vrml", MIME_TOP_TYPE_MODEL},
-    {"audio/DAT12", MIME_TOP_TYPE_AUDIO},
     {"image/g3fax", MIME_TOP_TYPE_IMAGE},
     {"image/naplps", MIME_TOP_TYPE_IMAGE},
     {"message/news", MIME_TOP_TYPE_MESSAGE},
     {"text/vnd.abc", MIME_TOP_TYPE_TEXT},
     {"text/vnd.fly", MIME_TOP_TYPE_TEXT},
-    {"audio/G.722.1", MIME_TOP_TYPE_AUDIO},
     {"audio/prs.sid", MIME_TOP_TYPE_AUDIO},
     {"image/prs.pti", MIME_TOP_TYPE_IMAGE},
     {"image/vnd.dwg", MIME_TOP_TYPE_IMAGE},
@@ -100,7 +92,6 @@ static const struct mime_lookup lookup[] = {
     {"text/richtext", MIME_TOP_TYPE_TEXT},
     {"text/uri-list", MIME_TOP_TYPE_TEXT},
     {"text/vnd.curl", MIME_TOP_TYPE_TEXT},
-    {"video/MP4V-ES", MIME_TOP_TYPE_VIDEO},
     {"video/pointer", MIME_TOP_TYPE_VIDEO},
     {"video/vnd.fvt", MIME_TOP_TYPE_VIDEO},
     {"audio/32kadpcm", MIME_TOP_TYPE_AUDIO},
@@ -114,7 +105,6 @@ static const struct mime_lookup lookup[] = {
     {"application/rtf", MIME_TOP_TYPE_APPLICATION},
     {"application/sdp", MIME_TOP_TYPE_APPLICATION},
     {"application/xml", MIME_TOP_TYPE_APPLICATION},
-    {"audio/MP4A-LATM", MIME_TOP_TYPE_AUDIO},
     {"audio/parityfec", MIME_TOP_TYPE_AUDIO},
     {"audio/vnd.qcelp", MIME_TOP_TYPE_AUDIO},
     {"text/vnd.wap.si", MIME_TOP_TYPE_TEXT},
@@ -145,6 +135,7 @@ static const struct mime_lookup lookup[] = {
     {"application/dec-dx", MIME_TOP_TYPE_APPLICATION},
     {"application/pkcs10", MIME_TOP_TYPE_APPLICATION},
     {"application/riscos", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-gzip", MIME_TOP_TYPE_APPLICATION},
     {"audio/vnd.cns.anp1", MIME_TOP_TYPE_AUDIO},
     {"audio/vnd.cns.inf1", MIME_TOP_TYPE_AUDIO},
     {"audio/vnd.vmx.cvsd", MIME_TOP_TYPE_AUDIO},
@@ -154,8 +145,6 @@ static const struct mime_lookup lookup[] = {
     {"text/vnd.IPTC.NITF", MIME_TOP_TYPE_TEXT},
     {"text/vnd.in3d.3dml", MIME_TOP_TYPE_TEXT},
     {"text/vnd.in3d.spot", MIME_TOP_TYPE_TEXT},
-    {"application/EDI-X12", MIME_TOP_TYPE_APPLICATION},
-    {"application/EDIFACT", MIME_TOP_TYPE_APPLICATION},
     {"application/dca-rft", MIME_TOP_TYPE_APPLICATION},
     {"application/pkixcmp", MIME_TOP_TYPE_APPLICATION},
     {"application/prs.cww", MIME_TOP_TYPE_APPLICATION},
@@ -167,6 +156,7 @@ static const struct mime_lookup lookup[] = {
     {"application/vnd.mif", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.svd", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.vcx", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-bzip2", MIME_TOP_TYPE_APPLICATION},
     {"application/x400-bp", MIME_TOP_TYPE_APPLICATION},
     {"application/xml-dtd", MIME_TOP_TYPE_APPLICATION},
     {"audio/vnd.cisco.nse", MIME_TOP_TYPE_AUDIO},
@@ -220,7 +210,6 @@ static const struct mime_lookup lookup[] = {
     {"audio/vnd.lucent.voice", MIME_TOP_TYPE_AUDIO},
     {"image/vnd.fastbidsheet", MIME_TOP_TYPE_IMAGE},
     {"text/vnd.wap.wmlscript", MIME_TOP_TYPE_TEXT},
-    {"application/EDI-Consent", MIME_TOP_TYPE_APPLICATION},
     {"application/hyperstudio", MIME_TOP_TYPE_APPLICATION},
     {"application/set-payment", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.dpgraph", MIME_TOP_TYPE_APPLICATION},
@@ -279,14 +268,6 @@ static const struct mime_lookup lookup[] = {
     {"text/tab-separated-values", MIME_TOP_TYPE_TEXT},
     {"video/vnd.motorola.videop", MIME_TOP_TYPE_VIDEO},
     {"application/index.response", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.FloGraphIt", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.DAF", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.DIS", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.MBK", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.MQY", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.MSL", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.PLC", MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.Mobius.TXF", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.aether.imp", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.audiograph", MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.canon-cpdl", MIME_TOP_TYPE_APPLICATION},
@@ -404,8 +385,6 @@ static const struct mime_lookup lookup[] = {
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.uplanet.listcmd",
       MIME_TOP_TYPE_APPLICATION},
-    {"text/xml-external-parsed-entity",
-      MIME_TOP_TYPE_TEXT},
     {"application/vnd.3M.Post-it-Notes",
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.epson.quickanime",
@@ -428,11 +407,7 @@ static const struct mime_lookup lookup[] = {
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.hhe.lesson-player",
       MIME_TOP_TYPE_APPLICATION},
-    {"model/vnd.parasolid.transmit.text",
-      MIME_TOP_TYPE_MODEL},
     {"application/set-payment-initiation",
-      MIME_TOP_TYPE_APPLICATION},
-    {"application/vnd.$commerce_battelle",
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.ecowin.filerequest",
       MIME_TOP_TYPE_APPLICATION},
@@ -466,8 +441,6 @@ static const struct mime_lookup lookup[] = {
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.wrq-hp3000-labelled",
       MIME_TOP_TYPE_APPLICATION},
-    {"model/vnd.parasolid.transmit.binary",
-      MIME_TOP_TYPE_MODEL},
     {"application/vnd.ecowin.seriesrequest",
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.groove-tool-template",
@@ -548,12 +521,400 @@ static const struct mime_lookup lookup[] = {
       MIME_TOP_TYPE_APPLICATION},
     {"application/vnd.anser-web-certificate-issue-initiation",
       MIME_TOP_TYPE_APPLICATION},
+    {"text/csv", MIME_TOP_TYPE_TEXT},
+    {"video/dl", MIME_TOP_TYPE_VIDEO},
+    {"video/dv", MIME_TOP_TYPE_VIDEO},
+    {"video/gl", MIME_TOP_TYPE_VIDEO},
+    {"audio/L16", MIME_TOP_TYPE_AUDIO},
+    {"audio/L20", MIME_TOP_TYPE_AUDIO},
+    {"audio/L24", MIME_TOP_TYPE_AUDIO},
+    {"audio/ogg", MIME_TOP_TYPE_AUDIO},
+    {"image/pcx", MIME_TOP_TYPE_IMAGE},
+    {"text/h323", MIME_TOP_TYPE_TEXT},
+    {"text/iuls", MIME_TOP_TYPE_TEXT},
+    {"text/sgml", MIME_TOP_TYPE_TEXT},
+    {"text/x-sh", MIME_TOP_TYPE_TEXT},
+    {"video/fli", MIME_TOP_TYPE_VIDEO},
+    {"video/mp4", MIME_TOP_TYPE_VIDEO},
+    {"video/ogg", MIME_TOP_TYPE_VIDEO},
+    {"audio/3gpp", MIME_TOP_TYPE_AUDIO},
+    {"audio/midi", MIME_TOP_TYPE_AUDIO},
+    {"image/x-jg", MIME_TOP_TYPE_IMAGE},
+    {"inode/fifo", MIME_TOP_TYPE_INODE},
+    {"text/x-boo", MIME_TOP_TYPE_TEXT},
+    {"text/x-csh", MIME_TOP_TYPE_TEXT},
+    {"text/x-moc", MIME_TOP_TYPE_TEXT},
+    {"text/x-tcl", MIME_TOP_TYPE_TEXT},
+    {"text/x-tex", MIME_TOP_TYPE_TEXT},
+    {"video/3gpp", MIME_TOP_TYPE_VIDEO},
+    {"audio/DAT12", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-gsm", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-sd2", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-wav", MIME_TOP_TYPE_AUDIO},
+    {"image/x-jng", MIME_TOP_TYPE_IMAGE},
+    {"image/x-rgb", MIME_TOP_TYPE_IMAGE},
+    {"text/mathml", MIME_TOP_TYPE_TEXT},
+    {"text/x-chdr", MIME_TOP_TYPE_TEXT},
+    {"text/x-csrc", MIME_TOP_TYPE_TEXT},
+    {"text/x-diff", MIME_TOP_TYPE_TEXT},
+    {"text/x-dsrc", MIME_TOP_TYPE_TEXT},
+    {"text/x-java", MIME_TOP_TYPE_TEXT},
+    {"text/x-perl", MIME_TOP_TYPE_TEXT},
+    {"video/x-mng", MIME_TOP_TYPE_VIDEO},
+    {"audio/x-aiff", MIME_TOP_TYPE_AUDIO},
+    {"image/x-icon", MIME_TOP_TYPE_IMAGE},
+    {"inode/socket", MIME_TOP_TYPE_INODE},
+    {"text/english", MIME_TOP_TYPE_TEXT},
+    {"text/texmacs", MIME_TOP_TYPE_TEXT},
+    {"text/x-vcard", MIME_TOP_TYPE_TEXT},
+    {"audio/G.722.1", MIME_TOP_TYPE_AUDIO},
+    {"audio/mpegurl", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-scpls", MIME_TOP_TYPE_AUDIO},
+    {"image/svg+xml", MIME_TOP_TYPE_IMAGE},
+    {"text/x-bibtex", MIME_TOP_TYPE_TEXT},
+    {"text/x-c++hdr", MIME_TOP_TYPE_TEXT},
+    {"text/x-c++src", MIME_TOP_TYPE_TEXT},
+    {"text/x-pascal", MIME_TOP_TYPE_TEXT},
+    {"text/x-python", MIME_TOP_TYPE_TEXT},
+    {"text/x-setext", MIME_TOP_TYPE_TEXT},
+    {"video/MP4V-ES", MIME_TOP_TYPE_VIDEO},
+    {"video/vnd.mts", MIME_TOP_TYPE_VIDEO},
+    {"video/x-ms-wm", MIME_TOP_TYPE_VIDEO},
+    {"audio/x-ms-wax", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-ms-wma", MIME_TOP_TYPE_AUDIO},
+    {"chemical/x-cdx", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-cif", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-cml", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-ctx", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-cxf", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-hin", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-pdb", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-vmd", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-xyz", MIME_TOP_TYPE_CHEMICAL},
+    {"image/vnd.djvu", MIME_TOP_TYPE_IMAGE},
+    {"image/x-ms-bmp", MIME_TOP_TYPE_IMAGE},
+    {"text/scriptlet", MIME_TOP_TYPE_TEXT},
+    {"text/x-crontab", MIME_TOP_TYPE_TEXT},
+    {"text/x-haskell", MIME_TOP_TYPE_TEXT},
+    {"text/x-pcs-gcd", MIME_TOP_TYPE_TEXT},
+    {"video/x-la-asf", MIME_TOP_TYPE_VIDEO},
+    {"video/x-ms-asf", MIME_TOP_TYPE_VIDEO},
+    {"video/x-ms-wmv", MIME_TOP_TYPE_VIDEO},
+    {"video/x-ms-wmx", MIME_TOP_TYPE_VIDEO},
+    {"video/x-ms-wvx", MIME_TOP_TYPE_VIDEO},
+    {"x-world/x-vrml", MIME_TOP_TYPE_X_WORLD},
+    {"application/cap", MIME_TOP_TYPE_APPLICATION},
+    {"application/hta", MIME_TOP_TYPE_APPLICATION},
+    {"application/ogg", MIME_TOP_TYPE_APPLICATION},
+    {"application/rar", MIME_TOP_TYPE_APPLICATION},
+    {"audio/MP4A-LATM", MIME_TOP_TYPE_AUDIO},
+    {"audio/x-mpegurl", MIME_TOP_TYPE_AUDIO},
+    {"chemical/x-cmdf", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-csml", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mol2", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-xtel", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-xbitmap", MIME_TOP_TYPE_IMAGE},
+    {"image/x-xpixmap", MIME_TOP_TYPE_IMAGE},
+    {"inode/directory", MIME_TOP_TYPE_INODE},
+    {"text/x-makefile", MIME_TOP_TYPE_TEXT},
+    {"video/x-msvideo", MIME_TOP_TYPE_VIDEO},
+    {"application/atom", MIME_TOP_TYPE_APPLICATION},
+    {"application/smil", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-rx", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-sh", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-cache", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mmcif", MIME_TOP_TYPE_CHEMICAL},
+    {"inode/chardevice", MIME_TOP_TYPE_INODE},
+    {"text/x-component", MIME_TOP_TYPE_TEXT},
+    {"text/x-vcalendar", MIME_TOP_TYPE_TEXT},
+    {"application/x-123", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cab", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cbr", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cbz", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cdf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-csh", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-dms", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-dvi", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-hdf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-ica", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-lha", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-lyx", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-lzh", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-lzx", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-mif", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-msi", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-nwc", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-tcl", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-xcf", MIME_TOP_TYPE_APPLICATION},
+    {"audio/x-realaudio", MIME_TOP_TYPE_AUDIO},
+    {"chemical/x-cerius", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-chem3d", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-rosdal", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-coreldraw", MIME_TOP_TYPE_IMAGE},
+    {"image/x-photoshop", MIME_TOP_TYPE_IMAGE},
+    {"inode/blockdevice", MIME_TOP_TYPE_INODE},
+    {"video/x-sgi-movie", MIME_TOP_TYPE_VIDEO},
+    {"x-epoc/x-sisx-app", MIME_TOP_TYPE_X_EPOC},
+    {"application/x-core", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cpio", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-doom", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-flac", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-font", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-gtar", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-jmol", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-koan", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-shar", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-xfig", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-alchemy", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-compass", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-genbank", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-isostar", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mdl-tgf", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-cmu-raster", MIME_TOP_TYPE_IMAGE},
+    {"application/EDI-X12", MIME_TOP_TYPE_APPLICATION},
+    {"application/EDIFACT", MIME_TOP_TYPE_APPLICATION},
+    {"application/dsptype", MIME_TOP_TYPE_APPLICATION},
+    {"application/java-vm", MIME_TOP_TYPE_APPLICATION},
+    {"application/ms-tnef", MIME_TOP_TYPE_APPLICATION},
+    {"application/rdf+xml", MIME_TOP_TYPE_APPLICATION},
+    {"application/rss+xml", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-bcpio", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-kword", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-latex", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-maker", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-trash", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-troff", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-ustar", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-wingz", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-chemdraw", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-jcamp-dx", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-kinemage", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-xwindowdump", MIME_TOP_TYPE_IMAGE},
+    {"application/cu-seeme", MIME_TOP_TYPE_APPLICATION},
+    {"application/msaccess", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.smaf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-cdlink", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-go-sgf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-iphone", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-kchart", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-kdelnk", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-ms-wmd", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-ms-wmz", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-netcdf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-object", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-sv4crc", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-tex-gf", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-tex-pk", MIME_TOP_TYPE_APPLICATION},
+    {"audio/x-pn-realaudio", MIME_TOP_TYPE_AUDIO},
+    {"chemical/x-cache-csf", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-crossfire", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-molconn-Z", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mopac-out", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mopac-vib", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-ncbi-asn1", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-swissprot", MIME_TOP_TYPE_CHEMICAL},
+    {"application/ghostview", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-abiword", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-kspread", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-stuffit", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-sv4cpio", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-texinfo", MIME_TOP_TYPE_APPLICATION},
+    {"application/xhtml+xml", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-mdl-rdfile", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mdl-sdfile", MIME_TOP_TYPE_CHEMICAL},
+    {"application/pics-rules", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-director", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-freemind", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-gnumeric", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-troff-me", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-troff-ms", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-videolan", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-macmolecule", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mdl-molfile", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mdl-rxnfile", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mopac-graph", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-mopac-input", MIME_TOP_TYPE_CHEMICAL},
+    {"inode/directory-locked", MIME_TOP_TYPE_INODE},
+    {"text/vnd.flatland.3dml", MIME_TOP_TYPE_TEXT},
+    {"application/EDI-Consent", MIME_TOP_TYPE_APPLICATION},
+    {"application/atomcat+xml", MIME_TOP_TYPE_APPLICATION},
+    {"application/docbook+xml", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.rim.cod", MIME_TOP_TYPE_APPLICATION},
+    {"application/wordperfect", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-chess-pgn", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-httpd-php", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-java-bean", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-pkcs7-crl", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-troff-man", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-xpinstall", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-galactic-spc", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-gamess-input", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-gaussian-log", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-corelphotopaint", MIME_TOP_TYPE_IMAGE},
+    {"image/x-portable-anymap", MIME_TOP_TYPE_IMAGE},
+    {"image/x-portable-bitmap", MIME_TOP_TYPE_IMAGE},
+    {"image/x-portable-pixmap", MIME_TOP_TYPE_IMAGE},
+    {"text/x-literate-haskell", MIME_TOP_TYPE_TEXT},
+    {"x-conference/x-cooltalk", MIME_TOP_TYPE_X_CONFERENCE},
+    {"application/atomserv+xml", MIME_TOP_TYPE_APPLICATION},
+    {"application/futuresplash", MIME_TOP_TYPE_APPLICATION},
+    {"application/java-archive", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-bittorrent", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-executable", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-httpd-php3", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-httpd-php4", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-javascript", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-kpresenter", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-cactvs-binary", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-gaussian-cube", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-gcg8-sequence", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-coreldrawpattern", MIME_TOP_TYPE_IMAGE},
+    {"image/x-portable-graymap", MIME_TOP_TYPE_IMAGE},
+    {"application/x-httpd-eruby", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-java-applet", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-python-code", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-shellscript", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-wais-source", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-gaussian-input", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-ncbi-asn1-spec", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-vamas-iso14976", MIME_TOP_TYPE_CHEMICAL},
+    {"image/x-coreldrawtemplate", MIME_TOP_TYPE_IMAGE},
+    {"text/x-server-parsed-html", MIME_TOP_TYPE_TEXT},
+    {"application/mac-compactpro", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.FloGraphIt", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.DAF", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.DIS", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.MBK", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.MQY", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.MSL", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.PLC", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.Mobius.TXF", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.cinderella", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.ms-pki.stl", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-futuresplash", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-killustrator", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-x509-ca-cert", MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-ncbi-asn1-ascii", MIME_TOP_TYPE_CHEMICAL},
+    {"application/mathematica-old", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.cosmocaller", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-7z-compressed", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-iso9660-image", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-msdos-program", MIME_TOP_TYPE_APPLICATION},
+    {"audio/x-pn-realaudio-plugin", MIME_TOP_TYPE_AUDIO},
+    {"chemical/x-macromodel-input", MIME_TOP_TYPE_CHEMICAL},
+    {"chemical/x-ncbi-asn1-binary", MIME_TOP_TYPE_CHEMICAL},
+    {"application/vnd.sun.xml.calc", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.draw", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.math", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-debian-package", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-java-jnlp-file", MIME_TOP_TYPE_APPLICATION},
+    {"application/x-oz-application", MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.ms-pki.seccat",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-apple-diskimage",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-internet-signup",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-quicktimeplayer",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-shockwave-flash",
+      MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-embl-dl-nucleotide",
+      MIME_TOP_TYPE_CHEMICAL},
+    {"application/vnd.sun.xml.writer",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-httpd-php-source",
+      MIME_TOP_TYPE_APPLICATION},
+    {"chemical/x-gaussian-checkpoint",
+      MIME_TOP_TYPE_CHEMICAL},
+    {"application/vnd.sun.xml.impress",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.symbian.install",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-pkcs7-certreqresp",
+      MIME_TOP_TYPE_APPLICATION},
+    {"text/xml-external-parsed-entity",
+      MIME_TOP_TYPE_TEXT},
+    {"application/vnd.google-earth.kmz",
+      MIME_TOP_TYPE_APPLICATION},
+    {"text/vnd.sun.j2me.app-descriptor",
+      MIME_TOP_TYPE_TEXT},
+    {"application/vnd.stardivision.calc",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.draw",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.math",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-graphing-calculator",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-ns-proxy-autoconfig",
+      MIME_TOP_TYPE_APPLICATION},
+    {"model/vnd.parasolid.transmit.text",
+      MIME_TOP_TYPE_MODEL},
+    {"application/java-serialized-object",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.$commerce_battelle",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.chart",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.writer",
+      MIME_TOP_TYPE_APPLICATION},
+    {"model/vnd.parasolid.transmit.binary",
+      MIME_TOP_TYPE_MODEL},
+    {"application/vnd.google-earth.kml+xml",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.impress",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-redhat-package-manager",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.calc.template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.draw.template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.writer.global",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/x-httpd-php3-preprocessed",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.text",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.writer.template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.chart",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.image",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.sun.xml.impress.template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.formula",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.stardivision.writer-global",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.database",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.graphics",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.text-web",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.spreadsheet",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.text-master",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.presentation",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.text-template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.graphics-template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.spreadsheet-template",
+      MIME_TOP_TYPE_APPLICATION},
+    {"application/vnd.oasis.opendocument.presentation-template",
+      MIME_TOP_TYPE_APPLICATION},
 
     {NULL, MIME_TOP_TYPE_ERR}
 };
 
 const char *mime_string(enum mime_types mtype) {
-    if (mtype <= 409) {
+    if (mtype <= 724) {
         return lookup[mtype].name;
     } else {
         return NULL;
@@ -561,7 +922,7 @@ const char *mime_string(enum mime_types mtype) {
 }
 
 enum mime_top_types mime_top_type(enum mime_types mtype) {
-    if (mtype <= 409) {
+    if (mtype <= 724) {
         return lookup[mtype].toptype;
     } else {
         return MIME_TOP_TYPE_ERR;
@@ -572,10 +933,6 @@ enum mime_top_types mime_top_type(enum mime_types mtype) {
 /* FIXME: do this properly, using parsing-type stuff */
 enum mime_types mime_content_guess(const void *buf, unsigned int len) {
     const char *cbuf = buf;
-
-    if (len == 0) {
-        return MIME_TYPE_APPLICATION_OCTET_STREAM;
-    }
 
     if (len >= 4) {
         /* test for JPEG */
@@ -648,40 +1005,40 @@ enum mime_types mime_content_guess(const void *buf, unsigned int len) {
     }
 
     /* TREC documents */
-    if (((len >= strvlen("<doc>")) 
-        && !str_ncasecmp("<doc>", cbuf, strvlen("<doc>")))) {
+    if (((len >= str_len("<doc>")) 
+        && !str_ncasecmp("<doc>", cbuf, str_len("<doc>")))) {
         return MIME_TYPE_APPLICATION_X_TREC;
     }
 
     /* INEX documents */
-    if (((len >= strvlen("<article>")) 
-        && !str_ncasecmp("<article>", cbuf, strvlen("<article>")))) {
+    if (((len >= str_len("<article>")) 
+        && !str_ncasecmp("<article>", cbuf, str_len("<article>")))) {
         return MIME_TYPE_APPLICATION_X_INEX;
     }
 
     /* HTML */
-    if (((len >= strvlen("<!doctype html")) 
-        && !str_ncasecmp("<!doctype html", cbuf, strvlen("<!doctype html")))
-      || ((len >= strvlen("<head")) 
-        && !str_ncasecmp("<head", cbuf, strvlen("<head")))
-      || ((len >= strvlen("<title")) 
-        && !str_ncasecmp("<title", cbuf, strvlen("<title")))
-      || ((len >= strvlen("<html")) 
-        && !str_ncasecmp("<html", cbuf, strvlen("<html")))) {
+    if (((len >= str_len("<!doctype html")) 
+        && !str_ncasecmp("<!doctype html", cbuf, str_len("<!doctype html")))
+      || ((len >= str_len("<head")) 
+        && !str_ncasecmp("<head", cbuf, str_len("<head")))
+      || ((len >= str_len("<title")) 
+        && !str_ncasecmp("<title", cbuf, str_len("<title")))
+      || ((len >= str_len("<html")) 
+        && !str_ncasecmp("<html", cbuf, str_len("<html")))) {
         return MIME_TYPE_TEXT_HTML;
     }
 
     /* SGML */
-    if (((len >= strvlen("<!doctype ")) 
-        && !str_ncasecmp("<!doctype ", cbuf, strvlen("<!doctype ")))
-      || ((len >= strvlen("<subdoc")) 
-        && !str_ncasecmp("<subdoc", cbuf, strvlen("<subdoc")))) {
+    if (((len >= str_len("<!doctype ")) 
+        && !str_ncasecmp("<!doctype ", cbuf, str_len("<!doctype ")))
+      || ((len >= str_len("<subdoc")) 
+        && !str_ncasecmp("<subdoc", cbuf, str_len("<subdoc")))) {
         return MIME_TYPE_TEXT_SGML;
     }
 
     /* XML */
-    if (((len >= strvlen("<?xml")) 
-        && !str_ncasecmp("<?xml", cbuf, strvlen("<?xml")))) {
+    if (((len >= str_len("<?xml")) 
+        && !str_ncasecmp("<?xml", cbuf, str_len("<?xml")))) {
         return MIME_TYPE_TEXT_XML;
     }
 
@@ -697,15 +1054,19 @@ enum mime_types mime_type(const char *str) {
     case 'A':
         goto a_label;
 
-    case 'i':
-    case 'I':
-        /* skip to prefix 'image/' */
-        if (!str_ncasecmp(str, "mage/", 5)) {
-            str += 5;
-            goto image__label;
+    case 'c':
+    case 'C':
+        /* skip to prefix 'chemical/x-' */
+        if (!str_ncasecmp(str, "hemical/x-", 10)) {
+            str += 10;
+            goto chemical_x__label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+
+    case 'i':
+    case 'I':
+        goto i_label;
 
     case 'm':
     case 'M':
@@ -727,6 +1088,16 @@ enum mime_types mime_type(const char *str) {
         if (!str_ncasecmp(str, "ideo/", 5)) {
             str += 5;
             goto video__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'x':
+    case 'X':
+        /* skip to prefix 'x-' */
+        if (!str_ncasecmp(str, "-", 1)) {
+            str += 1;
+            goto x__label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -783,16 +1154,20 @@ application__label:
     case 'D':
         goto application_d_label;
 
-    case 'f':
-    case 'F':
-        /* must be 'application/font-tdpfr' or unrecognised */
+    case 'g':
+    case 'G':
+        /* must be 'application/ghostview' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_FONT_TDPFR].name[13])) {
-            return MIME_TYPE_APPLICATION_FONT_TDPFR;
+          &lookup[MIME_TYPE_APPLICATION_GHOSTVIEW].name[13])) {
+            return MIME_TYPE_APPLICATION_GHOSTVIEW;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
         break;
+
+    case 'f':
+    case 'F':
+        goto application_f_label;
 
     case 'i':
     case 'I':
@@ -801,6 +1176,16 @@ application__label:
     case 'h':
     case 'H':
         goto application_h_label;
+
+    case 'j':
+    case 'J':
+        /* skip to prefix 'application/java-' */
+        if (!str_ncasecmp(str, "ava-", 4)) {
+            str += 4;
+            goto application_java__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
 
     case 'm':
     case 'M':
@@ -906,14 +1291,13 @@ application_a_label:
 
     case 't':
     case 'T':
-        /* must be 'application/atomicmail' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_ATOMICMAIL].name[14])) {
-            return MIME_TYPE_APPLICATION_ATOMICMAIL;
+        /* skip to prefix 'application/atom' */
+        if (!str_ncasecmp(str, "om", 2)) {
+            str += 2;
+            goto application_atom_label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
-        break;
 
     case 'n':
     case 'N':
@@ -930,18 +1314,53 @@ application_a_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
-application_c_label:
+application_atom_label:
     switch (*str++) {
-    case 'a':
-    case 'A':
-        /* must be 'application/cals-1840' or unrecognised */
+    case '\0':
+        return MIME_TYPE_APPLICATION_ATOM;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/atomicmail' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_CALS_1840].name[14])) {
-            return MIME_TYPE_APPLICATION_CALS_1840;
+          &lookup[MIME_TYPE_APPLICATION_ATOMICMAIL].name[17])) {
+            return MIME_TYPE_APPLICATION_ATOMICMAIL;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
         break;
+
+    case 'c':
+    case 'C':
+        /* must be 'application/atomcat+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_ATOMCAT_XML].name[17])) {
+            return MIME_TYPE_APPLICATION_ATOMCAT_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/atomserv+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_ATOMSERV_XML].name[17])) {
+            return MIME_TYPE_APPLICATION_ATOMSERV_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_c_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        goto application_ca_label;
 
     case 'y':
     case 'Y':
@@ -954,12 +1373,51 @@ application_c_label:
         }
         break;
 
+    case 'u':
+    case 'U':
+        /* must be 'application/cu-seeme' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_CU_SEEME].name[14])) {
+            return MIME_TYPE_APPLICATION_CU_SEEME;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'o':
     case 'O':
         /* must be 'application/commonground' or unrecognised */
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_COMMONGROUND].name[14])) {
             return MIME_TYPE_APPLICATION_COMMONGROUND;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_ca_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/cap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_CAP].name[15])) {
+            return MIME_TYPE_APPLICATION_CAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'application/cals-1840' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_CALS_1840].name[15])) {
+            return MIME_TYPE_APPLICATION_CALS_1840;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1096,12 +1554,62 @@ application_d_label:
         }
         break;
 
+    case 's':
+    case 'S':
+        /* must be 'application/dsptype' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_DSPTYPE].name[14])) {
+            return MIME_TYPE_APPLICATION_DSPTYPE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/docbook+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_DOCBOOK_XML].name[14])) {
+            return MIME_TYPE_APPLICATION_DOCBOOK_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'v':
     case 'V':
         /* must be 'application/dvcs' or unrecognised */
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_DVCS].name[14])) {
             return MIME_TYPE_APPLICATION_DVCS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_f_label:
+    switch (*str++) {
+    case 'u':
+    case 'U':
+        /* must be 'application/futuresplash' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_FUTURESPLASH].name[14])) {
+            return MIME_TYPE_APPLICATION_FUTURESPLASH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/font-tdpfr' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_FONT_TDPFR].name[14])) {
+            return MIME_TYPE_APPLICATION_FONT_TDPFR;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1248,10 +1756,70 @@ application_h_label:
 
     case 't':
     case 'T':
+        goto application_ht_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_ht_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/hta' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_HTA].name[15])) {
+            return MIME_TYPE_APPLICATION_HTA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
         /* must be 'application/http' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_HTTP].name[14])) {
+          &lookup[MIME_TYPE_APPLICATION_HTTP].name[15])) {
             return MIME_TYPE_APPLICATION_HTTP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_java__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/java-archive' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_JAVA_ARCHIVE].name[18])) {
+            return MIME_TYPE_APPLICATION_JAVA_ARCHIVE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/java-serialized-object' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_JAVA_SERIALIZED_OBJECT].name[18])) {
+            return MIME_TYPE_APPLICATION_JAVA_SERIALIZED_OBJECT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'application/java-vm' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_JAVA_VM].name[18])) {
+            return MIME_TYPE_APPLICATION_JAVA_VM;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1269,14 +1837,7 @@ application_m_label:
 
     case 's':
     case 'S':
-        /* must be 'application/msword' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_MSWORD].name[14])) {
-            return MIME_TYPE_APPLICATION_MSWORD;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
+        goto application_ms_label;
 
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -1301,10 +1862,29 @@ application_ma_label:
 
     case 't':
     case 'T':
-        /* must be 'application/mathematica' or unrecognised */
+        /* skip to prefix 'application/mathematica' */
+        if (!str_ncasecmp(str, "hematica", 8)) {
+            str += 8;
+            goto application_mathematica_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_mac_label:
+    switch (*str++) {
+    case '-':
+        goto application_mac__label;
+
+    case 'w':
+    case 'W':
+        /* must be 'application/macwriteii' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_MATHEMATICA].name[15])) {
-            return MIME_TYPE_APPLICATION_MATHEMATICA;
+          &lookup[MIME_TYPE_APPLICATION_MACWRITEII].name[16])) {
+            return MIME_TYPE_APPLICATION_MACWRITEII;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1314,13 +1894,71 @@ application_ma_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
-application_mac_label:
+application_mac__label:
     switch (*str++) {
-    case '-':
+    case 'c':
+    case 'C':
+        /* must be 'application/mac-compactpro' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_MAC_COMPACTPRO].name[17])) {
+            return MIME_TYPE_APPLICATION_MAC_COMPACTPRO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
         /* must be 'application/mac-binhex40' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_MAC_BINHEX40].name[16])) {
+          &lookup[MIME_TYPE_APPLICATION_MAC_BINHEX40].name[17])) {
             return MIME_TYPE_APPLICATION_MAC_BINHEX40;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_mathematica_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_MATHEMATICA;
+
+    case '-':
+        /* must be 'application/mathematica-old' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_MATHEMATICA_OLD].name[24])) {
+            return MIME_TYPE_APPLICATION_MATHEMATICA_OLD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_ms_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/msaccess' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_MSACCESS].name[15])) {
+            return MIME_TYPE_APPLICATION_MSACCESS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '-':
+        /* must be 'application/ms-tnef' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_MS_TNEF].name[15])) {
+            return MIME_TYPE_APPLICATION_MS_TNEF;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1328,10 +1966,10 @@ application_mac_label:
 
     case 'w':
     case 'W':
-        /* must be 'application/macwriteii' or unrecognised */
+        /* must be 'application/msword' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_MACWRITEII].name[16])) {
-            return MIME_TYPE_APPLICATION_MACWRITEII;
+          &lookup[MIME_TYPE_APPLICATION_MSWORD].name[15])) {
+            return MIME_TYPE_APPLICATION_MSWORD;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1353,6 +1991,17 @@ application_o_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_ODA].name[14])) {
             return MIME_TYPE_APPLICATION_ODA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'application/ogg' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_OGG].name[14])) {
+            return MIME_TYPE_APPLICATION_OGG;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1478,6 +2127,17 @@ application_p_label:
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+
+    case 'i':
+    case 'I':
+        /* must be 'application/pics-rules' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_PICS_RULES].name[14])) {
+            return MIME_TYPE_APPLICATION_PICS_RULES;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
 
     case 'k':
     case 'K':
@@ -1721,17 +2381,6 @@ application_prs__label:
 
 application_s_label:
     switch (*str++) {
-    case 'i':
-    case 'I':
-        /* must be 'application/sieve' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_SIEVE].name[14])) {
-            return MIME_TYPE_APPLICATION_SIEVE;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
-
     case 'e':
     case 'E':
         /* skip to prefix 'application/set-' */
@@ -1762,6 +2411,28 @@ application_s_label:
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+
+    case 'i':
+    case 'I':
+        /* must be 'application/sieve' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_SIEVE].name[14])) {
+            return MIME_TYPE_APPLICATION_SIEVE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* must be 'application/smil' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_SMIL].name[14])) {
+            return MIME_TYPE_APPLICATION_SMIL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
 
     case 'l':
     case 'L':
@@ -1863,12 +2534,12 @@ application_sgml_label:
 
 application_r_label:
     switch (*str++) {
-    case 'i':
-    case 'I':
-        /* must be 'application/riscos' or unrecognised */
+    case 'a':
+    case 'A':
+        /* must be 'application/rar' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_RISCOS].name[14])) {
-            return MIME_TYPE_APPLICATION_RISCOS;
+          &lookup[MIME_TYPE_APPLICATION_RAR].name[14])) {
+            return MIME_TYPE_APPLICATION_RAR;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1880,6 +2551,39 @@ application_r_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_REMOTE_PRINTING].name[14])) {
             return MIME_TYPE_APPLICATION_REMOTE_PRINTING;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'application/rdf+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_RDF_XML].name[14])) {
+            return MIME_TYPE_APPLICATION_RDF_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/riscos' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_RISCOS].name[14])) {
+            return MIME_TYPE_APPLICATION_RISCOS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/rss+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_RSS_XML].name[14])) {
+            return MIME_TYPE_APPLICATION_RSS_XML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -1953,14 +2657,13 @@ application_w_label:
 
     case 'o':
     case 'O':
-        /* must be 'application/wordperfect5.1' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_WORDPERFECT5_1].name[14])) {
-            return MIME_TYPE_APPLICATION_WORDPERFECT5_1;
+        /* skip to prefix 'application/wordperfect' */
+        if (!str_ncasecmp(str, "rdperfect", 9)) {
+            str += 9;
+            goto application_wordperfect_label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
-        break;
 
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -1985,6 +2688,25 @@ application_whoispp__label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_WHOISPP_RESPONSE].name[21])) {
             return MIME_TYPE_APPLICATION_WHOISPP_RESPONSE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_wordperfect_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_WORDPERFECT;
+
+    case '5':
+        /* must be 'application/wordperfect5.1' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_WORDPERFECT5_1].name[24])) {
+            return MIME_TYPE_APPLICATION_WORDPERFECT5_1;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -2065,13 +2787,7 @@ application_vnd__label:
 
     case 'g':
     case 'G':
-        /* skip to prefix 'application/vnd.gr' */
-        if (!str_ncasecmp(str, "r", 1)) {
-            str += 1;
-            goto application_vnd_gr_label;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
+        goto application_vnd_g_label;
 
     case 'f':
     case 'F':
@@ -2122,14 +2838,7 @@ application_vnd__label:
 
     case 'o':
     case 'O':
-        /* must be 'application/vnd.osa.netdeploy' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_VND_OSA_NETDEPLOY].name[17])) {
-            return MIME_TYPE_APPLICATION_VND_OSA_NETDEPLOY;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
+        goto application_vnd_o_label;
 
     case 'n':
     case 'N':
@@ -2145,14 +2854,7 @@ application_vnd__label:
 
     case 'r':
     case 'R':
-        /* must be 'application/vnd.rapid' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_VND_RAPID].name[17])) {
-            return MIME_TYPE_APPLICATION_VND_RAPID;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
+        goto application_vnd_r_label;
 
     case 'u':
     case 'U':
@@ -2326,6 +3028,17 @@ application_vnd_c_label:
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
 
+    case 'i':
+    case 'I':
+        /* must be 'application/vnd.cinderella' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_CINDERELLA].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_CINDERELLA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'l':
     case 'L':
         /* must be 'application/vnd.claymore' or unrecognised */
@@ -2407,6 +3120,17 @@ application_vnd_canon__label:
 
 application_vnd_co_label:
     switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'application/vnd.cosmocaller' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_COSMOCALLER].name[19])) {
+            return MIME_TYPE_APPLICATION_VND_COSMOCALLER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'm':
     case 'M':
         goto application_vnd_com_label;
@@ -2823,6 +3547,26 @@ application_vnd_d_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
+application_vnd_g_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        goto application_vnd_gr_label;
+
+    case 'o':
+    case 'O':
+        /* skip to prefix 'application/vnd.google-earth.km' */
+        if (!str_ncasecmp(str, "ogle-earth.km", 13)) {
+            str += 13;
+            goto application_vnd_google_earth_km_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
 application_vnd_gr_label:
     switch (*str++) {
     case 'a':
@@ -2939,6 +3683,34 @@ application_vnd_groove_tool__label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_VND_GROOVE_TOOL_TEMPLATE].name[29])) {
             return MIME_TYPE_APPLICATION_VND_GROOVE_TOOL_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_google_earth_km_label:
+    switch (*str++) {
+    case 'z':
+    case 'Z':
+        /* must be 'application/vnd.google-earth.kmz' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_GOOGLE_EARTH_KMZ].name[32])) {
+            return MIME_TYPE_APPLICATION_VND_GOOGLE_EARTH_KMZ;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'application/vnd.google-earth.kml+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_GOOGLE_EARTH_KML_XML].name[32])) {
+            return MIME_TYPE_APPLICATION_VND_GOOGLE_EARTH_KML_XML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -4079,6 +4851,16 @@ application_vnd_ms_a_label:
 
 application_vnd_ms_p_label:
     switch (*str++) {
+    case 'k':
+    case 'K':
+        /* skip to prefix 'application/vnd.ms-pki.s' */
+        if (!str_ncasecmp(str, "i.s", 3)) {
+            str += 3;
+            goto application_vnd_ms_pki_s_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
     case 'r':
     case 'R':
         /* must be 'application/vnd.ms-project' or unrecognised */
@@ -4096,6 +4878,34 @@ application_vnd_ms_p_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_VND_MS_POWERPOINT].name[21])) {
             return MIME_TYPE_APPLICATION_VND_MS_POWERPOINT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_ms_pki_s_label:
+    switch (*str++) {
+    case 'e':
+    case 'E':
+        /* must be 'application/vnd.ms-pki.seccat' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_MS_PKI_SECCAT].name[25])) {
+            return MIME_TYPE_APPLICATION_VND_MS_PKI_SECCAT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'application/vnd.ms-pki.stl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_MS_PKI_STL].name[25])) {
+            return MIME_TYPE_APPLICATION_VND_MS_PKI_STL;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -4205,6 +5015,231 @@ application_vnd_lotus__label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_VND_LOTUS_WORDPRO].name[23])) {
             return MIME_TYPE_APPLICATION_VND_LOTUS_WORDPRO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_o_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* skip to prefix 'application/vnd.oasis.opendocument.' */
+        if (!str_ncasecmp(str, "sis.opendocument.", 17)) {
+            str += 17;
+            goto application_vnd_oasis_opendocument__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 's':
+    case 'S':
+        /* must be 'application/vnd.osa.netdeploy' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OSA_NETDEPLOY].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_OSA_NETDEPLOY;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument__label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'application/vnd.oasis.opendocument.chart' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_CHART].name[36])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_CHART;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'application/vnd.oasis.opendocument.database' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_DATABASE].name[36])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_DATABASE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* skip to prefix 'application/vnd.oasis.opendocument.graphics' */
+        if (!str_ncasecmp(str, "raphics", 7)) {
+            str += 7;
+            goto application_vnd_oasis_opendocument_graphics_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'f':
+    case 'F':
+        /* must be 'application/vnd.oasis.opendocument.formula' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_FORMULA].name[36])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_FORMULA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/vnd.oasis.opendocument.image' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_IMAGE].name[36])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_IMAGE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        /* skip to prefix 'application/vnd.oasis.opendocument.presentation' */
+        if (!str_ncasecmp(str, "resentation", 11)) {
+            str += 11;
+            goto application_vnd_oasis_opendocument_presentation_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 's':
+    case 'S':
+        /* skip to prefix 'application/vnd.oasis.opendocument.spreadsheet' */
+        if (!str_ncasecmp(str, "preadsheet", 10)) {
+            str += 10;
+            goto application_vnd_oasis_opendocument_spreadsheet_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 't':
+    case 'T':
+        /* skip to prefix 'application/vnd.oasis.opendocument.text' */
+        if (!str_ncasecmp(str, "ext", 3)) {
+            str += 3;
+            goto application_vnd_oasis_opendocument_text_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument_graphics_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_GRAPHICS;
+
+    case '-':
+        /* must be 'application/vnd.oasis.opendocument.graphics-template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_GRAPHICS_TEMPLATE].name[44])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_GRAPHICS_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument_presentation_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_PRESENTATION;
+
+    case '-':
+        /* must be 'application/vnd.oasis.opendocument.presentation-template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_PRESENTATION_TEMPLATE].name[48])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_PRESENTATION_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument_spreadsheet_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_SPREADSHEET;
+
+    case '-':
+        /* must be 'application/vnd.oasis.opendocument.spreadsheet-template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_SPREADSHEET_TEMPLATE].name[47])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_SPREADSHEET_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument_text_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT;
+
+    case '-':
+        goto application_vnd_oasis_opendocument_text__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_oasis_opendocument_text__label:
+    switch (*str++) {
+    case 'm':
+    case 'M':
+        /* must be 'application/vnd.oasis.opendocument.text-master' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_MASTER].name[41])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_MASTER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'application/vnd.oasis.opendocument.text-template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_TEMPLATE].name[41])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'application/vnd.oasis.opendocument.text-web' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_WEB].name[41])) {
+            return MIME_TYPE_APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT_WEB;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -4553,6 +5588,17 @@ application_vnd_s_label:
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
 
+    case 'm':
+    case 'M':
+        /* must be 'application/vnd.smaf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SMAF].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_SMAF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 's':
     case 'S':
         /* skip to prefix 'application/vnd.sss-' */
@@ -4573,16 +5619,19 @@ application_vnd_s_label:
         }
         break;
 
-    case 't':
-    case 'T':
-        /* must be 'application/vnd.street-stream' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_VND_STREET_STREAM].name[18])) {
-            return MIME_TYPE_APPLICATION_VND_STREET_STREAM;
+    case 'u':
+    case 'U':
+        /* skip to prefix 'application/vnd.sun.xml.' */
+        if (!str_ncasecmp(str, "n.xml.", 6)) {
+            str += 6;
+            goto application_vnd_sun_xml__label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
-        break;
+
+    case 't':
+    case 'T':
+        goto application_vnd_st_label;
 
     case 'w':
     case 'W':
@@ -4601,6 +5650,17 @@ application_vnd_s_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_VND_SVD].name[18])) {
             return MIME_TYPE_APPLICATION_VND_SVD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'y':
+    case 'Y':
+        /* must be 'application/vnd.symbian.install' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SYMBIAN_INSTALL].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_SYMBIAN_INSTALL;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -4706,6 +5766,315 @@ application_vnd_sss__label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_APPLICATION_VND_SSS_NTF].name[21])) {
             return MIME_TYPE_APPLICATION_VND_SSS_NTF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml__label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* skip to prefix 'application/vnd.sun.xml.impress' */
+        if (!str_ncasecmp(str, "mpress", 6)) {
+            str += 6;
+            goto application_vnd_sun_xml_impress_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'c':
+    case 'C':
+        /* skip to prefix 'application/vnd.sun.xml.calc' */
+        if (!str_ncasecmp(str, "alc", 3)) {
+            str += 3;
+            goto application_vnd_sun_xml_calc_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'm':
+    case 'M':
+        /* must be 'application/vnd.sun.xml.math' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_MATH].name[25])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_MATH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* skip to prefix 'application/vnd.sun.xml.draw' */
+        if (!str_ncasecmp(str, "raw", 3)) {
+            str += 3;
+            goto application_vnd_sun_xml_draw_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'w':
+    case 'W':
+        /* skip to prefix 'application/vnd.sun.xml.writer' */
+        if (!str_ncasecmp(str, "riter", 5)) {
+            str += 5;
+            goto application_vnd_sun_xml_writer_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml_impress_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_SUN_XML_IMPRESS;
+
+    case '.':
+        /* must be 'application/vnd.sun.xml.impress.template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_IMPRESS_TEMPLATE].name[32])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_IMPRESS_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml_calc_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_SUN_XML_CALC;
+
+    case '.':
+        /* must be 'application/vnd.sun.xml.calc.template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_CALC_TEMPLATE].name[29])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_CALC_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml_draw_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_SUN_XML_DRAW;
+
+    case '.':
+        /* must be 'application/vnd.sun.xml.draw.template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_DRAW_TEMPLATE].name[29])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_DRAW_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml_writer_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_SUN_XML_WRITER;
+
+    case '.':
+        goto application_vnd_sun_xml_writer__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_sun_xml_writer__label:
+    switch (*str++) {
+    case 't':
+    case 'T':
+        /* must be 'application/vnd.sun.xml.writer.template' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_WRITER_TEMPLATE].name[32])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_WRITER_TEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'application/vnd.sun.xml.writer.global' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_SUN_XML_WRITER_GLOBAL].name[32])) {
+            return MIME_TYPE_APPLICATION_VND_SUN_XML_WRITER_GLOBAL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_st_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* skip to prefix 'application/vnd.stardivision.' */
+        if (!str_ncasecmp(str, "rdivision.", 10)) {
+            str += 10;
+            goto application_vnd_stardivision__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'r':
+    case 'R':
+        /* must be 'application/vnd.street-stream' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STREET_STREAM].name[19])) {
+            return MIME_TYPE_APPLICATION_VND_STREET_STREAM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_stardivision__label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'application/vnd.stardivision.impress' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_IMPRESS].name[30])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_IMPRESS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        goto application_vnd_stardivision_c_label;
+
+    case 'm':
+    case 'M':
+        /* must be 'application/vnd.stardivision.math' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_MATH].name[30])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_MATH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'application/vnd.stardivision.draw' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_DRAW].name[30])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_DRAW;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* skip to prefix 'application/vnd.stardivision.writer' */
+        if (!str_ncasecmp(str, "riter", 5)) {
+            str += 5;
+            goto application_vnd_stardivision_writer_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_stardivision_c_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/vnd.stardivision.calc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_CALC].name[31])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_CALC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'h':
+    case 'H':
+        /* must be 'application/vnd.stardivision.chart' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_CHART].name[31])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_CHART;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_stardivision_writer_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_VND_STARDIVISION_WRITER;
+
+    case '-':
+        /* must be 'application/vnd.stardivision.writer-global' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_STARDIVISION_WRITER_GLOBAL].name[36])) {
+            return MIME_TYPE_APPLICATION_VND_STARDIVISION_WRITER_GLOBAL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_vnd_r_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/vnd.rapid' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_RAPID].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_RAPID;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/vnd.rim.cod' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_VND_RIM_COD].name[18])) {
+            return MIME_TYPE_APPLICATION_VND_RIM_COD;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5266,6 +6635,17 @@ application_vnd_x_label:
 
 application_x_label:
     switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'application/xhtml+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_XHTML_XML].name[14])) {
+            return MIME_TYPE_APPLICATION_XHTML_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'm':
     case 'M':
         /* skip to prefix 'application/xml' */
@@ -5335,23 +6715,122 @@ application_xml__label:
 
 application_x__label:
     switch (*str++) {
-    case 'i':
-    case 'I':
-        /* must be 'application/x-inex' or unrecognised */
+    case '1':
+        /* must be 'application/x-123' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_X_INEX].name[15])) {
-            return MIME_TYPE_APPLICATION_X_INEX;
+          &lookup[MIME_TYPE_APPLICATION_X_123].name[15])) {
+            return MIME_TYPE_APPLICATION_X_123;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
         break;
 
+    case '7':
+        /* must be 'application/x-7z-compressed' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_7Z_COMPRESSED].name[15])) {
+            return MIME_TYPE_APPLICATION_X_7Z_COMPRESSED;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'a':
+    case 'A':
+        goto application_x_a_label;
+
+    case 'c':
+    case 'C':
+        goto application_x_c_label;
+
     case 'b':
     case 'B':
-        /* must be 'application/x-bzip2' or unrecognised */
+        goto application_x_b_label;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-executable' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_X_BZIP2].name[15])) {
-            return MIME_TYPE_APPLICATION_X_BZIP2;
+          &lookup[MIME_TYPE_APPLICATION_X_EXECUTABLE].name[15])) {
+            return MIME_TYPE_APPLICATION_X_EXECUTABLE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        goto application_x_d_label;
+
+    case 'g':
+    case 'G':
+        goto application_x_g_label;
+
+    case 'f':
+    case 'F':
+        goto application_x_f_label;
+
+    case 'i':
+    case 'I':
+        goto application_x_i_label;
+
+    case 'h':
+    case 'H':
+        goto application_x_h_label;
+
+    case 'k':
+    case 'K':
+        goto application_x_k_label;
+
+    case 'j':
+    case 'J':
+        goto application_x_j_label;
+
+    case 'm':
+    case 'M':
+        goto application_x_m_label;
+
+    case 'l':
+    case 'L':
+        goto application_x_l_label;
+
+    case 'o':
+    case 'O':
+        goto application_x_o_label;
+
+    case 'n':
+    case 'N':
+        goto application_x_n_label;
+
+    case 'q':
+    case 'Q':
+        /* must be 'application/x-quicktimeplayer' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_QUICKTIMEPLAYER].name[15])) {
+            return MIME_TYPE_APPLICATION_X_QUICKTIMEPLAYER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        goto application_x_p_label;
+
+    case 's':
+    case 'S':
+        goto application_x_s_label;
+
+    case 'r':
+    case 'R':
+        goto application_x_r_label;
+
+    case 'u':
+    case 'U':
+        /* must be 'application/x-ustar' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_USTAR].name[15])) {
+            return MIME_TYPE_APPLICATION_X_USTAR;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5361,12 +6840,1148 @@ application_x__label:
     case 'T':
         goto application_x_t_label;
 
-    case 'g':
-    case 'G':
+    case 'w':
+    case 'W':
+        goto application_x_w_label;
+
+    case 'v':
+    case 'V':
+        /* must be 'application/x-videolan' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_VIDEOLAN].name[15])) {
+            return MIME_TYPE_APPLICATION_X_VIDEOLAN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'x':
+    case 'X':
+        goto application_x_x_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_a_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/x-apple-diskimage' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_APPLE_DISKIMAGE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_APPLE_DISKIMAGE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'application/x-abiword' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_ABIWORD].name[16])) {
+            return MIME_TYPE_APPLICATION_X_ABIWORD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_c_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-cab' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CAB].name[16])) {
+            return MIME_TYPE_APPLICATION_X_CAB;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        goto application_x_cb_label;
+
+    case 'd':
+    case 'D':
+        goto application_x_cd_label;
+
+    case 'h':
+    case 'H':
+        /* must be 'application/x-chess-pgn' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CHESS_PGN].name[16])) {
+            return MIME_TYPE_APPLICATION_X_CHESS_PGN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-core' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CORE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_CORE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        /* must be 'application/x-cpio' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CPIO].name[16])) {
+            return MIME_TYPE_APPLICATION_X_CPIO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/x-csh' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CSH].name[16])) {
+            return MIME_TYPE_APPLICATION_X_CSH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_cb_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'application/x-cbr' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CBR].name[17])) {
+            return MIME_TYPE_APPLICATION_X_CBR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'z':
+    case 'Z':
+        /* must be 'application/x-cbz' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CBZ].name[17])) {
+            return MIME_TYPE_APPLICATION_X_CBZ;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_cd_label:
+    switch (*str++) {
+    case 'l':
+    case 'L':
+        /* must be 'application/x-cdlink' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CDLINK].name[17])) {
+            return MIME_TYPE_APPLICATION_X_CDLINK;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'f':
+    case 'F':
+        /* must be 'application/x-cdf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_CDF].name[17])) {
+            return MIME_TYPE_APPLICATION_X_CDF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_b_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'application/x-bittorrent' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_BITTORRENT].name[16])) {
+            return MIME_TYPE_APPLICATION_X_BITTORRENT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        /* must be 'application/x-bcpio' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_BCPIO].name[16])) {
+            return MIME_TYPE_APPLICATION_X_BCPIO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'z':
+    case 'Z':
+        /* must be 'application/x-bzip2' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_BZIP2].name[16])) {
+            return MIME_TYPE_APPLICATION_X_BZIP2;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_d_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'application/x-director' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_DIRECTOR].name[16])) {
+            return MIME_TYPE_APPLICATION_X_DIRECTOR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* must be 'application/x-dms' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_DMS].name[16])) {
+            return MIME_TYPE_APPLICATION_X_DMS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-debian-package' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_DEBIAN_PACKAGE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_DEBIAN_PACKAGE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-doom' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_DOOM].name[16])) {
+            return MIME_TYPE_APPLICATION_X_DOOM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'application/x-dvi' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_DVI].name[16])) {
+            return MIME_TYPE_APPLICATION_X_DVI;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_g_label:
+    switch (*str++) {
+    case 'z':
+    case 'Z':
         /* must be 'application/x-gzip' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_X_GZIP].name[15])) {
+          &lookup[MIME_TYPE_APPLICATION_X_GZIP].name[16])) {
             return MIME_TYPE_APPLICATION_X_GZIP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        /* must be 'application/x-graphing-calculator' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_GRAPHING_CALCULATOR].name[16])) {
+            return MIME_TYPE_APPLICATION_X_GRAPHING_CALCULATOR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'application/x-gtar' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_GTAR].name[16])) {
+            return MIME_TYPE_APPLICATION_X_GTAR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-go-sgf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_GO_SGF].name[16])) {
+            return MIME_TYPE_APPLICATION_X_GO_SGF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'n':
+    case 'N':
+        /* must be 'application/x-gnumeric' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_GNUMERIC].name[16])) {
+            return MIME_TYPE_APPLICATION_X_GNUMERIC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_f_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'application/x-freemind' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_FREEMIND].name[16])) {
+            return MIME_TYPE_APPLICATION_X_FREEMIND;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'u':
+    case 'U':
+        /* must be 'application/x-futuresplash' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_FUTURESPLASH].name[16])) {
+            return MIME_TYPE_APPLICATION_X_FUTURESPLASH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'application/x-flac' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_FLAC].name[16])) {
+            return MIME_TYPE_APPLICATION_X_FLAC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-font' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_FONT].name[16])) {
+            return MIME_TYPE_APPLICATION_X_FONT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_i_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/x-iphone' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_IPHONE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_IPHONE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        /* must be 'application/x-ica' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_ICA].name[16])) {
+            return MIME_TYPE_APPLICATION_X_ICA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/x-iso9660-image' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_ISO9660_IMAGE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_ISO9660_IMAGE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'n':
+    case 'N':
+        goto application_x_in_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_in_label:
+    switch (*str++) {
+    case 'e':
+    case 'E':
+        /* must be 'application/x-inex' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_INEX].name[17])) {
+            return MIME_TYPE_APPLICATION_X_INEX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'application/x-internet-signup' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_INTERNET_SIGNUP].name[17])) {
+            return MIME_TYPE_APPLICATION_X_INTERNET_SIGNUP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_h_label:
+    switch (*str++) {
+    case 'd':
+    case 'D':
+        /* must be 'application/x-hdf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_HDF].name[16])) {
+            return MIME_TYPE_APPLICATION_X_HDF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* skip to prefix 'application/x-httpd-' */
+        if (!str_ncasecmp(str, "tpd-", 4)) {
+            str += 4;
+            goto application_x_httpd__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_httpd__label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* skip to prefix 'application/x-httpd-php' */
+        if (!str_ncasecmp(str, "hp", 2)) {
+            str += 2;
+            goto application_x_httpd_php_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-httpd-eruby' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_HTTPD_ERUBY].name[21])) {
+            return MIME_TYPE_APPLICATION_X_HTTPD_ERUBY;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_httpd_php_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_X_HTTPD_PHP;
+
+    case '3':
+        goto application_x_httpd_php3_label;
+
+    case '-':
+        /* must be 'application/x-httpd-php-source' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_HTTPD_PHP_SOURCE].name[24])) {
+            return MIME_TYPE_APPLICATION_X_HTTPD_PHP_SOURCE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '4':
+        /* must be 'application/x-httpd-php4' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_HTTPD_PHP4].name[24])) {
+            return MIME_TYPE_APPLICATION_X_HTTPD_PHP4;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_httpd_php3_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_X_HTTPD_PHP3;
+
+    case '-':
+        /* must be 'application/x-httpd-php3-preprocessed' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_HTTPD_PHP3_PREPROCESSED].name[25])) {
+            return MIME_TYPE_APPLICATION_X_HTTPD_PHP3_PREPROCESSED;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_k_label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'application/x-kchart' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KCHART].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KCHART;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'application/x-kdelnk' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KDELNK].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KDELNK;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/x-killustrator' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KILLUSTRATOR].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KILLUSTRATOR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-koan' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KOAN].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KOAN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        /* must be 'application/x-kpresenter' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KPRESENTER].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KPRESENTER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/x-kspread' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KSPREAD].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KSPREAD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'application/x-kword' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_KWORD].name[16])) {
+            return MIME_TYPE_APPLICATION_X_KWORD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_j_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* skip to prefix 'application/x-java' */
+        if (!str_ncasecmp(str, "va", 2)) {
+            str += 2;
+            goto application_x_java_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'm':
+    case 'M':
+        /* must be 'application/x-jmol' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_JMOL].name[16])) {
+            return MIME_TYPE_APPLICATION_X_JMOL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_java_label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'application/x-javascript' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_JAVASCRIPT].name[19])) {
+            return MIME_TYPE_APPLICATION_X_JAVASCRIPT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '-':
+        goto application_x_java__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_java__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-java-applet' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_JAVA_APPLET].name[20])) {
+            return MIME_TYPE_APPLICATION_X_JAVA_APPLET;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'application/x-java-bean' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_JAVA_BEAN].name[20])) {
+            return MIME_TYPE_APPLICATION_X_JAVA_BEAN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'j':
+    case 'J':
+        /* must be 'application/x-java-jnlp-file' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_JAVA_JNLP_FILE].name[20])) {
+            return MIME_TYPE_APPLICATION_X_JAVA_JNLP_FILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_m_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-maker' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MAKER].name[16])) {
+            return MIME_TYPE_APPLICATION_X_MAKER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/x-mif' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MIF].name[16])) {
+            return MIME_TYPE_APPLICATION_X_MIF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        goto application_x_ms_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_ms_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'application/x-msi' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MSI].name[17])) {
+            return MIME_TYPE_APPLICATION_X_MSI;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '-':
+        /* skip to prefix 'application/x-ms-wm' */
+        if (!str_ncasecmp(str, "wm", 2)) {
+            str += 2;
+            goto application_x_ms_wm_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'd':
+    case 'D':
+        /* must be 'application/x-msdos-program' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MSDOS_PROGRAM].name[17])) {
+            return MIME_TYPE_APPLICATION_X_MSDOS_PROGRAM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_ms_wm_label:
+    switch (*str++) {
+    case 'z':
+    case 'Z':
+        /* must be 'application/x-ms-wmz' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MS_WMZ].name[20])) {
+            return MIME_TYPE_APPLICATION_X_MS_WMZ;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'application/x-ms-wmd' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_MS_WMD].name[20])) {
+            return MIME_TYPE_APPLICATION_X_MS_WMD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_l_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-latex' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_LATEX].name[16])) {
+            return MIME_TYPE_APPLICATION_X_LATEX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'h':
+    case 'H':
+        /* must be 'application/x-lha' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_LHA].name[16])) {
+            return MIME_TYPE_APPLICATION_X_LHA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'z':
+    case 'Z':
+        goto application_x_lz_label;
+
+    case 'y':
+    case 'Y':
+        /* must be 'application/x-lyx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_LYX].name[16])) {
+            return MIME_TYPE_APPLICATION_X_LYX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_lz_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'application/x-lzh' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_LZH].name[17])) {
+            return MIME_TYPE_APPLICATION_X_LZH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'x':
+    case 'X':
+        /* must be 'application/x-lzx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_LZX].name[17])) {
+            return MIME_TYPE_APPLICATION_X_LZX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_o_label:
+    switch (*str++) {
+    case 'b':
+    case 'B':
+        /* must be 'application/x-object' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_OBJECT].name[16])) {
+            return MIME_TYPE_APPLICATION_X_OBJECT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'z':
+    case 'Z':
+        /* must be 'application/x-oz-application' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_OZ_APPLICATION].name[16])) {
+            return MIME_TYPE_APPLICATION_X_OZ_APPLICATION;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_n_label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'application/x-ns-proxy-autoconfig' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_NS_PROXY_AUTOCONFIG].name[16])) {
+            return MIME_TYPE_APPLICATION_X_NS_PROXY_AUTOCONFIG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-netcdf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_NETCDF].name[16])) {
+            return MIME_TYPE_APPLICATION_X_NETCDF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'application/x-nwc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_NWC].name[16])) {
+            return MIME_TYPE_APPLICATION_X_NWC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_p_label:
+    switch (*str++) {
+    case 'y':
+    case 'Y':
+        /* must be 'application/x-python-code' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_PYTHON_CODE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_PYTHON_CODE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'k':
+    case 'K':
+        /* skip to prefix 'application/x-pkcs7-c' */
+        if (!str_ncasecmp(str, "cs7-c", 5)) {
+            str += 5;
+            goto application_x_pkcs7_c_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_pkcs7_c_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'application/x-pkcs7-crl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_PKCS7_CRL].name[22])) {
+            return MIME_TYPE_APPLICATION_X_PKCS7_CRL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-pkcs7-certreqresp' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_PKCS7_CERTREQRESP].name[22])) {
+            return MIME_TYPE_APPLICATION_X_PKCS7_CERTREQRESP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_s_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        goto application_x_sh_label;
+
+    case 't':
+    case 'T':
+        /* must be 'application/x-stuffit' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_STUFFIT].name[16])) {
+            return MIME_TYPE_APPLICATION_X_STUFFIT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* skip to prefix 'application/x-sv4c' */
+        if (!str_ncasecmp(str, "4c", 2)) {
+            str += 2;
+            goto application_x_sv4c_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_sh_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_X_SH;
+
+    case 'a':
+    case 'A':
+        /* must be 'application/x-shar' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_SHAR].name[17])) {
+            return MIME_TYPE_APPLICATION_X_SHAR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-shellscript' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_SHELLSCRIPT].name[17])) {
+            return MIME_TYPE_APPLICATION_X_SHELLSCRIPT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'application/x-shockwave-flash' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_SHOCKWAVE_FLASH].name[17])) {
+            return MIME_TYPE_APPLICATION_X_SHOCKWAVE_FLASH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_sv4c_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/x-sv4cpio' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_SV4CPIO].name[19])) {
+            return MIME_TYPE_APPLICATION_X_SV4CPIO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        /* must be 'application/x-sv4crc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_SV4CRC].name[19])) {
+            return MIME_TYPE_APPLICATION_X_SV4CRC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_r_label:
+    switch (*str++) {
+    case 'x':
+    case 'X':
+        /* must be 'application/x-rx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_RX].name[16])) {
+            return MIME_TYPE_APPLICATION_X_RX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-redhat-package-manager' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_REDHAT_PACKAGE_MANAGER].name[16])) {
+            return MIME_TYPE_APPLICATION_X_REDHAT_PACKAGE_MANAGER;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5389,12 +8004,246 @@ application_x_t_label:
         }
         break;
 
+    case 'c':
+    case 'C':
+        /* must be 'application/x-tcl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TCL].name[16])) {
+            return MIME_TYPE_APPLICATION_X_TCL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'r':
     case 'R':
+        goto application_x_tr_label;
+
+    case 'e':
+    case 'E':
+        /* skip to prefix 'application/x-tex' */
+        if (!str_ncasecmp(str, "x", 1)) {
+            str += 1;
+            goto application_x_tex_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_tr_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-trash' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TRASH].name[17])) {
+            return MIME_TYPE_APPLICATION_X_TRASH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
         /* must be 'application/x-trec' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_APPLICATION_X_TREC].name[16])) {
+          &lookup[MIME_TYPE_APPLICATION_X_TREC].name[17])) {
             return MIME_TYPE_APPLICATION_X_TREC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* skip to prefix 'application/x-troff' */
+        if (!str_ncasecmp(str, "ff", 2)) {
+            str += 2;
+            goto application_x_troff_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_troff_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_APPLICATION_X_TROFF;
+
+    case '-':
+        /* skip to prefix 'application/x-troff-m' */
+        if (!str_ncasecmp(str, "m", 1)) {
+            str += 1;
+            goto application_x_troff_m_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_troff_m_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-troff-man' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TROFF_MAN].name[22])) {
+            return MIME_TYPE_APPLICATION_X_TROFF_MAN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'application/x-troff-ms' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TROFF_MS].name[22])) {
+            return MIME_TYPE_APPLICATION_X_TROFF_MS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'application/x-troff-me' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TROFF_ME].name[22])) {
+            return MIME_TYPE_APPLICATION_X_TROFF_ME;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_tex_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'application/x-texinfo' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TEXINFO].name[18])) {
+            return MIME_TYPE_APPLICATION_X_TEXINFO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '-':
+        goto application_x_tex__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_tex__label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/x-tex-pk' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TEX_PK].name[19])) {
+            return MIME_TYPE_APPLICATION_X_TEX_PK;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'application/x-tex-gf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_TEX_GF].name[19])) {
+            return MIME_TYPE_APPLICATION_X_TEX_GF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_w_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'application/x-wais-source' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_WAIS_SOURCE].name[16])) {
+            return MIME_TYPE_APPLICATION_X_WAIS_SOURCE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'application/x-wingz' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_WINGZ].name[16])) {
+            return MIME_TYPE_APPLICATION_X_WINGZ;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+application_x_x_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'application/x-xpinstall' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_XPINSTALL].name[16])) {
+            return MIME_TYPE_APPLICATION_X_XPINSTALL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        /* must be 'application/x-xcf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_XCF].name[16])) {
+            return MIME_TYPE_APPLICATION_X_XCF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '5':
+        /* must be 'application/x-x509-ca-cert' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_X509_CA_CERT].name[16])) {
+            return MIME_TYPE_APPLICATION_X_X509_CA_CERT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'f':
+    case 'F':
+        /* must be 'application/x-xfig' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_APPLICATION_X_XFIG].name[16])) {
+            return MIME_TYPE_APPLICATION_X_XFIG;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5441,31 +8290,29 @@ audio__label:
 
     case 'm':
     case 'M':
-        /* skip to prefix 'audio/mp' */
-        if (!str_ncasecmp(str, "p", 1)) {
-            str += 1;
-            goto audio_mp_label;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
+        goto audio_m_label;
 
     case 'l':
     case 'L':
         goto audio_l_label;
+
+    case 'o':
+    case 'O':
+        /* must be 'audio/ogg' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_OGG].name[7])) {
+            return MIME_TYPE_AUDIO_OGG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
 
     case 'p':
     case 'P':
         goto audio_p_label;
 
     case '3':
-        /* must be 'audio/32kadpcm' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_AUDIO_32KADPCM].name[7])) {
-            return MIME_TYPE_AUDIO_32KADPCM;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
+        goto audio_3_label;
 
     case 't':
     case 'T':
@@ -5480,6 +8327,37 @@ audio__label:
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+
+    case 'x':
+    case 'X':
+        /* skip to prefix 'audio/x-' */
+        if (!str_ncasecmp(str, "-", 1)) {
+            str += 1;
+            goto audio_x__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_m_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'audio/midi' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_MIDI].name[8])) {
+            return MIME_TYPE_AUDIO_MIDI;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        goto audio_mp_label;
 
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -5500,20 +8378,39 @@ audio_mp_label:
 
     case 'e':
     case 'E':
-        /* must be 'audio/mpeg' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_AUDIO_MPEG].name[9])) {
-            return MIME_TYPE_AUDIO_MPEG;
+        /* skip to prefix 'audio/mpeg' */
+        if (!str_ncasecmp(str, "g", 1)) {
+            str += 1;
+            goto audio_mpeg_label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
-        break;
 
     case '4':
         /* must be 'audio/mp4a-latm' or unrecognised */
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_AUDIO_MP4A_LATM].name[9])) {
             return MIME_TYPE_AUDIO_MP4A_LATM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_mpeg_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_AUDIO_MPEG;
+
+    case 'u':
+    case 'U':
+        /* must be 'audio/mpegurl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_MPEGURL].name[11])) {
+            return MIME_TYPE_AUDIO_MPEGURL;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5587,6 +8484,33 @@ audio_p_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_AUDIO_PRS_SID].name[8])) {
             return MIME_TYPE_AUDIO_PRS_SID;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_3_label:
+    switch (*str++) {
+    case '2':
+        /* must be 'audio/32kadpcm' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_32KADPCM].name[8])) {
+            return MIME_TYPE_AUDIO_32KADPCM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'audio/3gpp' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_3GPP].name[8])) {
+            return MIME_TYPE_AUDIO_3GPP;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5833,6 +8757,1030 @@ audio_vnd_nuera_ecelp_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
+audio_x__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'audio/x-aiff' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_AIFF].name[9])) {
+            return MIME_TYPE_AUDIO_X_AIFF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'audio/x-gsm' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_GSM].name[9])) {
+            return MIME_TYPE_AUDIO_X_GSM;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        goto audio_x_m_label;
+
+    case 'p':
+    case 'P':
+        /* skip to prefix 'audio/x-pn-realaudio' */
+        if (!str_ncasecmp(str, "n-realaudio", 11)) {
+            str += 11;
+            goto audio_x_pn_realaudio_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 's':
+    case 'S':
+        goto audio_x_s_label;
+
+    case 'r':
+    case 'R':
+        /* must be 'audio/x-realaudio' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_REALAUDIO].name[9])) {
+            return MIME_TYPE_AUDIO_X_REALAUDIO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'audio/x-wav' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_WAV].name[9])) {
+            return MIME_TYPE_AUDIO_X_WAV;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_x_m_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'audio/x-mpegurl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_MPEGURL].name[10])) {
+            return MIME_TYPE_AUDIO_X_MPEGURL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* skip to prefix 'audio/x-ms-w' */
+        if (!str_ncasecmp(str, "-w", 2)) {
+            str += 2;
+            goto audio_x_ms_w_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_x_ms_w_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'audio/x-ms-wax' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_MS_WAX].name[13])) {
+            return MIME_TYPE_AUDIO_X_MS_WAX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* must be 'audio/x-ms-wma' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_MS_WMA].name[13])) {
+            return MIME_TYPE_AUDIO_X_MS_WMA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_x_pn_realaudio_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_AUDIO_X_PN_REALAUDIO;
+
+    case '-':
+        /* must be 'audio/x-pn-realaudio-plugin' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_PN_REALAUDIO_PLUGIN].name[21])) {
+            return MIME_TYPE_AUDIO_X_PN_REALAUDIO_PLUGIN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+audio_x_s_label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'audio/x-scpls' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_SCPLS].name[10])) {
+            return MIME_TYPE_AUDIO_X_SCPLS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'audio/x-sd2' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_AUDIO_X_SD2].name[10])) {
+            return MIME_TYPE_AUDIO_X_SD2;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'chemical/x-alchemy' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_ALCHEMY].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_ALCHEMY;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        goto chemical_x_c_label;
+
+    case 'e':
+    case 'E':
+        /* must be 'chemical/x-embl-dl-nucleotide' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_EMBL_DL_NUCLEOTIDE].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_EMBL_DL_NUCLEOTIDE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        goto chemical_x_g_label;
+
+    case 'i':
+    case 'I':
+        /* must be 'chemical/x-isostar' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_ISOSTAR].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_ISOSTAR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'h':
+    case 'H':
+        /* must be 'chemical/x-hin' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_HIN].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_HIN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'k':
+    case 'K':
+        /* must be 'chemical/x-kinemage' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_KINEMAGE].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_KINEMAGE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'j':
+    case 'J':
+        /* must be 'chemical/x-jcamp-dx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_JCAMP_DX].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_JCAMP_DX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        goto chemical_x_m_label;
+
+    case 'n':
+    case 'N':
+        /* skip to prefix 'chemical/x-ncbi-asn1' */
+        if (!str_ncasecmp(str, "cbi-asn1", 8)) {
+            str += 8;
+            goto chemical_x_ncbi_asn1_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'p':
+    case 'P':
+        /* must be 'chemical/x-pdb' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_PDB].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_PDB;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'chemical/x-swissprot' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_SWISSPROT].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_SWISSPROT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        /* must be 'chemical/x-rosdal' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_ROSDAL].name[12])) {
+            return MIME_TYPE_CHEMICAL_X_ROSDAL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        goto chemical_x_v_label;
+
+    case 'x':
+    case 'X':
+        goto chemical_x_x_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_c_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* skip to prefix 'chemical/x-cac' */
+        if (!str_ncasecmp(str, "c", 1)) {
+            str += 1;
+            goto chemical_x_cac_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'e':
+    case 'E':
+        /* must be 'chemical/x-cerius' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CERIUS].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CERIUS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'chemical/x-cdx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CDX].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CDX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'i':
+    case 'I':
+        /* must be 'chemical/x-cif' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CIF].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CIF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'h':
+    case 'H':
+        /* skip to prefix 'chemical/x-chem' */
+        if (!str_ncasecmp(str, "em", 2)) {
+            str += 2;
+            goto chemical_x_chem_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'm':
+    case 'M':
+        goto chemical_x_cm_label;
+
+    case 'o':
+    case 'O':
+        /* must be 'chemical/x-compass' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_COMPASS].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_COMPASS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'chemical/x-csml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CSML].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CSML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        /* must be 'chemical/x-crossfire' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CROSSFIRE].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CROSSFIRE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'chemical/x-ctx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CTX].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CTX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'x':
+    case 'X':
+        /* must be 'chemical/x-cxf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CXF].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_CXF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_cac_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* skip to prefix 'chemical/x-cache' */
+        if (!str_ncasecmp(str, "e", 1)) {
+            str += 1;
+            goto chemical_x_cache_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 't':
+    case 'T':
+        /* must be 'chemical/x-cactvs-binary' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CACTVS_BINARY].name[15])) {
+            return MIME_TYPE_CHEMICAL_X_CACTVS_BINARY;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_cache_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_CHEMICAL_X_CACHE;
+
+    case '-':
+        /* must be 'chemical/x-cache-csf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CACHE_CSF].name[17])) {
+            return MIME_TYPE_CHEMICAL_X_CACHE_CSF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_chem_label:
+    switch (*str++) {
+    case '3':
+        /* must be 'chemical/x-chem3d' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CHEM3D].name[16])) {
+            return MIME_TYPE_CHEMICAL_X_CHEM3D;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'chemical/x-chemdraw' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CHEMDRAW].name[16])) {
+            return MIME_TYPE_CHEMICAL_X_CHEMDRAW;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_cm_label:
+    switch (*str++) {
+    case 'd':
+    case 'D':
+        /* must be 'chemical/x-cmdf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CMDF].name[14])) {
+            return MIME_TYPE_CHEMICAL_X_CMDF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'chemical/x-cml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_CML].name[14])) {
+            return MIME_TYPE_CHEMICAL_X_CML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_g_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        goto chemical_x_ga_label;
+
+    case 'c':
+    case 'C':
+        /* must be 'chemical/x-gcg8-sequence' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GCG8_SEQUENCE].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_GCG8_SEQUENCE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'chemical/x-genbank' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GENBANK].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_GENBANK;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_ga_label:
+    switch (*str++) {
+    case 'u':
+    case 'U':
+        /* skip to prefix 'chemical/x-gaussian-' */
+        if (!str_ncasecmp(str, "ssian-", 6)) {
+            str += 6;
+            goto chemical_x_gaussian__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'm':
+    case 'M':
+        /* must be 'chemical/x-gamess-input' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GAMESS_INPUT].name[14])) {
+            return MIME_TYPE_CHEMICAL_X_GAMESS_INPUT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'chemical/x-galactic-spc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GALACTIC_SPC].name[14])) {
+            return MIME_TYPE_CHEMICAL_X_GALACTIC_SPC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_gaussian__label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'chemical/x-gaussian-input' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GAUSSIAN_INPUT].name[21])) {
+            return MIME_TYPE_CHEMICAL_X_GAUSSIAN_INPUT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        goto chemical_x_gaussian_c_label;
+
+    case 'l':
+    case 'L':
+        /* must be 'chemical/x-gaussian-log' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GAUSSIAN_LOG].name[21])) {
+            return MIME_TYPE_CHEMICAL_X_GAUSSIAN_LOG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_gaussian_c_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'chemical/x-gaussian-checkpoint' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GAUSSIAN_CHECKPOINT].name[22])) {
+            return MIME_TYPE_CHEMICAL_X_GAUSSIAN_CHECKPOINT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'u':
+    case 'U':
+        /* must be 'chemical/x-gaussian-cube' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_GAUSSIAN_CUBE].name[22])) {
+            return MIME_TYPE_CHEMICAL_X_GAUSSIAN_CUBE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_m_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* skip to prefix 'chemical/x-mac' */
+        if (!str_ncasecmp(str, "c", 1)) {
+            str += 1;
+            goto chemical_x_mac_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'm':
+    case 'M':
+        /* must be 'chemical/x-mmcif' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MMCIF].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_MMCIF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* skip to prefix 'chemical/x-mdl-' */
+        if (!str_ncasecmp(str, "l-", 2)) {
+            str += 2;
+            goto chemical_x_mdl__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'o':
+    case 'O':
+        goto chemical_x_mo_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mac_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'chemical/x-macromodel-input' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MACROMODEL_INPUT].name[15])) {
+            return MIME_TYPE_CHEMICAL_X_MACROMODEL_INPUT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* must be 'chemical/x-macmolecule' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MACMOLECULE].name[15])) {
+            return MIME_TYPE_CHEMICAL_X_MACMOLECULE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mdl__label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'chemical/x-mdl-sdfile' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MDL_SDFILE].name[16])) {
+            return MIME_TYPE_CHEMICAL_X_MDL_SDFILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        goto chemical_x_mdl_r_label;
+
+    case 'm':
+    case 'M':
+        /* must be 'chemical/x-mdl-molfile' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MDL_MOLFILE].name[16])) {
+            return MIME_TYPE_CHEMICAL_X_MDL_MOLFILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'chemical/x-mdl-tgf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MDL_TGF].name[16])) {
+            return MIME_TYPE_CHEMICAL_X_MDL_TGF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mdl_r_label:
+    switch (*str++) {
+    case 'x':
+    case 'X':
+        /* must be 'chemical/x-mdl-rxnfile' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MDL_RXNFILE].name[17])) {
+            return MIME_TYPE_CHEMICAL_X_MDL_RXNFILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* must be 'chemical/x-mdl-rdfile' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MDL_RDFILE].name[17])) {
+            return MIME_TYPE_CHEMICAL_X_MDL_RDFILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mo_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* skip to prefix 'chemical/x-mopac-' */
+        if (!str_ncasecmp(str, "ac-", 3)) {
+            str += 3;
+            goto chemical_x_mopac__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'l':
+    case 'L':
+        goto chemical_x_mol_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mopac__label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'chemical/x-mopac-input' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOPAC_INPUT].name[18])) {
+            return MIME_TYPE_CHEMICAL_X_MOPAC_INPUT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'chemical/x-mopac-out' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOPAC_OUT].name[18])) {
+            return MIME_TYPE_CHEMICAL_X_MOPAC_OUT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'chemical/x-mopac-graph' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOPAC_GRAPH].name[18])) {
+            return MIME_TYPE_CHEMICAL_X_MOPAC_GRAPH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'chemical/x-mopac-vib' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOPAC_VIB].name[18])) {
+            return MIME_TYPE_CHEMICAL_X_MOPAC_VIB;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_mol_label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'chemical/x-molconn-z' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOLCONN_Z].name[15])) {
+            return MIME_TYPE_CHEMICAL_X_MOLCONN_Z;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '2':
+        /* must be 'chemical/x-mol2' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_MOL2].name[15])) {
+            return MIME_TYPE_CHEMICAL_X_MOL2;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_ncbi_asn1_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_CHEMICAL_X_NCBI_ASN1;
+
+    case '-':
+        goto chemical_x_ncbi_asn1__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_ncbi_asn1__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'chemical/x-ncbi-asn1-ascii' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_NCBI_ASN1_ASCII].name[22])) {
+            return MIME_TYPE_CHEMICAL_X_NCBI_ASN1_ASCII;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'chemical/x-ncbi-asn1-spec' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_NCBI_ASN1_SPEC].name[22])) {
+            return MIME_TYPE_CHEMICAL_X_NCBI_ASN1_SPEC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'chemical/x-ncbi-asn1-binary' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_NCBI_ASN1_BINARY].name[22])) {
+            return MIME_TYPE_CHEMICAL_X_NCBI_ASN1_BINARY;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_v_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'chemical/x-vamas-iso14976' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_VAMAS_ISO14976].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_VAMAS_ISO14976;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* must be 'chemical/x-vmd' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_VMD].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_VMD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+chemical_x_x_label:
+    switch (*str++) {
+    case 'y':
+    case 'Y':
+        /* must be 'chemical/x-xyz' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_XYZ].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_XYZ;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'chemical/x-xtel' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_CHEMICAL_X_XTEL].name[13])) {
+            return MIME_TYPE_CHEMICAL_X_XTEL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+i_label:
+    switch (*str++) {
+    case 'm':
+    case 'M':
+        /* skip to prefix 'image/' */
+        if (!str_ncasecmp(str, "age/", 4)) {
+            str += 4;
+            goto image__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'n':
+    case 'N':
+        /* skip to prefix 'inode/' */
+        if (!str_ncasecmp(str, "ode/", 4)) {
+            str += 4;
+            goto inode__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
 image__label:
     switch (*str++) {
     case 'c':
@@ -5887,6 +9835,17 @@ image__label:
     case 'P':
         goto image_p_label;
 
+    case 's':
+    case 'S':
+        /* must be 'image/svg+xml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_SVG_XML].name[7])) {
+            return MIME_TYPE_IMAGE_SVG_XML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 't':
     case 'T':
         /* must be 'image/tiff' or unrecognised */
@@ -5904,6 +9863,16 @@ image__label:
         if (!str_ncasecmp(str, "nd.", 3)) {
             str += 3;
             goto image_vnd__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'x':
+    case 'X':
+        /* skip to prefix 'image/x-' */
+        if (!str_ncasecmp(str, "-", 1)) {
+            str += 1;
+            goto image_x__label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -5941,6 +9910,17 @@ image_g_label:
 
 image_p_label:
     switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'image/pcx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_PCX].name[8])) {
+            return MIME_TYPE_IMAGE_PCX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'r':
     case 'R':
         /* skip to prefix 'image/prs.' */
@@ -6087,6 +10067,17 @@ image_vnd_d_label:
         }
         break;
 
+    case 'j':
+    case 'J':
+        /* must be 'image/vnd.djvu' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_VND_DJVU].name[12])) {
+            return MIME_TYPE_IMAGE_VND_DJVU;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'w':
     case 'W':
         /* must be 'image/vnd.dwg' or unrecognised */
@@ -6170,6 +10161,369 @@ image_vnd_fujixerox_edmics__label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_IMAGE_VND_FUJIXEROX_EDMICS_MMR].name[28])) {
             return MIME_TYPE_IMAGE_VND_FUJIXEROX_EDMICS_MMR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x__label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        goto image_x_c_label;
+
+    case 'i':
+    case 'I':
+        /* must be 'image/x-icon' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_ICON].name[9])) {
+            return MIME_TYPE_IMAGE_X_ICON;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'j':
+    case 'J':
+        goto image_x_j_label;
+
+    case 'm':
+    case 'M':
+        /* must be 'image/x-ms-bmp' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_MS_BMP].name[9])) {
+            return MIME_TYPE_IMAGE_X_MS_BMP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        goto image_x_p_label;
+
+    case 'r':
+    case 'R':
+        /* must be 'image/x-rgb' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_RGB].name[9])) {
+            return MIME_TYPE_IMAGE_X_RGB;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'x':
+    case 'X':
+        goto image_x_x_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_c_label:
+    switch (*str++) {
+    case 'm':
+    case 'M':
+        /* must be 'image/x-cmu-raster' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_CMU_RASTER].name[10])) {
+            return MIME_TYPE_IMAGE_X_CMU_RASTER;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* skip to prefix 'image/x-corel' */
+        if (!str_ncasecmp(str, "rel", 3)) {
+            str += 3;
+            goto image_x_corel_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_corel_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'image/x-corelphotopaint' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_CORELPHOTOPAINT].name[14])) {
+            return MIME_TYPE_IMAGE_X_CORELPHOTOPAINT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* skip to prefix 'image/x-coreldraw' */
+        if (!str_ncasecmp(str, "raw", 3)) {
+            str += 3;
+            goto image_x_coreldraw_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_coreldraw_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_IMAGE_X_CORELDRAW;
+
+    case 'p':
+    case 'P':
+        /* must be 'image/x-coreldrawpattern' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_CORELDRAWPATTERN].name[18])) {
+            return MIME_TYPE_IMAGE_X_CORELDRAWPATTERN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'image/x-coreldrawtemplate' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_CORELDRAWTEMPLATE].name[18])) {
+            return MIME_TYPE_IMAGE_X_CORELDRAWTEMPLATE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_j_label:
+    switch (*str++) {
+    case 'g':
+    case 'G':
+        /* must be 'image/x-jg' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_JG].name[10])) {
+            return MIME_TYPE_IMAGE_X_JG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'n':
+    case 'N':
+        /* must be 'image/x-jng' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_JNG].name[10])) {
+            return MIME_TYPE_IMAGE_X_JNG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_p_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'image/x-photoshop' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_PHOTOSHOP].name[10])) {
+            return MIME_TYPE_IMAGE_X_PHOTOSHOP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* skip to prefix 'image/x-portable-' */
+        if (!str_ncasecmp(str, "rtable-", 7)) {
+            str += 7;
+            goto image_x_portable__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_portable__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'image/x-portable-anymap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_PORTABLE_ANYMAP].name[18])) {
+            return MIME_TYPE_IMAGE_X_PORTABLE_ANYMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        /* must be 'image/x-portable-pixmap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_PORTABLE_PIXMAP].name[18])) {
+            return MIME_TYPE_IMAGE_X_PORTABLE_PIXMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'image/x-portable-bitmap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_PORTABLE_BITMAP].name[18])) {
+            return MIME_TYPE_IMAGE_X_PORTABLE_BITMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'image/x-portable-graymap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_PORTABLE_GRAYMAP].name[18])) {
+            return MIME_TYPE_IMAGE_X_PORTABLE_GRAYMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+image_x_x_label:
+    switch (*str++) {
+    case 'p':
+    case 'P':
+        /* must be 'image/x-xpixmap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_XPIXMAP].name[10])) {
+            return MIME_TYPE_IMAGE_X_XPIXMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'image/x-xbitmap' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_XBITMAP].name[10])) {
+            return MIME_TYPE_IMAGE_X_XBITMAP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'image/x-xwindowdump' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_IMAGE_X_XWINDOWDUMP].name[10])) {
+            return MIME_TYPE_IMAGE_X_XWINDOWDUMP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+inode__label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'inode/socket' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_INODE_SOCKET].name[7])) {
+            return MIME_TYPE_INODE_SOCKET;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        /* must be 'inode/chardevice' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_INODE_CHARDEVICE].name[7])) {
+            return MIME_TYPE_INODE_CHARDEVICE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'b':
+    case 'B':
+        /* must be 'inode/blockdevice' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_INODE_BLOCKDEVICE].name[7])) {
+            return MIME_TYPE_INODE_BLOCKDEVICE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        /* skip to prefix 'inode/directory' */
+        if (!str_ncasecmp(str, "irectory", 8)) {
+            str += 8;
+            goto inode_directory_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'f':
+    case 'F':
+        /* must be 'inode/fifo' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_INODE_FIFO].name[7])) {
+            return MIME_TYPE_INODE_FIFO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+inode_directory_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_INODE_DIRECTORY;
+
+    case '-':
+        /* must be 'inode/directory-locked' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_INODE_DIRECTORY_LOCKED].name[16])) {
+            return MIME_TYPE_INODE_DIRECTORY_LOCKED;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -6692,14 +11046,13 @@ text__label:
 
     case 'e':
     case 'E':
-        /* must be 'text/enriched' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_TEXT_ENRICHED].name[6])) {
-            return MIME_TYPE_TEXT_ENRICHED;
+        /* skip to prefix 'text/en' */
+        if (!str_ncasecmp(str, "n", 1)) {
+            str += 1;
+            goto text_en_label;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
-        break;
 
     case 'd':
     case 'D':
@@ -6712,12 +11065,27 @@ text__label:
         }
         break;
 
+    case 'i':
+    case 'I':
+        /* must be 'text/iuls' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_IULS].name[6])) {
+            return MIME_TYPE_TEXT_IULS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'h':
     case 'H':
-        /* must be 'text/html' or unrecognised */
+        goto text_h_label;
+
+    case 'm':
+    case 'M':
+        /* must be 'text/mathml' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_TEXT_HTML].name[6])) {
-            return MIME_TYPE_TEXT_HTML;
+          &lookup[MIME_TYPE_TEXT_MATHML].name[6])) {
+            return MIME_TYPE_TEXT_MATHML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -6729,14 +11097,7 @@ text__label:
 
     case 's':
     case 'S':
-        /* must be 'text/sgml' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_TEXT_SGML].name[6])) {
-            return MIME_TYPE_TEXT_SGML;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
+        goto text_s_label;
 
     case 'r':
     case 'R':
@@ -6769,13 +11130,7 @@ text__label:
 
     case 'x':
     case 'X':
-        /* skip to prefix 'text/xml' */
-        if (!str_ncasecmp(str, "ml", 2)) {
-            str += 2;
-            goto text_xml_label;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
+        goto text_x_label;
 
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -6796,10 +11151,86 @@ text_c_label:
 
     case 's':
     case 'S':
+        goto text_cs_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_cs_label:
+    switch (*str++) {
+    case 's':
+    case 'S':
         /* must be 'text/css' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_TEXT_CSS].name[7])) {
+          &lookup[MIME_TYPE_TEXT_CSS].name[8])) {
             return MIME_TYPE_TEXT_CSS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'text/csv' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_CSV].name[8])) {
+            return MIME_TYPE_TEXT_CSV;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_en_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'text/enriched' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_ENRICHED].name[8])) {
+            return MIME_TYPE_TEXT_ENRICHED;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'text/english' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_ENGLISH].name[8])) {
+            return MIME_TYPE_TEXT_ENGLISH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_h_label:
+    switch (*str++) {
+    case '3':
+        /* must be 'text/h323' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_H323].name[7])) {
+            return MIME_TYPE_TEXT_H323;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'text/html' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_HTML].name[7])) {
+            return MIME_TYPE_TEXT_HTML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -6839,6 +11270,34 @@ text_p_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_TEXT_PLAIN].name[7])) {
             return MIME_TYPE_TEXT_PLAIN;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_s_label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'text/scriptlet' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_SCRIPTLET].name[7])) {
+            return MIME_TYPE_TEXT_SCRIPTLET;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'g':
+    case 'G':
+        /* must be 'text/sgml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_SGML].name[7])) {
+            return MIME_TYPE_TEXT_SGML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -6910,6 +11369,17 @@ text_t_label:
         }
         break;
 
+    case 'e':
+    case 'E':
+        /* must be 'text/texmacs' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_TEXMACS].name[7])) {
+            return MIME_TYPE_TEXT_TEXMACS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
@@ -6972,6 +11442,17 @@ text_vnd__label:
         }
         break;
 
+    case 's':
+    case 'S':
+        /* must be 'text/vnd.sun.j2me.app-descriptor' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_VND_SUN_J2ME_APP_DESCRIPTOR].name[10])) {
+            return MIME_TYPE_TEXT_VND_SUN_J2ME_APP_DESCRIPTOR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'w':
     case 'W':
         /* skip to prefix 'text/vnd.wap.' */
@@ -7001,9 +11482,30 @@ text_vnd_f_label:
 
     case 'l':
     case 'L':
+        goto text_vnd_fl_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_vnd_fl_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'text/vnd.flatland.3dml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_VND_FLATLAND_3DML].name[12])) {
+            return MIME_TYPE_TEXT_VND_FLATLAND_3DML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'y':
+    case 'Y':
         /* must be 'text/vnd.fly' or unrecognised */
         if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_TEXT_VND_FLY].name[11])) {
+          &lookup[MIME_TYPE_TEXT_VND_FLY].name[12])) {
             return MIME_TYPE_TEXT_VND_FLY;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -7191,6 +11693,25 @@ text_vnd_wap_wml_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
+text_x_label:
+    switch (*str++) {
+    case 'm':
+    case 'M':
+        /* skip to prefix 'text/xml' */
+        if (!str_ncasecmp(str, "l", 1)) {
+            str += 1;
+            goto text_xml_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case '-':
+        goto text_x__label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
 text_xml_label:
     switch (*str++) {
     case '\0':
@@ -7210,8 +11731,479 @@ text_xml_label:
         return MIME_TYPE_UNKNOWN_UNKNOWN;
     }
 
+text_x__label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        goto text_x_c_label;
+
+    case 'b':
+    case 'B':
+        goto text_x_b_label;
+
+    case 'd':
+    case 'D':
+        goto text_x_d_label;
+
+    case 'h':
+    case 'H':
+        /* must be 'text/x-haskell' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_HASKELL].name[8])) {
+            return MIME_TYPE_TEXT_X_HASKELL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'j':
+    case 'J':
+        /* must be 'text/x-java' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_JAVA].name[8])) {
+            return MIME_TYPE_TEXT_X_JAVA;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        goto text_x_m_label;
+
+    case 'l':
+    case 'L':
+        /* must be 'text/x-literate-haskell' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_LITERATE_HASKELL].name[8])) {
+            return MIME_TYPE_TEXT_X_LITERATE_HASKELL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'p':
+    case 'P':
+        goto text_x_p_label;
+
+    case 's':
+    case 'S':
+        goto text_x_s_label;
+
+    case 't':
+    case 'T':
+        goto text_x_t_label;
+
+    case 'v':
+    case 'V':
+        /* skip to prefix 'text/x-vca' */
+        if (!str_ncasecmp(str, "ca", 2)) {
+            str += 2;
+            goto text_x_vca_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_c_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'text/x-chdr' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_CHDR].name[9])) {
+            return MIME_TYPE_TEXT_X_CHDR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '+':
+        /* skip to prefix 'text/x-c++' */
+        if (!str_ncasecmp(str, "+", 1)) {
+            str += 1;
+            goto text_x_c___label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'r':
+    case 'R':
+        /* must be 'text/x-crontab' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_CRONTAB].name[9])) {
+            return MIME_TYPE_TEXT_X_CRONTAB;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        goto text_x_cs_label;
+
+    case 'o':
+    case 'O':
+        /* must be 'text/x-component' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_COMPONENT].name[9])) {
+            return MIME_TYPE_TEXT_X_COMPONENT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_c___label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'text/x-c++hdr' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_C__HDR].name[11])) {
+            return MIME_TYPE_TEXT_X_C__HDR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'text/x-c++src' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_C__SRC].name[11])) {
+            return MIME_TYPE_TEXT_X_C__SRC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_cs_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'text/x-csh' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_CSH].name[10])) {
+            return MIME_TYPE_TEXT_X_CSH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'r':
+    case 'R':
+        /* must be 'text/x-csrc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_CSRC].name[10])) {
+            return MIME_TYPE_TEXT_X_CSRC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_b_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'text/x-bibtex' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_BIBTEX].name[9])) {
+            return MIME_TYPE_TEXT_X_BIBTEX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'text/x-boo' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_BOO].name[9])) {
+            return MIME_TYPE_TEXT_X_BOO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_d_label:
+    switch (*str++) {
+    case 'i':
+    case 'I':
+        /* must be 'text/x-diff' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_DIFF].name[9])) {
+            return MIME_TYPE_TEXT_X_DIFF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 's':
+    case 'S':
+        /* must be 'text/x-dsrc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_DSRC].name[9])) {
+            return MIME_TYPE_TEXT_X_DSRC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_m_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'text/x-makefile' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_MAKEFILE].name[9])) {
+            return MIME_TYPE_TEXT_X_MAKEFILE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'o':
+    case 'O':
+        /* must be 'text/x-moc' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_MOC].name[9])) {
+            return MIME_TYPE_TEXT_X_MOC;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_p_label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'text/x-pascal' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_PASCAL].name[9])) {
+            return MIME_TYPE_TEXT_X_PASCAL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'y':
+    case 'Y':
+        /* must be 'text/x-python' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_PYTHON].name[9])) {
+            return MIME_TYPE_TEXT_X_PYTHON;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'c':
+    case 'C':
+        /* must be 'text/x-pcs-gcd' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_PCS_GCD].name[9])) {
+            return MIME_TYPE_TEXT_X_PCS_GCD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'text/x-perl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_PERL].name[9])) {
+            return MIME_TYPE_TEXT_X_PERL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_s_label:
+    switch (*str++) {
+    case 'h':
+    case 'H':
+        /* must be 'text/x-sh' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_SH].name[9])) {
+            return MIME_TYPE_TEXT_X_SH;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        goto text_x_se_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_se_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'text/x-server-parsed-html' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_SERVER_PARSED_HTML].name[10])) {
+            return MIME_TYPE_TEXT_X_SERVER_PARSED_HTML;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 't':
+    case 'T':
+        /* must be 'text/x-setext' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_SETEXT].name[10])) {
+            return MIME_TYPE_TEXT_X_SETEXT;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_t_label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'text/x-tcl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_TCL].name[9])) {
+            return MIME_TYPE_TEXT_X_TCL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'text/x-tex' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_TEX].name[9])) {
+            return MIME_TYPE_TEXT_X_TEX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+text_x_vca_label:
+    switch (*str++) {
+    case 'r':
+    case 'R':
+        /* must be 'text/x-vcard' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_VCARD].name[11])) {
+            return MIME_TYPE_TEXT_X_VCARD;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'l':
+    case 'L':
+        /* must be 'text/x-vcalendar' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_TEXT_X_VCALENDAR].name[11])) {
+            return MIME_TYPE_TEXT_X_VCALENDAR;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
 video__label:
     switch (*str++) {
+    case 'd':
+    case 'D':
+        goto video_d_label;
+
+    case 'g':
+    case 'G':
+        /* must be 'video/gl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_GL].name[7])) {
+            return MIME_TYPE_VIDEO_GL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'f':
+    case 'F':
+        /* must be 'video/fli' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_FLI].name[7])) {
+            return MIME_TYPE_VIDEO_FLI;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        /* skip to prefix 'video/mp' */
+        if (!str_ncasecmp(str, "p", 1)) {
+            str += 1;
+            goto video_mp_label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    case 'o':
+    case 'O':
+        /* must be 'video/ogg' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_OGG].name[7])) {
+            return MIME_TYPE_VIDEO_OGG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'q':
     case 'Q':
         /* must be 'video/quicktime' or unrecognised */
@@ -7227,15 +12219,15 @@ video__label:
     case 'P':
         goto video_p_label;
 
-    case 'm':
-    case 'M':
-        /* skip to prefix 'video/mp' */
-        if (!str_ncasecmp(str, "p", 1)) {
-            str += 1;
-            goto video_mp_label;
+    case '3':
+        /* must be 'video/3gpp' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_3GPP].name[7])) {
+            return MIME_TYPE_VIDEO_3GPP;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+        break;
 
     case 'v':
     case 'V':
@@ -7246,6 +12238,84 @@ video__label:
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
+
+    case 'x':
+    case 'X':
+        /* skip to prefix 'video/x-' */
+        if (!str_ncasecmp(str, "-", 1)) {
+            str += 1;
+            goto video_x__label;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_d_label:
+    switch (*str++) {
+    case 'l':
+    case 'L':
+        /* must be 'video/dl' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_DL].name[8])) {
+            return MIME_TYPE_VIDEO_DL;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'video/dv' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_DV].name[8])) {
+            return MIME_TYPE_VIDEO_DV;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_mp_label:
+    switch (*str++) {
+    case 'e':
+    case 'E':
+        /* must be 'video/mpeg' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_MPEG].name[9])) {
+            return MIME_TYPE_VIDEO_MPEG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case '4':
+        goto video_mp4_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_mp4_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_VIDEO_MP4;
+
+    case 'v':
+    case 'V':
+        /* must be 'video/mp4v-es' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_MP4V_ES].name[10])) {
+            return MIME_TYPE_VIDEO_MP4V_ES;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
 
     default: 
         return MIME_TYPE_UNKNOWN_UNKNOWN;
@@ -7270,33 +12340,6 @@ video_p_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_VIDEO_POINTER].name[8])) {
             return MIME_TYPE_VIDEO_POINTER;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
-
-    default: 
-        return MIME_TYPE_UNKNOWN_UNKNOWN;
-    }
-
-video_mp_label:
-    switch (*str++) {
-    case 'e':
-    case 'E':
-        /* must be 'video/mpeg' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_VIDEO_MPEG].name[9])) {
-            return MIME_TYPE_VIDEO_MPEG;
-        } else {
-            return MIME_TYPE_UNKNOWN_UNKNOWN;
-        }
-        break;
-
-    case '4':
-        /* must be 'video/mp4v-es' or unrecognised */
-        if (!str_casecmp(str, 
-          &lookup[MIME_TYPE_VIDEO_MP4V_ES].name[9])) {
-            return MIME_TYPE_VIDEO_MP4V_ES;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
@@ -7362,6 +12405,17 @@ video_vnd_m_label:
         }
         break;
 
+    case 't':
+    case 'T':
+        /* must be 'video/vnd.mts' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_VND_MTS].name[12])) {
+            return MIME_TYPE_VIDEO_VND_MTS;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
     case 'o':
     case 'O':
         /* skip to prefix 'video/vnd.motorola.video' */
@@ -7387,6 +12441,191 @@ video_vnd_motorola_video_label:
         if (!str_casecmp(str, 
           &lookup[MIME_TYPE_VIDEO_VND_MOTOROLA_VIDEOP].name[25])) {
             return MIME_TYPE_VIDEO_VND_MOTOROLA_VIDEOP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x__label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        /* must be 'video/x-sgi-movie' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_SGI_MOVIE].name[9])) {
+            return MIME_TYPE_VIDEO_X_SGI_MOVIE;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'm':
+    case 'M':
+        goto video_x_m_label;
+
+    case 'l':
+    case 'L':
+        /* must be 'video/x-la-asf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_LA_ASF].name[9])) {
+            return MIME_TYPE_VIDEO_X_LA_ASF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x_m_label:
+    switch (*str++) {
+    case 's':
+    case 'S':
+        goto video_x_ms_label;
+
+    case 'n':
+    case 'N':
+        /* must be 'video/x-mng' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MNG].name[10])) {
+            return MIME_TYPE_VIDEO_X_MNG;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x_ms_label:
+    switch (*str++) {
+    case '-':
+        goto video_x_ms__label;
+
+    case 'v':
+    case 'V':
+        /* must be 'video/x-msvideo' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MSVIDEO].name[11])) {
+            return MIME_TYPE_VIDEO_X_MSVIDEO;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x_ms__label:
+    switch (*str++) {
+    case 'a':
+    case 'A':
+        /* must be 'video/x-ms-asf' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MS_ASF].name[12])) {
+            return MIME_TYPE_VIDEO_X_MS_ASF;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        goto video_x_ms_w_label;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x_ms_w_label:
+    switch (*str++) {
+    case 'm':
+    case 'M':
+        goto video_x_ms_wm_label;
+
+    case 'v':
+    case 'V':
+        /* must be 'video/x-ms-wvx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MS_WVX].name[13])) {
+            return MIME_TYPE_VIDEO_X_MS_WVX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+video_x_ms_wm_label:
+    switch (*str++) {
+    case '\0':
+        return MIME_TYPE_VIDEO_X_MS_WM;
+
+    case 'x':
+    case 'X':
+        /* must be 'video/x-ms-wmx' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MS_WMX].name[14])) {
+            return MIME_TYPE_VIDEO_X_MS_WMX;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'v':
+    case 'V':
+        /* must be 'video/x-ms-wmv' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_VIDEO_X_MS_WMV].name[14])) {
+            return MIME_TYPE_VIDEO_X_MS_WMV;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    default: 
+        return MIME_TYPE_UNKNOWN_UNKNOWN;
+    }
+
+x__label:
+    switch (*str++) {
+    case 'c':
+    case 'C':
+        /* must be 'x-conference/x-cooltalk' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_X_CONFERENCE_X_COOLTALK].name[3])) {
+            return MIME_TYPE_X_CONFERENCE_X_COOLTALK;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'e':
+    case 'E':
+        /* must be 'x-epoc/x-sisx-app' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_X_EPOC_X_SISX_APP].name[3])) {
+            return MIME_TYPE_X_EPOC_X_SISX_APP;
+        } else {
+            return MIME_TYPE_UNKNOWN_UNKNOWN;
+        }
+        break;
+
+    case 'w':
+    case 'W':
+        /* must be 'x-world/x-vrml' or unrecognised */
+        if (!str_casecmp(str, 
+          &lookup[MIME_TYPE_X_WORLD_X_VRML].name[3])) {
+            return MIME_TYPE_X_WORLD_X_VRML;
         } else {
             return MIME_TYPE_UNKNOWN_UNKNOWN;
         }
