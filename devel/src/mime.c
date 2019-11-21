@@ -14,7 +14,7 @@
  *
  */
                
-#include "firstinclude.h"
+#include "zettair.h"
 
 #include "mime.h"
 
@@ -934,6 +934,10 @@ enum mime_top_types mime_top_type(enum mime_types mtype) {
 enum mime_types mime_content_guess(const void *buf, unsigned int len) {
     const char *cbuf = buf;
 
+    if (len == 0) {
+        return MIME_TYPE_APPLICATION_OCTET_STREAM;
+    }
+
     if (len >= 4) {
         /* test for JPEG */
         if ((cbuf[0] == (char) 0xff) && (cbuf[1] == (char) 0xd8) 
@@ -1005,40 +1009,40 @@ enum mime_types mime_content_guess(const void *buf, unsigned int len) {
     }
 
     /* TREC documents */
-    if (((len >= str_len("<doc>")) 
-        && !str_ncasecmp("<doc>", cbuf, str_len("<doc>")))) {
+    if (((len >= strvlen("<doc>"))
+        && !str_ncasecmp("<doc>", cbuf, strvlen("<doc>")))) {
         return MIME_TYPE_APPLICATION_X_TREC;
     }
 
     /* INEX documents */
-    if (((len >= str_len("<article>")) 
-        && !str_ncasecmp("<article>", cbuf, str_len("<article>")))) {
+    if (((len >= strvlen("<article>"))
+        && !str_ncasecmp("<article>", cbuf, strvlen("<article>")))) {
         return MIME_TYPE_APPLICATION_X_INEX;
     }
 
     /* HTML */
-    if (((len >= str_len("<!doctype html")) 
-        && !str_ncasecmp("<!doctype html", cbuf, str_len("<!doctype html")))
-      || ((len >= str_len("<head")) 
-        && !str_ncasecmp("<head", cbuf, str_len("<head")))
-      || ((len >= str_len("<title")) 
-        && !str_ncasecmp("<title", cbuf, str_len("<title")))
-      || ((len >= str_len("<html")) 
-        && !str_ncasecmp("<html", cbuf, str_len("<html")))) {
+    if (((len >= strvlen("<!doctype html"))
+        && !str_ncasecmp("<!doctype html", cbuf, strvlen("<!doctype html")))
+      || ((len >= strvlen("<head"))
+        && !str_ncasecmp("<head", cbuf, strvlen("<head")))
+      || ((len >= strvlen("<title"))
+        && !str_ncasecmp("<title", cbuf, strvlen("<title")))
+      || ((len >= strvlen("<html"))
+        && !str_ncasecmp("<html", cbuf, strvlen("<html")))) {
         return MIME_TYPE_TEXT_HTML;
     }
 
     /* SGML */
-    if (((len >= str_len("<!doctype ")) 
-        && !str_ncasecmp("<!doctype ", cbuf, str_len("<!doctype ")))
-      || ((len >= str_len("<subdoc")) 
-        && !str_ncasecmp("<subdoc", cbuf, str_len("<subdoc")))) {
+    if (((len >= strvlen("<!doctype "))
+        && !str_ncasecmp("<!doctype ", cbuf, strvlen("<!doctype ")))
+      || ((len >= strvlen("<subdoc"))
+        && !str_ncasecmp("<subdoc", cbuf, strvlen("<subdoc")))) {
         return MIME_TYPE_TEXT_SGML;
     }
 
     /* XML */
-    if (((len >= str_len("<?xml")) 
-        && !str_ncasecmp("<?xml", cbuf, str_len("<?xml")))) {
+    if (((len >= strvlen("<?xml"))
+        && !str_ncasecmp("<?xml", cbuf, strvlen("<?xml")))) {
         return MIME_TYPE_TEXT_XML;
     }
 
