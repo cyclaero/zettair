@@ -900,10 +900,10 @@ enum search_ret doc_ord_eval(struct index *idx, struct query *query,
         if (opt) {
             spareopt = *opt;
         }
-        if ((sret = sm.parse_params(&spareopt.u, opt->u.dynamic.params)) 
-          == SEARCH_OK) {
+        if ((sret = sm.parse_params(&spareopt.u, opt->u.dynamic.params)) == SEARCH_OK) {
             opt = &spareopt;
         } else {
+            free(srcarr);
             return sret;
         }
 

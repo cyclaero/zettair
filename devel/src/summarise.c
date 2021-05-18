@@ -206,7 +206,6 @@ unsigned int entityEncode(struct sentence **sent, const char *term, unsigned int
         char *p = (char *)term;
         char *q = o;
         char *s = p + len;
-        char *t = o + (*sent)->bufsize - MAX_ESCAPE;
 
         if (q)
         {
@@ -224,7 +223,6 @@ unsigned int entityEncode(struct sentence **sent, const char *term, unsigned int
                     int l = q - o;
                     o = &(*sent)->buf[(*sent)->buflen];
                     q = o + l;
-                    t = o + (*sent)->bufsize - MAX_ESCAPE;
                 }
 
                 switch (c = *p++)
@@ -740,6 +738,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
                         stream_delete(sum->last_stream);
                         sum->last_stream = NULL;
                     }
+                    free(occs);
                     return SUMMARISE_ENOMEM;
                 }
             }
@@ -800,6 +799,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
     while (curroffset + (off_t) sum->last_stream->avail_out < offset) {
         curroffset += sum->last_stream->avail_out;
         if (index_stream_read(sum->last_stream, ps.fd, sum->buf, sum->bufsize) != STREAM_OK) {
+            free(occs);
             persum_delete(sum, &ps);
             return SUMMARISE_EIO;
         }
@@ -829,6 +829,7 @@ enum summarise_ret summarise(struct summarise *sum, unsigned long int docno, con
             } else {
                 free(occs);
                 persum_delete(sum, &ps);
+                return SUMMARISE_ERR;
             }
         } while (term);
     }

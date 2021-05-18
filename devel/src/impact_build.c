@@ -132,6 +132,9 @@ enum impact_ret impact_order_index(struct index *idx) {
     double slope = IMPACT_DEFAULT_SLOPE;
     unsigned int quant_bits = IMPACT_DEFAULT_QUANT_BITS;
     
+    decomp_list.postings = NULL;
+    decomp_list.postings_size = 0;
+
     if ((our_ret = calculate_impact_limits(idx, pivot,  &max_impact, &min_impact, &f_t_avg)) != IMPACT_OK) {
         ERROR("calculating impact limits");
         goto ERROR;
@@ -139,9 +142,6 @@ enum impact_ret impact_order_index(struct index *idx) {
     assert(min_impact <= max_impact);
 
     norm_B = pow(max_impact/min_impact, min_impact/(max_impact - min_impact));
-
-    decomp_list.postings = NULL;
-    decomp_list.postings_size = 0;
 
     tmp_vocab_fd_type = idx->tmp_type;
     addfile_data.fd = idx->fd;
