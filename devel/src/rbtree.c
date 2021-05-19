@@ -262,19 +262,18 @@ static enum rbtree_ret rbtree_node_check_black(const struct rbtree *rb,
     } else {
         unsigned int l = 0,
                      r = 0;
-        enum rbtree_ret ret;
 
-        if ((ret = rbtree_node_check_black(rb, node->child[RBTREE_LEFT], &l)) == RBTREE_OK
-         && (ret = rbtree_node_check_black(rb, node->child[RBTREE_RIGHT], &r)) == RBTREE_OK
+        if (rbtree_node_check_black(rb, node->child[RBTREE_LEFT], &l) == RBTREE_OK
+         && rbtree_node_check_black(rb, node->child[RBTREE_RIGHT], &r) == RBTREE_OK
          /* return value is EINVAL if we get this far but fail final check */
-         && (/* (ret = RBTREE_EINVAL) */ l == r)) {
+         && l == r) {
             *black_height = r + !node->red;
             return RBTREE_OK;
         } else {
             printf("l %u r %u node %lu\n", l, r, node->key.k_luint);
             rbtree_print(rb, stdout);
             assert(!CRASH);
-            return ret;
+            return RBTREE_EINVAL;
         }
     }
 }
