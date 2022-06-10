@@ -122,7 +122,7 @@ extern "C" {
          char pad;                                                            \
          type align;                                                          \
       } s;                                                                    \
-      return ((unsigned int) &s.align) - ((unsigned int) &s.pad);             \
+      return ((intptr_t) &s.align) - ((intptr_t) &s.pad);                     \
    }
 
 /* this macro returns what should be the maximum alignment on this platform */
