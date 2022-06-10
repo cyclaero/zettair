@@ -47,11 +47,11 @@ SITEROOT="siteroot"
 
 
 if [ -d "$SYNCHRON" ] && [ -d "$SITEROOT" ]; then
-   /usr/local/bin/clone -iv0 "$DOCUMENTS_DIR" "$SYNCHRON"
+   /usr/local/bin/clone -iv0 -x *.bmp:*.gif:*.ico:*.jpg:*.jpeg:*.png:*.rar:*.zip:*.doc:*.ppt:*.xls:*.c:*.css:*.js:*.BMP:*.GIF:*.ICO:*.JPG:*.JPEG:*.PNG:*.RAR:*.ZIP:*.DOC:*.PPT:*.XLS:*.C:*.CSS:*.JS "$DOCUMENTS_DIR" "$SYNCHRON"
    /usr/bin/find "$SYNCHRON" \( -links 2 -and \! -type d \) -delete >/dev/null 2>&1
 else
    rm -rf "$SYNCHRON" "$SITEROOT"
-   /usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
+   /usr/local/bin/clone -lv0 -x *.bmp:*.gif:*.ico:*.jpg:*.jpeg:*.png:*.rar:*.zip:*.doc:*.ppt:*.xls:*.c:*.css:*.js:*.BMP:*.GIF:*.ICO:*.JPG:*.JPEG:*.PNG:*.RAR:*.ZIP:*.DOC:*.PPT:*.XLS:*.C:*.CSS:*.JS "$DOCUMENTS_DIR" "$SYNCHRON"
 fi
 
 /usr/bin/find "$SYNCHRON" -not -path "*/Downloads/*" \( -name "index.html" -or -name "toc.html" \) -delete >/dev/null 2>&1
@@ -126,7 +126,7 @@ cd ..
 
 
 rm -rf "$SYNCHRON"
-/usr/local/bin/clone -lv0 "$DOCUMENTS_DIR" "$SYNCHRON"
+/usr/local/bin/clone -lv0 -x *.bmp:*.gif:*.ico:*.jpg:*.jpeg:*.png:*.rar:*.zip:*.doc:*.ppt:*.xls:*.c:*.css:*.js:*.BMP:*.GIF:*.ICO:*.JPG:*.JPEG:*.PNG:*.RAR:*.ZIP:*.DOC:*.PPT:*.XLS:*.C:*.CSS:*.JS "$DOCUMENTS_DIR" "$SYNCHRON"
 
 rm -f index*
 /usr/bin/find "$SITEROOT" -name "*.iso.html" | /usr/local/bin/zet -i >/dev/null 2>&1
